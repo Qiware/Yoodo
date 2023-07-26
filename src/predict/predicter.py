@@ -117,7 +117,10 @@ class Predicter():
         feature_list = list()
 
         lines = fp.readlines()
+        index = 0
         for line in lines:
+            index += 1
+            logging.debug("Load train data. line:%d", index)
             line = line.strip()
             data = line.split(",")
 
@@ -127,6 +130,7 @@ class Predicter():
             idx = 0
             while (idx < len(data)-1):
                 feature.append(float(data[idx]))
+                idx += 1
             feature_list.append(feature)
             target_list.append(target)
         fp.close()
@@ -148,7 +152,7 @@ class Predicter():
 
 
         # 预测结果
-        predict_test = lrtoot.predict(feature_test)
+        predict_test = lr.predict(feature_test)
 
         predict_sum = 0
         for predict in predict_test:
