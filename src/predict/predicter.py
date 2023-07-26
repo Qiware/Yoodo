@@ -71,25 +71,22 @@ class Predicter():
             # 生成训练数据
             index = offset + TRAIN_DATA_TRANSACTION_NUM - 1
             while (index >= offset):
-                if (index - TRAIN_DATA_TRANSACTION_NUM + 1) == offset:
-                    train_data += "%f,%f,%f,%f,%d,%f,%f" % (transaction_list[index]["open_price"],
-                                                            transaction_list[index]["close_price"],
-                                                            transaction_list[index]["top_price"],
-                                                            transaction_list[index]["bottom_price"],
-                                                            transaction_list[index]["volume"],
-                                                            transaction_list[index]["turnover"],
-                                                            self.price_rate(transaction_list[index]["open_price"], transaction_list[index]["close_price"]))
-                else:
-                    train_data += ",%f,%f,%f,%f,%d,%d,%f" % (transaction_list[index]["open_price"],
-                                                            transaction_list[index]["close_price"],
-                                                            transaction_list[index]["top_price"],
-                                                            transaction_list[index]["bottom_price"],
-                                                            transaction_list[index]["volume"],
-                                                            transaction_list[index]["turnover"],
-                                                            self.price_rate(transaction_list[index]["open_price"], transaction_list[index]["close_price"]))
-                index -= 1
+                if (index - TRAIN_DATA_TRANSACTION_NUM + 1) != offset:
+                    train_data += ","
+                train_data += "%f,%f,%f,%f,%d,%d,%f" % (
+                        transaction_list[index]["open_price"],
+                        transaction_list[index]["close_price"],
+                        transaction_list[index]["top_price"],
+                        transaction_list[index]["bottom_price"],
+                        transaction_list[index]["volume"],
+                        transaction_list[index]["turnover"],
+                        self.price_rate(transaction_list[index]["open_price"],
+                                        transaction_list[index]["close_price"]))
+            index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
-            price_rate = self.price_rate(transaction_list[offset]["close_price"], transaction_list[offset-1]["close_price"])
+            price_rate = self.price_rate(
+                    transaction_list[offset]["close_price"],
+                    transaction_list[offset-1]["close_price"])
             train_data += ",%f\n" % (price_rate)
 
             train_data_list.append(train_data)
