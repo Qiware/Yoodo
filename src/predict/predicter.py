@@ -21,9 +21,6 @@ GET_TRANSACTION_NUM = 1000
 # 单条训练样本拥有的交易数据条目
 TRAIN_DATA_TRANSACTION_NUM = 30
 
-# 股票训练数据占比
-TRAIN_STOCK_RATE = 0.5
-
 # 股票预测
 class Predicter():
     def __init__(self):
