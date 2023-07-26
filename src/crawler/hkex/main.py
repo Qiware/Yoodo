@@ -19,12 +19,13 @@ def usage():
 
 
 if __name__ == "__main__":
+    # 校验参数
     if len(sys.argv) != 2:
         usage() 
         exit(-1)
 
     # 日志初始化
-    log_init("../../../log/crawl_stock.log")
+    log_init("../../../log/crawler.log")
 
     # 新建爬虫对象
     crawler = Crawler()

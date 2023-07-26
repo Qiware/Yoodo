@@ -148,8 +148,20 @@ class Crawler():
 
     def crawl_all_transaction(self):
         ''' 爬取交易信息 '''
-        stock_code = HKEX_STOCK_CODE_MIN
-        while (stock_code <= HKEX_STOCK_CODE_MAX):
-            logging.debug("Crawl transaction. stock_code:%d", stock_code)
+        # 获取股票列表
+        stock_list = self.database.get_all_stock()
+        if len(stock_list) == 0:
+            logging.error("Get stock list failed!")
+            return
+
+        # 获取交易数据
+        for stock in stock_list:
+            # 获取股票代码
+            stock_key = stock["key"].split(":")
+            exchange = stock_key[0]
+            stock_code = int(stock_key[1])
+
+            logging.info("Crawl transaction data. stock_key:%s", stock_key)
+
+            # 获取交易数据
             self.crawl_transaction(stock_code)
-            stock_code += 1

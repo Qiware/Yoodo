@@ -8,7 +8,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
 
+sys.path.append("../lib/log")
+from log import *
 sys.path.append("../lib/database")
 from database import *
 
@@ -34,7 +37,7 @@ class Predicter():
 
     def gen_train_data(self, date):
         ''' 生成训练数据 '''
-        fp = open(str(date)+".csv", "w")
+        fp = open(str(date)+".dat", "w")
 
         # 获取股票列表
         stock_list = self.database.get_all_stock()
@@ -106,48 +109,57 @@ class Predicter():
 
         return None
 
+    def load_train_data(self, date):
+        ''' 加载训练数据, 并返回特征数据和目标数据 '''
+        fp = open(str(date) + ".dat")
+
+        target_list = list()
+        feature_list = list()
+
+        lines = fp.readlines()
+        for line in lines:
+            line = line.strip()
+            data = line.split(",")
+
+            feature = list()
+            target = float(data[-1])
+
+            idx = 0
+            while (idx < len(data)-1):
+                feature.append(float(data[idx]))
+            feature_list.append(feature)
+            target_list.append(target)
+        fp.close()
+
+        return feature_list, target_list
+
     def train_model(self, date):
         ''' 模型训练 '''
-        fpath = str(date) + ".csv"
+        # 加载训练数据
+        feature, target = self.load_train_data(date)
 
-        # 读取数据
-        data = np.genfromtxt(fpath, delimiter=',')
-        x_data = data[1:, 1]
-        y_data = data[1:, 2]
-        print("data: ", data)
-        print("x_data: ", x_data)
-        print("y_data: ", y_data)
+        # 划分训练集和测试集
+        feature_train, feature_test, target_train, target_test = train_test_split(feature, target, test_size=0.05)
 
-        # 一维数据通过增加维度转为二维数据
-        x_2data = x_data[:, np.newaxis]
-        y_2data = data[1:, 2, np.newaxis]
+        # 创建线性回归对象
+        lr = LinearRegression()
 
-        print("x_2data: ", x_2data)
-        print("y_2data: ", y_2data)
+        lr.fit(feature_train, target_train) # 训练
 
-        # 训练一元线性模型
-        model = LinearRegression()
-        model.fit(x_2data, y_2data)
 
-        plt.plot(x_2data, y_2data, 'b.')
-        plt.plot(x_2data, model.predict(x_2data), 'r')
+        # 预测结果
+        predict_test = lrtoot.predict(feature_test)
 
-        # 定义多项式回归：其本质是将变量x，根据degree的值转换为相应的多项式（非线性回归），eg: degree=3,则回归模型
-        # 变为 y = theta0 + theta1 * x + theta2 * x^2 + theta3 * x^3
-        #poly_reg = PolynomialFeatures(degree=3)
-        poly_reg = PolynomialFeatures(degree=63)
-        # 特征处理
-        x_ploy = poly_reg.fit_transform(x_2data)  # 这个方法实质是把非线性的模型转为线性模型进行处理，
-        # 处理方法就是把多项式每项的样本数据根据幂次数计算出相应的样本值(详细理解可以参考我的博文：https://blog.csdn.net/qq_34720818/article/details/103349452)
+        predict_sum = 0
+        for predict in predict_test:
+            predict_sum += predict
 
-        # 训练线性模型（其本质是非线性模型，是由非线性模型转换而来）
-        lin_reg_model = LinearRegression()
-        lin_reg_model.fit(x_ploy, y_2data)
+        target_sum = 0
+        for target in target_test:
+            target_sum += target
 
-        plt.plot(x_2data, y_2data, 'b.')
-        plt.plot(x_2data, lin_reg_model.predict(x_ploy), 'r')
-
-        plt.show()
+        logging.debug("predict_sum: %s", predict_sum)
+        logging.debug("target_sum: %s", target_sum)
 
         return None
 
@@ -162,6 +174,9 @@ class Predicter():
         self.train_model(date)
 
 if __name__ == "__main__":
+
+    log_init("../../log/predicter.log")
+
     predict = Predicter()
 
-    predict.train("20230726")
+    predict.train("20230725")
