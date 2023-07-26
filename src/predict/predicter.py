@@ -42,7 +42,6 @@ class Predicter():
         # 获取股票列表
         stock_list = self.database.get_all_stock()
 
-        count = 0
         for stock in stock_list:
             stock_key = stock["key"]
 
@@ -51,11 +50,6 @@ class Predicter():
 
             # 生成训练样本
             self.gen_train_data_by_transaction_list(stock_key, transaction_list, fp)
-
-            # 预留一定比例做实验
-            count += 1
-            if (float(count) / len(stock_list)) > TRAIN_STOCK_RATE:
-                break
 
         fp.close()
 
@@ -165,6 +159,9 @@ class Predicter():
         logging.debug("predict_sum: %s", predict_sum)
         logging.debug("target_sum: %s", target_sum)
 
+        logging.debug("predict_test: %s", predict_test)
+        logging.debug("target_test: %s", target_test)
+
         return None
 
     def train(self, date):
@@ -172,7 +169,7 @@ class Predicter():
             @Param date: 从哪天开始训练(YYYYMMDD)
         '''
         # 生成训练数据
-        #self.gen_train_data(date)
+        self.gen_train_data(date)
 
         # 进行模型训练
         self.train_model(date)
