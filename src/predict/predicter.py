@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
+from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 
 sys.path.append("../lib/log")
@@ -38,7 +39,6 @@ class Predicter():
 
         # 获取股票列表
         stock_list = self.database.get_all_stock()
-
         for stock in stock_list:
             stock_key = stock["key"]
 
@@ -82,7 +82,7 @@ class Predicter():
                         transaction_list[index]["turnover"],
                         self.price_rate(transaction_list[index]["open_price"],
                                         transaction_list[index]["close_price"]))
-            index -= 1
+                index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
             price_rate = self.price_rate(
                     transaction_list[offset]["close_price"],
@@ -125,22 +125,23 @@ class Predicter():
 
         return feature_list, target_list
 
-    def train_model(self, date):
+    def train(self, date):
         ''' 模型训练 '''
         # 加载训练数据
         feature, target = self.load_train_data(date)
 
         # 划分训练集和测试集
-        feature_train, feature_test, target_train, target_test = train_test_split(feature, target, test_size=0.05)
+        feature_train, feature_test, target_train, target_test = train_test_split(feature, target, test_size=0.05, random_state=1)
 
         # 创建线性回归对象
-        lr = LinearRegression()
+        #predict_model = LinearRegression()
+        #predict_model.fit(feature_train, target_train) # 训练
 
-        lr.fit(feature_train, target_train) # 训练
-
+        predict_model = MLPRegressor()
+        predict_model.fit(feature_train, target_train) # 训练
 
         # 预测结果
-        predict_test = lr.predict(feature_test)
+        predict_test = predict_model.predict(feature_test)
 
         predict_sum = 0
         for predict in predict_test:
@@ -158,20 +159,17 @@ class Predicter():
 
         return None
 
-    def train(self, date):
-        ''' 训练数据
-            @Param date: 从哪天开始训练(YYYYMMDD)
-        '''
-        # 生成训练数据
-        self.gen_train_data(date)
-
-        # 进行模型训练
-        self.train_model(date)
-
 if __name__ == "__main__":
 
     log_init("../../log/predicter.log")
 
     predict = Predicter()
 
+    # 生成训练数据
+    # predict.gen_train_data(date)
+
+    # 进行模型训练
     predict.train("20230725")
+
+    # 进行结果预测
+    # predict.predit()
