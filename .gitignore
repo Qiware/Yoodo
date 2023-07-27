@@ -4,3 +4,4 @@ __pycache__
 log
 *.log
 *.dat
+.DS_Store
