@@ -46,20 +46,22 @@ class Trainer():
         num = int(0)
         while (num < group_num):
             index = num * days
-            print("index:%d num:%d group_num:%d" % (index, num, group_num))
 
+            item = dict()
             while (index < (num+1)*days):
-                item = dict()
-                print("group:%d/%d index:%d list:%d" % (num, group_num, index, len(transaction_list)))
                 for key in transaction_list[index].keys():
                     if key not in item.keys():
                         item[key] = transaction_list[index][key]
                         continue
                     if isinstance(item[key], int) or isinstance(item[key], float):
                         item[key] += float(transaction_list[index][key])
-                transaction_group.append(item)
                 index += 1
+            transaction_group.append(item)
             num += 1
+
+        logging.info("transaction_list:%d transaction_group:%d",
+                     len(transaction_list), len(transaction_group))
+
         return transaction_group
 
     def gen_train_data_by_days(self, date, days):
@@ -237,7 +239,7 @@ if __name__ == "__main__":
     date = sys.argv[1]
 
     # 生成训练数据
-    # trainer.gen_train_data_by_days(date, 7)
+    #trainer.gen_train_data_by_days(date, 7)
 
     # 进行模型训练
     trainer.train(date)
