@@ -30,9 +30,12 @@ class Trainer():
         self.database = Database()
         pass
 
-    def price_rate(self, open_price, close_price):
-        ''' 计算价格上浮率 '''
-        return (close_price - open_price) / open_price * 100
+    def ratio(self, start_val, end_val):
+        ''' 波动比率
+            @Param start_val: 开始值
+            @Param end_val: 结束值
+        '''
+        return (end_val - start_val) / start_val * 100
 
     def gen_train_data(self, date):
         ''' 生成训练数据 '''
@@ -72,23 +75,35 @@ class Trainer():
             # 生成训练数据
             index = offset + TRAIN_DATA_TRANSACTION_NUM - 1
             while (index >= offset):
-                if (index - TRAIN_DATA_TRANSACTION_NUM + 1) != offset:
+                if (index - TRAIN_DATA_TRANSACTION_NUM + 1) == offset:
+                    train_data += "%f,%f,%f,%f,%f" % (
+                        self.ratio(transaction_list[index]["open_price"], # 收盘价波动率
+                                        transaction_list[index]["close_price"]),
+                        self.ratio(transaction_list[index]["open_price"], # 最高价波动率
+                                        transaction_list[index]["top_price"]),
+                        self.ratio(transaction_list[index]["open_price"], # 最低价波动率
+                                        transaction_list[index]["bottom_price"]),
+                        0, # 交易量波动率(与前一天比)
+                        0) # 交易额波动率(与前一天比)
+                else:
                     train_data += ","
-                train_data += "%f,%f,%f,%f,%d,%d,%f" % (
-                        transaction_list[index]["open_price"],
-                        transaction_list[index]["close_price"],
-                        transaction_list[index]["top_price"],
-                        transaction_list[index]["bottom_price"],
-                        transaction_list[index]["volume"],
-                        transaction_list[index]["turnover"],
-                        self.price_rate(transaction_list[index]["open_price"],
-                                        transaction_list[index]["close_price"]))
+                    train_data += "%f,%f,%f,%f,%f" % (
+                        self.ratio(transaction_list[index]["open_price"], # 收盘价波动率
+                                        transaction_list[index]["close_price"]),
+                        self.ratio(transaction_list[index]["open_price"], # 最高价波动率
+                                        transaction_list[index]["top_price"]),
+                        self.ratio(transaction_list[index]["open_price"], # 最低价波动率
+                                        transaction_list[index]["bottom_price"]),
+                        self.ratio(transaction_list[index+1]["volume"], # 交易量波动率(与前一天比)
+                                        transaction_list[index]["volume"]),
+                        self.ratio(transaction_list[index+1]["turnover"], # 交易额波动率(与前一天比)
+                                        transaction_list[index]["turnover"]))
                 index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
-            price_rate = self.price_rate(
+            price_ratio = self.ratio(
                     transaction_list[offset]["close_price"],
                     transaction_list[offset-1]["close_price"])
-            train_data += ",%f\n" % (price_rate)
+            train_data += ",%f\n" % (price_ratio)
 
             train_data_list.append(train_data)
             offset -= 1
@@ -136,11 +151,17 @@ class Trainer():
         # 划分训练集和测试集
         feature_train, feature_test, target_train, target_test = train_test_split(feature, target, test_size=0.05, random_state=1)
 
-        # 创建线性回归对象
-        predict_model = LinearRegression()
+        # 创建回归对象
+        predict_model = LinearRegression() # 线性回归
         predict_model.fit(feature_train, target_train) # 训练
 
-        #predict_model = MLPRegressor(hidden_layer_sizes=(100,), activation='relu', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
+        predict_model = MLPRegressor()
+        #predict_model = MLPRegressor( # 神经网络
+        #                     hidden_layer_sizes=(6,2),  activation='relu', solver='adam', alpha=0.0001, batch_size='auto',
+        #                     learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=5000, shuffle=True,
+        #                     random_state=1, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True,
+        #                     early_stopping=False,beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+        #predict_model = MLPRegressor(hidden_layer_sizes=(100,), activation='logistic', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
         #predict_model.fit(feature_train, target_train) # 训练
 
         # 模型评估
@@ -149,24 +170,29 @@ class Trainer():
         score = r2_score(target_test, predict_test)
         print('R-Squared:', score)
 
-        predict_sum = 0
-        target_sum = 0
         index = 0
+        right_count = 0
+        wrong_count = 0
+        zero_count = 0
         while (index < len(target_test)):
-            predict_sum += predict_test[index]
-            target_sum += target_test[index]
+            mul = predict_test[index] * target_test[index]
+            if mul > 0:
+                right_count += 1
+            elif (mul == 0) and ((target_test[index] == 0) or ((predict_test[index] == 0) and (target_test[index] > 0))):
+                zero_count += 1
+            else:
+                wrong_count += 1
             logging.debug("feature[%d] %s", index, feature_test[index])
             logging.debug("compare[%d] %s:%s", index, predict_test[index], target_test[index])
             index += 1
 
-        logging.debug("predict_sum: %s", predict_sum)
-        logging.debug("target_sum: %s", target_sum)
+        logging.debug("right_count:%d wrong_count:%d zero_count:%d", right_count, wrong_count, zero_count)
 
         return None
 
 if __name__ == "__main__":
 
-    log_init("../../log/predicter.log")
+    log_init("../../log/trainer.log")
 
     trainer = Trainer()
 
