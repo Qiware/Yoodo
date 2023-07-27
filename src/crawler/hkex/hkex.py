@@ -12,9 +12,6 @@ import requests	# pip3 install requests
 HKEX_STOCK_CODE_MIN = 1 # 港股股票代码最小值
 HKEX_STOCK_CODE_MAX = 3999 # 港股股票代码最大值
 
-# 请求交易所的TOKEN
-HKEX_TOKEN = "evLtsLsBNAUVTPxtGqVeG42%2feK1xJZnO3foLRMItvxXfdWrbR2phOYFziVhNby09"
-
 # 时间维度
 HKEX_SPAN_DAY = 6 # 按天维度
 HKEX_SPAN_WEEK = 7 # 按周维度
@@ -47,6 +44,9 @@ HKEX_GET_CHART_DATA2_URL = "https://www1.hkex.com.hk/hkexwidget/data/getchartdat
 #HKEX_GET_EQUITY_QUOTE_URL = "https://www1.hkex.com.hk/hkexwidget/data/getequityquote?sym=%d&token=%s&lang=chn&qid=1690217104956&callback=jQuery35108442069917684831_%d&_=%d"
 HKEX_GET_EQUITY_QUOTE_URL = "https://www1.hkex.com.hk/hkexwidget/data/getequityquote?sym=%d&token=%s&lang=chn&qid=%d&callback=jQuery35108442069917684831_%d&_=%d"
 
+# 获取TOKEN
+HKEX_GET_TOKEN_URL = "https://sc.hkex.com.hk/TuniS/www.hkex.com.hk/Market-Data/Securities-Prices/Equities/Equities-Quote?sym=3999&sc_lang=zh-hk"
+
 # 错误码
 HKEX_RESPONE_CODE_OK = "000" # 正常
 
@@ -54,7 +54,29 @@ HKEX_RESPONE_CODE_OK = "000" # 正常
 class HKEX():
     def __init__(self):
         ''' 初始化 '''
-        pass
+        self.token = self.get_token()
+
+    def get_token(self):
+        ''' 获取TOKEN '''
+        token_prefix = "evLtsL"
+
+        headers = { 'Content-Type' : 'application/json' }
+
+        url =  HKEX_GET_TOKEN_URL
+
+        # 获取TOKEN数据
+        rsp = requests.get(url=url, headers=headers)
+        if rsp is None:
+            return dict()
+
+        # 提取TOKEN数据
+        lines = rsp.text.split('\n')
+        for line in lines:
+            line = line.strip()
+            if line.find(token_prefix) == -1:
+                continue
+            segments = line.split("\"")
+            return segments[1]
 
     def gen_stock_key(self, exchange_code, stock_code):
         ''' 生成股票KEY '''
@@ -80,7 +102,7 @@ class HKEX():
 
         timestamp = int(time.time() * 1000)
 
-        url =  HKEX_GET_EQUITY_QUOTE_URL % (int(stock_code), HKEX_TOKEN, timestamp, timestamp, timestamp)
+        url =  HKEX_GET_EQUITY_QUOTE_URL % (int(stock_code), self.token, timestamp, timestamp, timestamp)
 
         # 发起拉取请求
         rsp = requests.get(url=url, headers=headers)
@@ -111,7 +133,7 @@ class HKEX():
 
         timestamp = int(time.time() * 1000)
 
-        url =  HKEX_GET_CHART_DATA2_URL % (span, HKEX_LASTEST_1MONTH, int(stock_code), HKEX_TOKEN, timestamp, timestamp, timestamp)
+        url =  HKEX_GET_CHART_DATA2_URL % (span, HKEX_LASTEST_1MONTH, int(stock_code), self.token, timestamp, timestamp, timestamp)
 
         # 发起拉取请求
         rsp = requests.get(url=url, headers=headers)
