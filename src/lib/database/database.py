@@ -91,14 +91,14 @@ class Database():
 
         for item in items:
             data = dict()
-            data["stock_key"] = item[0]
-            data["date"] = item[1]
-            data["open_price"] = item[2]
-            data["close_price"] = item[3]
-            data["top_price"] = item[4]
-            data["bottom_price"] = item[5]
-            data["volume"] = item[6]
-            data["turnover"] = item[7]
+            data["stock_key"] = str(item[0])
+            data["date"] = int(item[1])
+            data["open_price"] = float(item[2])
+            data["close_price"] = float(item[3])
+            data["top_price"] = float(item[4])
+            data["bottom_price"] = float(item[5])
+            data["volume"] = int(item[6])
+            data["turnover"] = float(item[7])
             result.append(data)
         return result
 

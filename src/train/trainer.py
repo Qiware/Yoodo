@@ -37,8 +37,36 @@ class Trainer():
         '''
         return (end_val - start_val) / start_val * 100
 
-    def gen_train_data(self, date):
-        ''' 生成训练数据 '''
+    def group_transaction_by_days(self, transaction_list, days):
+        ''' 交易数据间隔days分组 '''
+
+        transaction_group = list()
+        group_num = int(len(transaction_list) / days)
+
+        num = int(0)
+        while (num < group_num):
+            index = num * days
+            print("index:%d num:%d group_num:%d" % (index, num, group_num))
+
+            while (index < (num+1)*days):
+                item = dict()
+                print("group:%d/%d index:%d list:%d" % (num, group_num, index, len(transaction_list)))
+                for key in transaction_list[index].keys():
+                    if key not in item.keys():
+                        item[key] = transaction_list[index][key]
+                        continue
+                    if isinstance(item[key], int) or isinstance(item[key], float):
+                        item[key] += float(transaction_list[index][key])
+                transaction_group.append(item)
+                index += 1
+            num += 1
+        return transaction_group
+
+    def gen_train_data_by_days(self, date, days):
+        ''' 按days天聚合训练数据
+            @Param date: 结束日期
+            @Param days: 以days为间隔进行分组
+        '''
         fp = open(str(date)+".dat", "w")
 
         # 获取股票列表
@@ -49,8 +77,11 @@ class Trainer():
             # 拉取交易数据
             transaction_list = self.database.get_transaction(stock_key, date, GET_TRANSACTION_NUM)
 
+            # 交易数据聚合分组
+            transaction_group = self.group_transaction_by_days(transaction_list, days)
+
             # 生成训练样本
-            self.gen_train_data_by_transaction_list(stock_key, transaction_list, fp)
+            self.gen_train_data_by_transaction_list(stock_key, transaction_group, fp)
 
         fp.close()
 
@@ -152,17 +183,17 @@ class Trainer():
         feature_train, feature_test, target_train, target_test = train_test_split(feature, target, test_size=0.05, random_state=1)
 
         # 创建回归对象
-        predict_model = LinearRegression() # 线性回归
-        predict_model.fit(feature_train, target_train) # 训练
+        #predict_model = LinearRegression() # 线性回归
+        #predict_model.fit(feature_train, target_train) # 训练
 
-        predict_model = MLPRegressor()
+        #predict_model = MLPRegressor()
         #predict_model = MLPRegressor( # 神经网络
         #                     hidden_layer_sizes=(6,2),  activation='relu', solver='adam', alpha=0.0001, batch_size='auto',
         #                     learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=5000, shuffle=True,
         #                     random_state=1, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True,
         #                     early_stopping=False,beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-        #predict_model = MLPRegressor(hidden_layer_sizes=(100,), activation='logistic', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
-        #predict_model.fit(feature_train, target_train) # 训练
+        predict_model = MLPRegressor(hidden_layer_sizes=(200, 100), activation='tanh', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
+        predict_model.fit(feature_train, target_train) # 训练
 
         # 模型评估
         predict_test = predict_model.predict(feature_test)
@@ -188,6 +219,13 @@ class Trainer():
 
         logging.debug("right_count:%d wrong_count:%d zero_count:%d", right_count, wrong_count, zero_count)
 
+        # 打印结果
+        plt.scatter(target_test, predict_test)
+        plt.xlabel("Real")
+        plt.ylabel("Predicted")
+        plt.title("Linear regression")
+        plt.show()
+
         return None
 
 if __name__ == "__main__":
@@ -199,7 +237,7 @@ if __name__ == "__main__":
     date = sys.argv[1]
 
     # 生成训练数据
-    # trainer.gen_train_data(date)
+    # trainer.gen_train_data_by_days(date, 7)
 
     # 进行模型训练
     trainer.train(date)
