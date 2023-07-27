@@ -6,6 +6,7 @@ import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.neural_network import MLPRegressor
@@ -99,12 +100,15 @@ class Predicter():
 
     def load_train_data(self, date):
         ''' 加载训练数据, 并返回特征数据和目标数据 '''
+        # 加载训练数据
         fp = open(str(date) + ".dat")
+        lines = fp.readlines()
+        fp.close()
 
+        # 处理训练数据
         target_list = list()
         feature_list = list()
 
-        lines = fp.readlines()
         index = 0
         for line in lines:
             index += 1
@@ -121,7 +125,6 @@ class Predicter():
                 idx += 1
             feature_list.append(feature)
             target_list.append(target)
-        fp.close()
 
         return feature_list, target_list
 
@@ -137,25 +140,27 @@ class Predicter():
         #predict_model = LinearRegression()
         #predict_model.fit(feature_train, target_train) # 训练
 
-        predict_model = MLPRegressor()
+        predict_model = MLPRegressor(hidden_layer_sizes=(100,), activation='relu', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
         predict_model.fit(feature_train, target_train) # 训练
 
-        # 预测结果
+        # 模型评估
         predict_test = predict_model.predict(feature_test)
 
-        predict_sum = 0
-        for predict in predict_test:
-            predict_sum += predict
+        score = r2_score(target_test, predict_test)
+        print('R-Squared:', score)
 
+        predict_sum = 0
         target_sum = 0
-        for target in target_test:
-            target_sum += target
+        index = 0
+        while (index < len(target_test)):
+            predict_sum += predict_test[index]
+            target_sum += target_test[index]
+            logging.debug("feature[%d] %s", index, feature_test[index])
+            logging.debug("compare[%d] %s:%s", index, predict_test[index], target_test[index])
+            index += 1
 
         logging.debug("predict_sum: %s", predict_sum)
         logging.debug("target_sum: %s", target_sum)
-
-        logging.debug("predict_test: %s", predict_test)
-        logging.debug("target_test: %s", target_test)
 
         return None
 
@@ -165,11 +170,13 @@ if __name__ == "__main__":
 
     predict = Predicter()
 
+    date = sys.argv[1]
+
     # 生成训练数据
     # predict.gen_train_data(date)
 
     # 进行模型训练
-    predict.train("20230725")
+    predict.train(date)
 
     # 进行结果预测
     # predict.predit()
