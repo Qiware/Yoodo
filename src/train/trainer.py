@@ -6,7 +6,6 @@ import joblib
 import logging
 
 import numpy as np
-from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 
 sys.path.append("../lib/log")

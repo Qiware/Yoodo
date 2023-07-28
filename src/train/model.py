@@ -74,7 +74,7 @@ class Model():
 
     def predict(self, feature):
         ''' 预测结果 '''
-        return self.model(feature)
+        return self.model.predict(feature)
 
     def dump(self):
         ''' DUMP模型 '''
