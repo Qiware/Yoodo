@@ -19,13 +19,11 @@ sys.path.append("../lib/database")
 from database import *
 
 class Model():
-    def __init__(self, date, days, is_rebuild=False):
+    def __init__(self, days, is_rebuild=False):
         ''' 初始化
-            @Param date: 模型日期
-            @Param date: 预测days的模型
+            @Param days: 预测days的模型
             @Param is_rebuild: 是否重建模型
         '''
-        self.date = date
         self.days = days
         if is_rebuild:
             self.model = self.new()
@@ -57,17 +55,17 @@ class Model():
         '''
         return (end_val - start_val) / start_val * 100
 
-    def gen_model_fpath(self, date, days):
+    def _gen_model_fpath(self, days):
         ''' 生成预测模型的路径 '''
-        return "./model/%s-%ddays.mod" % (str(date), int(days))
+        return "./model/%ddays.mod" % (int(days))
 
     def _load(self):
         ''' 加载预测模型 '''
 
-        fpath = self.gen_model_fpath(self.date, self.days)
+        fpath = self._gen_model_fpath(self.days)
         if not os.path.isfile(fpath):
             logging.error("Model is not exist! fpath:%s", fpath)
-            return self.create()
+            return self.new()
 
         # 加载模型
         return joblib.load(fpath)
@@ -78,7 +76,7 @@ class Model():
 
     def dump(self):
         ''' DUMP模型 '''
-        joblib.dump(self.model, self.gen_model_fpath(self.date, self.days))
+        joblib.dump(self.model, self._gen_model_fpath(self.days))
 
     def fit(self, feature, target):
         ''' 模型训练 '''
