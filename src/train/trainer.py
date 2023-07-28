@@ -48,14 +48,24 @@ class Trainer():
             index = num * days
 
             item = dict()
+
+            item["stock_key"] = transaction_list[index]["stock_key"] # 股票KEY
+            item["open_price"] = transaction_list[index]["open_price"] # 开盘价(取第一天开盘价)
+            item["close_price"] = transaction_list[index+days-1]["close_price"] # 收盘价(取最后一天收盘价)
+
+            item["top_price"] = transaction_list[index]["top_price"] # 最高价
+            item["bottom_price"] = transaction_list[index]["bottom_price"] # 最低价
+            item["volume"] = transaction_list[index]["volume"] # 交易量
+            item["turnover"] = transaction_list[index]["turnover"] # 交易额
+
+            index += 1
             while (index < (num+1)*days):
-                for key in transaction_list[index].keys():
-                    if key not in item.keys():
-                        item[key] = transaction_list[index][key]
-                        continue
-                    if isinstance(item[key], int) or isinstance(item[key], float):
-                        item[key] += float(transaction_list[index][key])
+                item["top_price"] = max(item["top_price"], transaction_list[index]["top_price"])
+                item["bottom_price"] = min(item["bottom_price"], transaction_list[index]["bottom_price"])
+                item["volume"] = item["volume"] + transaction_list[index]["volume"]
+                item["turnover"] = item["turnover"] + transaction_list[index]["turnover"]
                 index += 1
+            logging.debug("Transaction group data: %s", item)
             transaction_group.append(item)
             num += 1
 
@@ -185,17 +195,17 @@ class Trainer():
         feature_train, feature_test, target_train, target_test = train_test_split(feature, target, test_size=0.05, random_state=1)
 
         # 创建回归对象
-        #predict_model = LinearRegression() # 线性回归
-        #predict_model.fit(feature_train, target_train) # 训练
+        predict_model = LinearRegression() # 线性回归
+        predict_model.fit(feature_train, target_train) # 训练
 
         #predict_model = MLPRegressor()
         #predict_model = MLPRegressor( # 神经网络
-        #                     hidden_layer_sizes=(6,2),  activation='relu', solver='adam', alpha=0.0001, batch_size='auto',
+        #                     hidden_layer_sizes=(500,200),  activation='relu', solver='adam', alpha=0.0001, batch_size='auto',
         #                     learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=5000, shuffle=True,
         #                     random_state=1, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True,
         #                     early_stopping=False,beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-        predict_model = MLPRegressor(hidden_layer_sizes=(200, 100), activation='tanh', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
-        predict_model.fit(feature_train, target_train) # 训练
+        #predict_model = MLPRegressor(hidden_layer_sizes=(500, 100), activation='tanh', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
+        #predict_model.fit(feature_train, target_train) # 训练
 
         # 模型评估
         predict_test = predict_model.predict(feature_test)
@@ -219,7 +229,11 @@ class Trainer():
             logging.debug("compare[%d] %s:%s", index, predict_test[index], target_test[index])
             index += 1
 
-        logging.debug("right_count:%d wrong_count:%d zero_count:%d", right_count, wrong_count, zero_count)
+        sample_count = right_count + wrong_count + zero_count
+        logging.debug("right_count:%d/%f wrong_count:%d/%f zero_count:%d/%f",
+                      right_count, float(right_count)/sample_count,
+                      wrong_count, float(wrong_count)/sample_count,
+                      zero_count, float(zero_count)/sample_count)
 
         # 打印结果
         plt.scatter(target_test, predict_test)
@@ -239,7 +253,7 @@ if __name__ == "__main__":
     date = sys.argv[1]
 
     # 生成训练数据
-    #trainer.gen_train_data_by_days(date, 7)
+    # trainer.gen_train_data_by_days(date, 7)
 
     # 进行模型训练
     trainer.train(date)
