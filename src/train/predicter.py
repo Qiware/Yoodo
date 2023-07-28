@@ -39,7 +39,7 @@ class Predicter():
         # 连接数据库
         self.database = Database()
         # 模型模块
-        self.model = Model()
+        self.model = Model(date, days)
 
     def group_transaction_by_days(self, transaction_list, days):
         ''' 交易数据间隔days分组 '''

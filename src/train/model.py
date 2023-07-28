@@ -1,5 +1,6 @@
 # encoding=utf-8
 
+import os
 import sys
 import joblib
 import logging
@@ -34,7 +35,7 @@ class Model():
         ''' 生成预测模型的路径 '''
         return "./model/%s-%ddays.mod" % (str(date), int(days))
 
-    def load_model(self):
+    def load_predict_model(self):
         ''' 加载预测模型 '''
 
         # 模型已加载, 则直接返回.
@@ -42,7 +43,9 @@ class Model():
             return self.predict_model
 
         fpath = self.gen_model_fpath(self.date, self.days)
-        if not os.exists(fpath):
+        if not os.path.isfile(fpath):
+            logging.error("Model is not exist! fpath:%s", fpath)
+            exit(-1)
             return None
 
         # 加载模型
@@ -52,4 +55,4 @@ class Model():
 
     def get_predict_model(self):
         ''' 获取预测模型 '''
-        return self.predict_model
+        return self.load_predict_model()
