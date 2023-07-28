@@ -113,43 +113,34 @@ class Trainer():
             @Param stock_key: 股票KEY
             @Param transaction_list: 交易数据
             @Param fname: 训练数据输出文件
+            @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
         '''
         train_data_list = list()
 
         # 判断参数合法性
-        if len(transaction_list) < TRAIN_DATA_TRANSACTION_NUM:
+        if len(transaction_list) < TRAIN_DATA_TRANSACTION_NUM+1:
             logging.error("Transaction data not enough! stock_key:%s", stock_key)
             return None
 
-        offset = len(transaction_list) - TRAIN_DATA_TRANSACTION_NUM
+        # 注意: 收盘价/最高价/最低价不与当前的开盘价比较, 而是与前一天的收盘价比较. 
+        #       预留最后一个作为起始基准.
+        offset = len(transaction_list) - (TRAIN_DATA_TRANSACTION_NUM + 1)
         while (offset > 0):
             train_data = ""
             # 生成训练数据
             index = offset + TRAIN_DATA_TRANSACTION_NUM - 1
             while (index >= offset):
-                if (index - TRAIN_DATA_TRANSACTION_NUM + 1) == offset:
-                    train_data += "%f,%f,%f,%f,%f" % (
-                        self.ratio(transaction_list[index]["open_price"], # 收盘价波动率
-                                        transaction_list[index]["close_price"]),
-                        self.ratio(transaction_list[index]["open_price"], # 最高价波动率
-                                        transaction_list[index]["top_price"]),
-                        self.ratio(transaction_list[index]["open_price"], # 最低价波动率
-                                        transaction_list[index]["bottom_price"]),
-                        0, # 交易量波动率(与前一天比)
-                        0) # 交易额波动率(与前一天比)
-                else:
+                curr = transaction_list[index]
+                prev = transaction_list[index+1]
+                if (index - TRAIN_DATA_TRANSACTION_NUM + 1) != offset:
                     train_data += ","
-                    train_data += "%f,%f,%f,%f,%f" % (
-                        self.ratio(transaction_list[index]["open_price"], # 收盘价波动率
-                                        transaction_list[index]["close_price"]),
-                        self.ratio(transaction_list[index]["open_price"], # 最高价波动率
-                                        transaction_list[index]["top_price"]),
-                        self.ratio(transaction_list[index]["open_price"], # 最低价波动率
-                                        transaction_list[index]["bottom_price"]),
-                        self.ratio(transaction_list[index+1]["volume"], # 交易量波动率(与前一天比)
-                                        transaction_list[index]["volume"]),
-                        self.ratio(transaction_list[index+1]["turnover"], # 交易额波动率(与前一天比)
-                                        transaction_list[index]["turnover"]))
+                train_data += "%f,%f,%f,%f,%f,%f" % (
+                    self.ratio(prev["close_price"], curr["open_price"]), # 开盘价波动率
+                    self.ratio(prev["close_price"], curr["close_price"]), # 收盘价波动率
+                    self.ratio(prev["close_price"], curr["top_price"]), # 最高价波动率
+                    self.ratio(prev["close_price"], curr["bottom_price"]), # 最低价波动率
+                    self.ratio(prev["volume"], curr["volume"]), # 交易量波动率(与前一天比)
+                    self.ratio(prev["turnover"], curr["turnover"])) # 交易额波动率(与前一天比)
                 index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
             price_ratio = self.ratio(
