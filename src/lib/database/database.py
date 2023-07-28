@@ -2,6 +2,7 @@
 
 # 数据库的查询和更新操作
 
+import logging
 import pymysql
 
 # 数据库操作
@@ -104,6 +105,9 @@ class Database():
 
     def _add_predict(self, data):
         ''' 新增预测数据 '''
+
+        logging.debug("Call _add_predict(). data:%s", data)
+
         cursor = self.mysql.cursor()
 
         sql = f'INSERT INTO t_predict(stock_key, date, days, curr_price, price, ratio, create_time, update_time) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)'
@@ -116,6 +120,9 @@ class Database():
 
     def _update_predict(self, data):
         ''' 更新预测数据 '''
+
+        logging.debug("Call _update_predict(). data:%s", data)
+
         cursor = self.mysql.cursor()
 
         sql = f'UPDATE t_predict SET curr_price=%s,price=%s,ratio=%s,update_time=%s WHERE stock_key=%s AND date=%s AND days=%s'
@@ -132,6 +139,8 @@ class Database():
             @Param data: 预测信息
         '''
 
+        logging.debug("Call set_predict(). data:%s", data)
+
         old_data = self.get_predict(data["stock_key"], data["date"], data["days"])
         if old_data is None:
             return self._add_predict(data)
@@ -147,7 +156,7 @@ class Database():
         # 查询交易数据
         cursor = self.mysql.cursor()
 
-        sql = f'SELECT stock_key, date, days, curr_price, price, ratio FROM t_predict WHERE stock_key=%s AND date<=%s AND days=%s'
+        sql = f'SELECT stock_key, date, days, curr_price, price, ratio FROM t_predict WHERE stock_key=%s AND date=%s AND days=%s'
 
         cursor.execute(sql, (stock_key, date, days))
 
@@ -156,6 +165,8 @@ class Database():
         cursor.close()
 
         if item is None:
+            logging.debug("Select data from database failed. stock_key:%s date:%s days:%s",
+                          stock_key, date, days)
             return None
 
         # 数据整合处理
@@ -164,8 +175,9 @@ class Database():
         data["stock_key"] = str(item[0])
         data["date"] = int(item[1])
         data["days"] = float(item[2])
-        data["price"] = float(item[3])
-        data["ratio"] = float(item[4])
+        data["curr_price"] = float(item[3])
+        data["price"] = float(item[4])
+        data["ratio"] = float(item[5])
 
         return data
 

@@ -2,6 +2,7 @@
 # 君子爱财 取之有道
 
 import sys
+import time
 import joblib
 import logging
 
@@ -245,7 +246,7 @@ class Data():
         ''' 更新预测数据 '''
         # 获取最新价格
         curr_price = float(0)
-        transaction_list = self.data.get_transaction(stock_key, date, 1)
+        transaction_list = self.get_transaction(stock_key, date, 1)
         if len(transaction_list) != 0:
             curr_price = transaction_list[0]["close_price"]
 
@@ -263,7 +264,7 @@ class Data():
         data["update_time"] = time.localtime(curr_timestamp)
 
         # 更新预测结果
-        self.set_predict(data)
+        self.database.set_predict(data)
 
 if __name__ == "__main__":
     # 提取参数

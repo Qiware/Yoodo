@@ -35,7 +35,9 @@ if __name__ == "__main__":
         crawler.crawl_stock()
     elif func == "transaction":
         # 爬取交易信息
-        stock_code = sys.argv[2]
+        stock_code = "all"
+        if len(sys.argv) == 3:
+            stock_code = sys.argv[2]
         crawler.crawl_transaction(stock_code)
     else:
         usage()
