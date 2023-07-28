@@ -12,20 +12,21 @@ import requests	# pip3 install requests
 HKEX_STOCK_CODE_MIN = 1 # 港股股票代码最小值
 HKEX_STOCK_CODE_MAX = 3999 # 港股股票代码最大值
 
+# 获取多久的数据
+HKEX_LASTEST_TODAY = 1 # 获取最近今天的数据(时)
+HKEX_LASTEST_1MONTH = 2 # 获取最近1个月的数据
+HKEX_LASTEST_3MONTH = 3 # 获取最近3个月的数据
+HKEX_LASTEST_6MONTH = 4 # 获取最近6个月的数据
+HKEX_LASTEST_1YEAR = 5 # 获取最近1年的数据
+HKEX_LASTEST_2YEAR = 6 # 获取最近2年的数据
+HKEX_LASTEST_5YEAR = 7 # 获取最近5年的数据
+HKEX_LASTEST_10YEAR = 8 # 获取最近5年的数据
+HKEX_LASTEST_THIS_YEAR = 9 # 获取本年至今的数据
+
 # 时间维度
 HKEX_SPAN_DAY = 6 # 按天维度
 HKEX_SPAN_WEEK = 7 # 按周维度
 HKEX_SPAN_MONTH = 8 # 按月维度
-
-# 获取多久的数据
-HKEX_LASTEST_TODAY = 1 # 获取最近今天的数据(时)
-HKEX_LASTEST_1MONTH = 2 # 获取最近1个月的数据(天)
-HKEX_LASTEST_3MONTH = 3 # 获取最近3个月的数据(天)
-HKEX_LASTEST_6MONTH = 4 # 获取最近6个月的数据(天)
-HKEX_LASTEST_1YEAR = 5 # 获取最近1年的数据(天)
-HKEX_LASTEST_2YEAR = 6 # 获取最近2年的数据(天)
-HKEX_LASTEST_5YEAR = 7 # 获取最近5年的数据(周)
-HKEX_LASTEST_10YEAR = 8 # 获取最近5年的数据(月)
 
 # 获取交易数据(交易时间、开盘价、最高价、最低价、收盘价、交易量、交易额)
 # @Param int: 时间间隔
@@ -133,7 +134,7 @@ class HKEX():
 
         timestamp = int(time.time() * 1000)
 
-        url =  HKEX_GET_CHART_DATA2_URL % (span, HKEX_LASTEST_1MONTH, int(stock_code), self.token, timestamp, timestamp, timestamp)
+        url =  HKEX_GET_CHART_DATA2_URL % (span, days, int(stock_code), self.token, timestamp, timestamp, timestamp)
 
         # 发起拉取请求
         rsp = requests.get(url=url, headers=headers)

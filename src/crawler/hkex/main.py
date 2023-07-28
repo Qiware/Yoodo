@@ -17,7 +17,6 @@ def usage():
     print("     - transaction: 爬取交易数据")
     print("     - help: 展示帮助信息")
 
-
 if __name__ == "__main__":
     # 校验参数
     if len(sys.argv) < 2:
