@@ -20,7 +20,7 @@ def usage():
 
 if __name__ == "__main__":
     # 校验参数
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         usage() 
         exit(-1)
 
@@ -33,10 +33,11 @@ if __name__ == "__main__":
     func = sys.argv[1]
     if func == "stock":
         # 爬取股票信息
-        crawler.crawl_all_stock()
+        crawler.crawl_stock()
     elif func == "transaction":
         # 爬取交易信息
-        crawler.crawl_all_transaction()
+        stock_code = sys.argv[2]
+        crawler.crawl_transaction(stock_code)
     else:
         usage()
 

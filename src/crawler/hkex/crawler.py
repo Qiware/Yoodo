@@ -36,7 +36,7 @@ class Crawler():
 
         return "%04d%02d%02d" % (year, month, mday)
 
-    def crawl_stock(self, stock_code):
+    def _crawl_stock(self, stock_code):
         ''' 爬取指定股票信息 '''
 
         try:
@@ -60,13 +60,12 @@ class Crawler():
             logging.error("Crawl stock failed! stock_code:%d errmsg:%s", stock_code, e)
             return e
 
-    def crawl_all_stock(self):
+    def crawl_stock(self, stock_code):
         ''' 爬取全部股票信息 '''
-
         stock_code = HKEX_STOCK_CODE_MIN
         while (stock_code <= HKEX_STOCK_CODE_MAX):
             # 爬取股票数据
-            self.crawl_stock(stock_code)
+            self._crawl_stock(stock_code)
 
             stock_code += 1
 
@@ -126,7 +125,7 @@ class Crawler():
 
         return transaction
 
-    def crawl_transaction(self, stock_code):
+    def _crawl_transaction(self, stock_code):
         ''' 爬取指定股票交易信息 '''
 
         # 爬取交易数据
@@ -150,8 +149,15 @@ class Crawler():
 
         return None
 
-    def crawl_all_transaction(self):
+    def crawl_transaction(self, stock_code):
         ''' 爬取交易信息 '''
+
+        # 判断是否爬取所有交易
+        if str(stock_code) != "all":
+            # 爬取指定股票交易
+            self._crawl_transaction(stock_code)
+            return
+
         # 获取股票列表
         stock_list = self.database.get_all_stock()
         if len(stock_list) == 0:
@@ -168,4 +174,4 @@ class Crawler():
             logging.info("Crawl transaction data. stock_key:%s", stock_key)
 
             # 获取交易数据
-            self.crawl_transaction(stock_code)
+            self._crawl_transaction(stock_code)
