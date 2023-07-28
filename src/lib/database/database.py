@@ -102,6 +102,73 @@ class Database():
             result.append(data)
         return result
 
+    def _add_predict(self, data):
+        ''' 新增预测数据 '''
+        cursor = self.mysql.cursor()
+
+        sql = f'INSERT INTO t_predict(stock_key, date, days, curr_price, price, ratio, create_time, update_time) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)'
+
+        cursor.execute(sql, (data["stock_key"], data["date"], data["days"], data["curr_price"], data["price"], data["ratio"], data["create_time"], data["update_time"]))
+
+        self.mysql.commit()
+
+        cursor.close()
+
+    def _update_predict(self, data):
+        ''' 更新预测数据 '''
+        cursor = self.mysql.cursor()
+
+        sql = f'UPDATE t_predict SET curr_price=%s,price=%s,ratio=%s,update_time=%s WHERE stock_key=%s AND date=%s AND days=%s'
+
+        cursor.execute(sql, (data["curr_price"], data["price"], data["ratio"], data["update_time"], data["stock_key"], data["date"], data["days"]))
+
+        self.mysql.commit()
+
+        cursor.close()
+
+
+    def set_predict(self, data):
+        ''' 设置预测数据
+            @Param data: 预测信息
+        '''
+
+        old_data = self.get_predict(data["stock_key"], data["date"], data["days"])
+        if old_data is None:
+            return self._add_predict(data)
+        return self._update_predict(data)
+
+    def get_predict(self, stock_key, date, days):
+        ''' 获取指定日期指定周期的预测结果
+            @Param stock_key: 股票KEY
+            @Param date: 交易日期(格式: YYYYMMDD)
+            @Param days: 预测周期(天数)
+        '''
+
+        # 查询交易数据
+        cursor = self.mysql.cursor()
+
+        sql = f'SELECT stock_key, date, days, curr_price, price, ratio FROM t_predict WHERE stock_key=%s AND date<=%s AND days=%s'
+
+        cursor.execute(sql, (stock_key, date, days))
+
+        item = cursor.fetchone()
+
+        cursor.close()
+
+        if item is None:
+            return None
+
+        # 数据整合处理
+        data = dict()
+
+        data["stock_key"] = str(item[0])
+        data["date"] = int(item[1])
+        data["days"] = float(item[2])
+        data["price"] = float(item[3])
+        data["ratio"] = float(item[4])
+
+        return data
+
 if __name__ == "__main__":
     db = Database()
 

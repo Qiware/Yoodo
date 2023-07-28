@@ -2,6 +2,7 @@
 # 君子爱财 取之有道
 
 import sys
+import joblib
 import logging
 
 import numpy as np
@@ -36,6 +37,14 @@ class Trainer():
             @Param end_val: 结束值
         '''
         return (end_val - start_val) / start_val * 100
+
+    def gen_train_data_fpath(self, date, days):
+        ''' 生成训练数据的路径 '''
+        return "./data/%s-%ddays.dat" % (str(date), int(days))
+
+    def gen_train_model_fpath(self, date, days):
+        ''' 生成预测模型的路径 '''
+        return "./model/%s-%ddays.mod" % (str(date), int(days))
 
     def group_transaction_by_days(self, transaction_list, days):
         ''' 交易数据间隔days分组 '''
@@ -79,7 +88,7 @@ class Trainer():
             @Param date: 结束日期
             @Param days: 以days为间隔进行分组
         '''
-        fp = open(str(date)+".dat", "w")
+        fp = open(self.gen_train_data_fpath(date, days), "w")
 
         # 获取股票列表
         stock_list = self.database.get_all_stock()
@@ -156,10 +165,10 @@ class Trainer():
 
         return None
 
-    def load_train_data(self, date):
+    def load_train_data(self, date, days):
         ''' 加载训练数据, 并返回特征数据和目标数据 '''
         # 加载训练数据
-        fp = open(str(date) + ".dat")
+        fp = open(self.gen_train_data_fpath(date, days))
         lines = fp.readlines()
         fp.close()
 
@@ -186,29 +195,27 @@ class Trainer():
 
         return feature_list, target_list
 
-    def train(self, date):
+    def train(self, date, days):
         ''' 模型训练 '''
         # 加载训练数据
-        feature, target = self.load_train_data(date)
+        feature, target = self.load_train_data(date, days)
 
         # 划分训练集和测试集
         feature_train, feature_test, target_train, target_test = train_test_split(feature, target, test_size=0.05, random_state=1)
 
         # 创建回归对象
-        predict_model = LinearRegression() # 线性回归
-        predict_model.fit(feature_train, target_train) # 训练
+        #predict_model = LinearRegression() # 线性回归
+        #predict_model.fit(feature_train, target_train) # 训练
 
         #predict_model = MLPRegressor()
-        #predict_model = MLPRegressor( # 神经网络
-        #                     hidden_layer_sizes=(500,200),  activation='relu', solver='adam', alpha=0.0001, batch_size='auto',
-        #                     learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=5000, shuffle=True,
-        #                     random_state=1, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True,
-        #                     early_stopping=False,beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-        #predict_model = MLPRegressor(hidden_layer_sizes=(500, 100), activation='tanh', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=200, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
-        #predict_model.fit(feature_train, target_train) # 训练
+        #predict_model = MLPRegressor(hidden_layer_sizes=(500,200), activation='relu', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=5000, shuffle=True, random_state=1, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False,beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+        predict_model = MLPRegressor(hidden_layer_sizes=(500, 100), activation='tanh', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=5000, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
+        predict_model.fit(feature_train, target_train) # 训练
 
         # 模型评估
         predict_test = predict_model.predict(feature_test)
+
+        joblib.dump(predict_model, self.gen_train_model_fpath(date, days))
 
         score = r2_score(target_test, predict_test)
         print('R-Squared:', score)
@@ -251,9 +258,10 @@ if __name__ == "__main__":
     trainer = Trainer()
 
     date = sys.argv[1]
+    days = int(sys.argv[2])
 
     # 生成训练数据
-    # trainer.gen_train_data_by_days(date, 7)
+    trainer.gen_train_data_by_days(date, days)
 
     # 进行模型训练
-    trainer.train(date)
+    trainer.train(date, days)
