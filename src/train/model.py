@@ -19,10 +19,36 @@ sys.path.append("../lib/database")
 from database import *
 
 class Model():
-    def __init__(self, date, days):
+    def __init__(self, date, days, is_rebuild=False):
+        ''' 初始化
+            @Param date: 模型日期
+            @Param date: 预测days的模型
+            @Param is_rebuild: 是否重建模型
+        '''
         self.date = date
         self.days = days
-        self.predict_model = None
+        if is_rebuild:
+            self.model = self.new()
+        else:
+            self.model = self._load()
+
+    def new(self):
+        ''' 新建模型 '''
+        return MLPRegressor(
+                hidden_layer_sizes=(500, 100),
+                activation='tanh', solver='adam',
+                alpha=0.0001, batch_size='auto',
+                learning_rate='constant',
+                learning_rate_init=0.001,
+                power_t=0.5, max_iter=5000,
+                shuffle=True, random_state=None,
+                tol=0.0001, verbose=False,
+                warm_start=False, momentum=0.9,
+                nesterovs_momentum=True,
+                early_stopping=False,
+                validation_fraction=0.1,
+                beta_1=0.9, beta_2=0.999,
+                epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
 
     def ratio(self, start_val, end_val):
         ''' 波动比率
@@ -35,24 +61,25 @@ class Model():
         ''' 生成预测模型的路径 '''
         return "./model/%s-%ddays.mod" % (str(date), int(days))
 
-    def load_predict_model(self):
+    def _load(self):
         ''' 加载预测模型 '''
-
-        # 模型已加载, 则直接返回.
-        if self.predict_model is not None:
-            return self.predict_model
 
         fpath = self.gen_model_fpath(self.date, self.days)
         if not os.path.isfile(fpath):
             logging.error("Model is not exist! fpath:%s", fpath)
-            exit(-1)
-            return None
+            return self.create()
 
         # 加载模型
-        self.predict_model = joblib.load(fpath)
+        return joblib.load(fpath)
 
-        return self.predict_model
+    def predict(self, feature):
+        ''' 预测结果 '''
+        return self.model(feature)
 
-    def get_predict_model(self):
-        ''' 获取预测模型 '''
-        return self.load_predict_model()
+    def dump(self):
+        ''' DUMP模型 '''
+        joblib.dump(self.model, self.gen_model_fpath(self.date, self.days))
+
+    def fit(self, feature, target):
+        ''' 模型训练 '''
+        return self.model.fit(feature, target)

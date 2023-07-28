@@ -6,10 +6,6 @@ import joblib
 import logging
 
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import r2_score
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.linear_model import LinearRegression
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 
@@ -17,9 +13,10 @@ sys.path.append("../lib/log")
 from log import *
 sys.path.append("../lib/database")
 from database import *
+from model import Model
 
 # 拉取训练交易数据条目
-GET_TRANSACTION_NUM = 1000
+GET_TRANSACTION_MAX_NUM = 1000
 
 # 单条训练样本拥有的交易数据条目
 TRAIN_DATA_TRANSACTION_NUM = 30
@@ -41,10 +38,6 @@ class Trainer():
     def gen_train_data_fpath(self, date, days):
         ''' 生成训练数据的路径 '''
         return "./data/%s-%ddays.dat" % (str(date), int(days))
-
-    def gen_train_model_fpath(self, date, days):
-        ''' 生成预测模型的路径 '''
-        return "./model/%s-%ddays.mod" % (str(date), int(days))
 
     def group_transaction_by_days(self, transaction_list, days):
         ''' 交易数据间隔days分组 '''
@@ -83,11 +76,15 @@ class Trainer():
 
         return transaction_group
 
-    def gen_train_data_by_days(self, date, days):
+    def gen_train_data_by_days(self, date, days, num):
         ''' 按days天聚合训练数据
             @Param date: 结束日期
             @Param days: 以days为间隔进行分组
+            @Param num: 交易数据条目
         '''
+
+        logging.debug("Call gen_train_data_by_days(). date:%s days:%s num:%s", date, days, num)
+
         fp = open(self.gen_train_data_fpath(date, days), "w")
 
         # 获取股票列表
@@ -96,7 +93,7 @@ class Trainer():
             stock_key = stock["key"]
 
             # 拉取交易数据
-            transaction_list = self.database.get_transaction(stock_key, date, GET_TRANSACTION_NUM)
+            transaction_list = self.database.get_transaction(stock_key, date, num)
 
             # 交易数据聚合分组
             transaction_group = self.group_transaction_by_days(transaction_list, days)
@@ -115,6 +112,9 @@ class Trainer():
             @Param fname: 训练数据输出文件
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
         '''
+
+        logging.debug("Call gen_train_data_by_transaction_list(). stock_key:%s", stock_key)
+
         train_data_list = list()
 
         # 判断参数合法性
@@ -125,6 +125,7 @@ class Trainer():
         # 注意: 收盘价/最高价/最低价不与当前的开盘价比较, 而是与前一天的收盘价比较. 
         #       预留最后一个作为起始基准.
         offset = len(transaction_list) - (TRAIN_DATA_TRANSACTION_NUM + 1)
+
         while (offset > 0):
             train_data = ""
             # 生成训练数据
@@ -186,7 +187,7 @@ class Trainer():
 
         return feature_list, target_list
 
-    def train(self, date, days):
+    def train(self, date, days, is_rebuild=False):
         ''' 模型训练 '''
         # 加载训练数据
         feature, target = self.load_train_data(date, days)
@@ -194,22 +195,15 @@ class Trainer():
         # 划分训练集和测试集
         feature_train, feature_test, target_train, target_test = train_test_split(feature, target, test_size=0.05, random_state=1)
 
-        # 创建回归对象
-        #predict_model = LinearRegression() # 线性回归
-        #predict_model.fit(feature_train, target_train) # 训练
+        # 新建模型
+        model = Model(date, days, is_rebuild)
 
-        #predict_model = MLPRegressor()
-        #predict_model = MLPRegressor(hidden_layer_sizes=(500,200), activation='relu', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=5000, shuffle=True, random_state=1, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False,beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-        predict_model = MLPRegressor(hidden_layer_sizes=(500, 100), activation='tanh', solver='adam', alpha=0.0001, batch_size='auto', learning_rate='constant', learning_rate_init=0.001, power_t=0.5, max_iter=5000, shuffle=True, random_state=None, tol=0.0001, verbose=False, warm_start=False, momentum=0.9, nesterovs_momentum=True, early_stopping=False, validation_fraction=0.1, beta_1=0.9, beta_2=0.999, epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
-        predict_model.fit(feature_train, target_train) # 训练
+        model.fit(feature_train, target_train) # 训练
+
+        model.dump() # 固化模型
 
         # 模型评估
-        predict_test = predict_model.predict(feature_test)
-
-        joblib.dump(predict_model, self.gen_train_model_fpath(date, days))
-
-        score = r2_score(target_test, predict_test)
-        print('R-Squared:', score)
+        predict_test = model.predict(feature_test)
 
         index = 0
         right_count = 0
@@ -233,14 +227,27 @@ class Trainer():
                       wrong_count, float(wrong_count)/sample_count,
                       zero_count, float(zero_count)/sample_count)
 
-        # 打印结果
-        plt.scatter(target_test, predict_test)
-        plt.xlabel("Real")
-        plt.ylabel("Predicted")
-        plt.title("Linear regression")
-        plt.show()
-
         return None
+
+    def rebuild(self, date, days):
+        ''' 重建模型 '''
+
+        # 生成训练数据
+        trainer.gen_train_data_by_days(date, days, GET_TRANSACTION_MAX_NUM)
+
+        # 进行模型训练
+        trainer.train(date, days, True)
+
+    def update(self, date, days):
+        ''' 更新模型 '''
+
+        # 生成训练数据
+        # 注意事项: 不仅需要训练数据, 还有一个基准数据和目标结果数据, 因此是+2.
+        trainer.gen_train_data_by_days(date, days, days*(TRAIN_DATA_TRANSACTION_NUM+2))
+
+        # 进行模型训练
+        trainer.train(date, days, False)
+
 
 if __name__ == "__main__":
 
@@ -248,11 +255,13 @@ if __name__ == "__main__":
 
     trainer = Trainer()
 
-    date = sys.argv[1]
-    days = int(sys.argv[2])
+    action = sys.argv[1]
+    date = sys.argv[2]
+    days = int(sys.argv[3])
 
-    # 生成训练数据
-    trainer.gen_train_data_by_days(date, days)
-
-    # 进行模型训练
-    trainer.train(date, days)
+    if action == "update":
+        print("Update model. date:%s days:%s" % (date, days))
+        trainer.update(date, days)
+    elif action == "rebuild":
+        print("Rebuild model. date:%s days:%s" % (date, days))
+        trainer.rebuild(date, days)

@@ -144,7 +144,7 @@ class Predicter():
                 continue
 
             # 进行结果预测
-            ratio = self.model.get_predict_model().predict(feature)
+            ratio = self.model.predict(feature)
 
             print("predict: %s %s %s" % (stock_key, ratio[0], stock["name"]))
             logging.info("predict: %s %s %s", stock_key, ratio[0], stock["name"])
