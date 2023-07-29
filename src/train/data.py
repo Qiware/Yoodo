@@ -89,7 +89,7 @@ class Data():
             stock_key = stock["key"]
 
             # 拉取交易数据
-            transaction_list = self.database.get_transaction(stock_key, date, num)
+            transaction_list = self.database.get_transaction_list(stock_key, date, num)
 
             # 交易数据聚合分组
             transaction_group = self.group_transaction_by_days(transaction_list, days)
@@ -219,7 +219,7 @@ class Data():
         feature = list()
 
         # 查询所需数据
-        transaction_list = self.database.get_transaction(stock_key, date, TRAIN_DATA_TRANSACTION_NUM*(days+1))
+        transaction_list = self.database.get_transaction_list(stock_key, date, TRAIN_DATA_TRANSACTION_NUM*(days+1))
 
         # 交易数据聚合分组
         transaction_group = self.group_transaction_by_days(transaction_list, days)
@@ -238,15 +238,11 @@ class Data():
         ''' 获取所有股票  '''
         return self.database.get_all_stock()
 
-    def get_transaction(self, stock_key, date, num):
-        ''' 获取交易列表 '''
-        return self.database.get_transaction(stock_key, date, 1)
-
     def update_predict(self, stock_key, date, days, ratio):
         ''' 更新预测数据 '''
         # 获取最新价格
         curr_price = float(0)
-        transaction_list = self.get_transaction(stock_key, date, 1)
+        transaction_list = self.database.get_transaction_list(stock_key, date, 1)
         if len(transaction_list) != 0:
             curr_price = transaction_list[0]["close_price"]
 

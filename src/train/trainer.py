@@ -32,8 +32,8 @@ class Trainer():
         feature, target = self.data.load_train_data(date, days)
 
         # 划分训练集和测试集
-        feature_train, feature_test, target_train, target_test = 
-            train_test_split(feature, target, test_size=0.05, random_state=1)
+        feature_train, feature_test, target_train, target_test = train_test_split(
+                feature, target, test_size=0.05, random_state=1)
 
         # 新建模型
         model = Model(days, is_rebuild)

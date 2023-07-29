@@ -92,32 +92,54 @@ class Crawler():
                 transaction_date.tm_mday)
 
         # 开盘价
+        if data[HKEX_TRANSACTION_OPEN_PRICE] is None:
+            return None
+
         transaction["open_price"] = float(data[HKEX_TRANSACTION_OPEN_PRICE])
         if transaction["open_price"] <= 0:
             logging.error("Open price is invalid! stock_code:%s open_price:%f", stock_code, transaction["open_price"])
             return None
+
         # 收盘价
+        if data[HKEX_TRANSACTION_CLOSE_PRICE] is None:
+            return None
+
         transaction["close_price"] = float(data[HKEX_TRANSACTION_CLOSE_PRICE])
         if transaction["close_price"] <= 0:
             logging.error("Close price is invalid! stock_code:%s close_price:%f", stock_code, transaction["close_price"])
             return None
+
         # 最高价
+        if data[HKEX_TRANSACTION_TOP_PRICE] is None:
+            return None
+
         transaction["top_price"] = float(data[HKEX_TRANSACTION_TOP_PRICE])
         if transaction["top_price"] <= 0:
             logging.error("Top price is invalid! stock_code:%s top_price:%f", stock_code, transaction["top_price"])
             return None
+
         # 最低价
+        if data[HKEX_TRANSACTION_BOTTOM_PRICE] is None:
+            return None
+
         transaction["bottom_price"] = float(data[HKEX_TRANSACTION_BOTTOM_PRICE])
         if transaction["bottom_price"] <= 0:
             logging.error("Bottom price is invalid! stock_code:%s bottom_price:%f", stock_code, transaction["bottom_price"])
             return None
 
         # 交易量
+        if data[HKEX_TRANSACTION_VOLUME] is None:
+            return None
+
         transaction["volume"] = int(data[HKEX_TRANSACTION_VOLUME])
         if transaction["volume"] <= 0:
             logging.error("Volume is invalid! stock_code:%s volume:%d", stock_code, transaction["volume"])
             return None
+
         # 交易额
+        if data[HKEX_TRANSACTION_TURNOVER] is None:
+            return None
+
         transaction["turnover"] = float(data[HKEX_TRANSACTION_TURNOVER])
         if transaction["turnover"] <= 0:
             logging.error("Turnover is invalid! stock_code:%s turnover:%f", stock_code, transaction["turnover"])
@@ -140,18 +162,14 @@ class Crawler():
 
         # 遍历交易数据
         for data in data_list:
-            try:
-                # 提取交易信息
-                transaction = self.gen_transaction(stock_code, data)
-                if transaction is None:
-                    logging.error("Gen transaction failed! stock_code:%s ", stock_code)
-                    continue
-
-                # 更新交易信息
-                self.database.set_transaction(transaction)
-            except Exception as e:
-                logging.error("Catch exception! stock_code:%s e:%s", stock_code, str(e))
+            # 提取交易信息
+            transaction = self.gen_transaction(stock_code, data)
+            if transaction is None:
+                logging.error("Gen transaction failed! stock_code:%s ", stock_code)
                 continue
+
+            # 更新交易信息
+            self.database.set_transaction(transaction)
 
         return None
 
