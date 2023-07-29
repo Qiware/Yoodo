@@ -240,20 +240,21 @@ class Data():
 
     def update_predict(self, stock_key, date, days, ratio):
         ''' 更新预测数据 '''
-        # 获取最新价格
-        curr_price = float(0)
+
+        # 获取基准价格
+        base_price = float(0)
         transaction_list = self.database.get_transaction_list(stock_key, date, 1)
         if len(transaction_list) != 0:
-            curr_price = transaction_list[0]["close_price"]
+            base_price = transaction_list[0]["close_price"]
 
         # 准备数据
         data = dict()
         data["stock_key"] = stock_key
         data["date"] = date
         data["days"] = int(days)
-        data["curr_price"] = curr_price
-        data["price"] = curr_price + curr_price*(ratio/100)
-        data["ratio"] = ratio
+        data["base_price"] = base_price
+        data["pred_price"] = base_price + base_price*(ratio/100)
+        data["pred_ratio"] = ratio
 
         curr_timestamp = int(time.time())
         data["create_time"] = time.localtime(curr_timestamp)

@@ -195,10 +195,13 @@ class Database():
         cursor = self.mysql.cursor()
 
         sql = f'INSERT INTO t_predict(stock_key, date, days, \
-                        curr_price, price, ratio, create_time, update_time) \
+                        base_price, pred_price, pred_ratio, create_time, update_time) \
                     VALUES(%s,%s,%s,%s,%s,%s,%s,%s)'
 
-        cursor.execute(sql, (data["stock_key"], data["date"], data["days"], data["curr_price"], data["price"], data["ratio"], data["create_time"], data["update_time"]))
+        cursor.execute(sql, (data["stock_key"], data["date"],
+                             data["days"], data["base_price"],
+                             data["pred_price"], data["pred_ratio"],
+                             data["create_time"], data["update_time"]))
 
         self.mysql.commit()
 
@@ -211,11 +214,13 @@ class Database():
 
         cursor = self.mysql.cursor()
 
-        sql = f'UPDATE t_predict SET curr_price=%s, \
-                        price=%s,ratio=%s,update_time=%s \
+        sql = f'UPDATE t_predict SET base_price=%s, \
+                        pred_price=%s,pred_ratio=%s,update_time=%s \
                     WHERE stock_key=%s AND date=%s AND days=%s'
 
-        cursor.execute(sql, (data["curr_price"], data["price"], data["ratio"], data["update_time"], data["stock_key"], data["date"], data["days"]))
+        cursor.execute(sql, (data["base_price"], data["pred_price"],
+                             data["pred_ratio"], data["update_time"],
+                             data["stock_key"], data["date"], data["days"]))
 
         self.mysql.commit()
 
@@ -245,7 +250,7 @@ class Database():
         cursor = self.mysql.cursor()
 
         sql = f'SELECT stock_key, date, days, \
-                        curr_price, price, ratio \
+                        base_price, pred_price, pred_ratio \
                     FROM t_predict \
                     WHERE stock_key=%s AND date=%s AND days=%s'
 
@@ -266,9 +271,9 @@ class Database():
         data["stock_key"] = str(item[0])
         data["date"] = int(item[1])
         data["days"] = float(item[2])
-        data["curr_price"] = float(item[3])
-        data["price"] = float(item[4])
-        data["ratio"] = float(item[5])
+        data["base_price"] = float(item[3])
+        data["pred_price"] = float(item[4])
+        data["pred_ratio"] = float(item[5])
 
         return data
 
