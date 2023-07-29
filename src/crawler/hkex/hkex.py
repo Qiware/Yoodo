@@ -79,10 +79,6 @@ class HKEX():
             segments = line.split("\"")
             return segments[1]
 
-    def gen_stock_key(self, exchange_code, stock_code):
-        ''' 生成股票KEY '''
-        return "%s:%04d" % (exchange_code, int(stock_code))
-
     def parse(self, text):
         ''' 提取text中的JSON字串, 并返回JSON对象
             @Param text: 格式为jQuery35108442069917684831_1690217104956({.....})

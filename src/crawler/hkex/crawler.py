@@ -36,6 +36,10 @@ class Crawler():
 
         return "%04d%02d%02d" % (year, month, mday)
 
+    def gen_stock_key(self, exchange_code, stock_code):
+        ''' 生成股票KEY '''
+        return "%s:%05d" % (exchange_code, int(stock_code))
+
     def _crawl_stock(self, stock_code):
         ''' 爬取指定股票信息 '''
 
@@ -43,11 +47,12 @@ class Crawler():
             # 爬取股票数据
             data = self.hkex.get_stock(stock_code)
             if len(data) == 0:
+                logging.error("Get stock data failed! stock_code:%s", stock_code)
                 return None
 
             # 提取有效信息
             stock = dict()
-            stock["key"] = self.hkex.gen_stock_key(HKEX_EXCHAGE_KEY, data["sym"])
+            stock["key"] = self.gen_stock_key(HKEX_EXCHAGE_KEY, data["sym"])
             stock["name"] = str(data["nm"])
 
             timestamp = int(time.time())
@@ -60,10 +65,11 @@ class Crawler():
             logging.error("Crawl stock failed! stock_code:%d errmsg:%s", stock_code, e)
             return e
 
-    def crawl_stock(self, stock_code):
+    def crawl_stock(self):
         ''' 爬取全部股票信息 '''
         stock_code = HKEX_STOCK_CODE_MIN
         while (stock_code <= HKEX_STOCK_CODE_MAX):
+            print("Crawl stock data. stock_code:%s" % (stock_code))
             # 爬取股票数据
             self._crawl_stock(stock_code)
 
@@ -74,7 +80,7 @@ class Crawler():
         transaction = dict()
 
         # 股票KEY
-        transaction["stock_key"] = self.hkex.gen_stock_key(HKEX_EXCHAGE_KEY, stock_code)
+        transaction["stock_key"] = self.gen_stock_key(HKEX_EXCHAGE_KEY, stock_code)
 
         # 交易日期(YYYYMMDD)
         transaction_timestamp = int(data[HKEX_TRANSACTION_TIMESTAMP])/1000
@@ -129,7 +135,7 @@ class Crawler():
         ''' 爬取指定股票交易信息 '''
 
         # 爬取交易数据
-        data_list = self.hkex.get_transaction(stock_code, HKEX_SPAN_DAY)
+        data_list = self.hkex.get_transaction(stock_code, HKEX_SPAN_DAY, HKEX_LASTEST_2YEAR)
         print(data_list)
 
         # 遍历交易数据
