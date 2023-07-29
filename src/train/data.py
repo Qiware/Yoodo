@@ -214,6 +214,10 @@ class Data():
 
         return feature
 
+    def get_transaction_list(self, stock_key, date, num):
+        ''' 获取交易列表 '''
+        return self.database.get_transaction_list(stock_key, date, num)
+
     def load_featue(self, stock_key, date, days):
         ''' 加载特征数据 '''
         feature = list()
@@ -262,6 +266,23 @@ class Data():
 
         # 更新预测结果
         self.database.set_predict(data)
+
+    def update_predict_real(self, stock_key, date, days, real_price, real_ratio):
+        ''' 更新预测数据中的真实数据 '''
+
+        # 准备数据
+        data = dict()
+        data["stock_key"] = stock_key
+        data["date"] = date
+        data["days"] = int(days)
+        data["real_price"] = real_price
+        data["real_ratio"] = real_ratio
+
+        curr_timestamp = int(time.time())
+        data["update_time"] = time.localtime(curr_timestamp)
+
+        # 更新预测结果
+        self.database.update_predict_real(data)
 
 if __name__ == "__main__":
     # 提取参数

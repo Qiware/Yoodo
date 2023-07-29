@@ -29,10 +29,7 @@ TRAIN_DATA_TRANSACTION_NUM = 30
 # 股票预测
 class Predicter():
     def __init__(self):
-        ''' 初始化
-            @Param date: 预测的起始日期
-            @Param days: 预测days天的趋势
-        '''
+        ''' 初始化 '''
         # 数据处理
         self.data = Data()
 
