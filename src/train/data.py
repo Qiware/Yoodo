@@ -131,13 +131,31 @@ class Data():
                 prev = transaction_list[index+1]
                 if (index - TRAIN_DATA_TRANSACTION_NUM + 1) != offset:
                     train_data += ","
-                train_data += "%f,%f,%f,%f,%f,%f" % (
-                    self.ratio(prev["close_price"], curr["open_price"]), # 开盘价波动率
-                    self.ratio(prev["close_price"], curr["close_price"]), # 收盘价波动率
-                    self.ratio(prev["close_price"], curr["top_price"]), # 最高价波动率
-                    self.ratio(prev["close_price"], curr["bottom_price"]), # 最低价波动率
-                    self.ratio(prev["volume"], curr["volume"]), # 交易量波动率(与前一天比)
-                    self.ratio(prev["turnover"], curr["turnover"])) # 交易额波动率(与前一天比)
+                train_data += "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (
+                        # 开盘价波动率(与'前周期'比较)
+                        self.ratio(prev["close_price"], curr["open_price"]),
+                        # 收盘价波动率(与'前周期'比较)
+                        self.ratio(prev["close_price"], curr["close_price"]),
+                        # 最高价波动率(与'前周期'比较)
+                        self.ratio(prev["close_price"], curr["top_price"]),
+                        # 最低价波动率(与'前周期'比较)
+                        self.ratio(prev["close_price"], curr["bottom_price"]),
+                        # 交易量波动率(与'前周期'比较)
+                        self.ratio(prev["volume"], curr["volume"]),
+                        # 交易额波动率(与'前周期'比较)
+                        self.ratio(prev["turnover"], curr["turnover"]),
+
+                        # 收盘价波动率(与'本周期'开盘价比较)
+                        self.ratio(curr["open_price"], curr["close_price"]),
+                        # 最高价波动率(与'本周期'开盘价比较)
+                        self.ratio(curr["open_price"], curr["top_price"]),
+                        # 最低价波动率(与'本周期'开盘价比较)
+                        self.ratio(curr["open_price"], curr["bottom_price"]),
+
+                        # 最高价和收盘价比较(与'本周期'收盘价比较)
+                        self.ratio(curr["close_price"], curr["top_price"]),
+                        # 最低价和收盘价比较(与'本周期'收盘价比较)
+                        self.ratio(curr["close_price"], curr["bottom_price"]))
                 index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
             price_ratio = self.ratio(
@@ -201,12 +219,20 @@ class Data():
         while (index >= 0):
             curr = transaction_list[index]
             prev = transaction_list[index+1]
+            # 与前周期的比较
             feature.append(self.ratio(prev["close_price"], curr["open_price"]))
             feature.append(self.ratio(prev["close_price"], curr["close_price"]))
             feature.append(self.ratio(prev["close_price"], curr["top_price"]))
             feature.append(self.ratio(prev["close_price"], curr["bottom_price"]))
             feature.append(self.ratio(prev["volume"], curr["volume"]))
             feature.append(self.ratio(prev["turnover"], curr["turnover"]))
+            # 与本周期的开盘价比较
+            feature.append(self.ratio(curr["open_price"], curr["close_price"]))
+            feature.append(self.ratio(curr["open_price"], curr["top_price"]))
+            feature.append(self.ratio(curr["open_price"], curr["bottom_price"]))
+            # 与本周期的收盘价比较
+            feature.append(self.ratio(curr["close_price"], curr["top_price"]))
+            feature.append(self.ratio(curr["close_price"], curr["bottom_price"]))
             index -= 1
 
         logging.info("Generate feature by transaction list success. stock_key:%s transaction_list:%d feature:%d",

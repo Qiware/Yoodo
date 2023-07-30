@@ -226,6 +226,26 @@ class Database():
 
         cursor.close()
 
+    def update_predict_real(self, data):
+        ''' 更新预测数据中的真实数据 '''
+
+        logging.debug("Call _update_predict_real(). data:%s", data)
+
+        cursor = self.mysql.cursor()
+
+        sql = f'UPDATE t_predict SET real_price=%s, \
+                        real_ratio=%s,update_time=%s \
+                    WHERE stock_key=%s AND date=%s AND days=%s'
+
+        cursor.execute(sql, (data["real_price"],
+                             data["real_ratio"], data["update_time"],
+                             data["stock_key"], data["date"], data["days"]))
+
+        self.mysql.commit()
+
+        cursor.close()
+
+
 
     def set_predict(self, data):
         ''' 设置预测数据
