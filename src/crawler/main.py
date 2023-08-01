@@ -3,11 +3,12 @@
 # 爬取港交所数据
 
 import sys
+import logging
 
-from hkex import *
+sys.path.append("./hkex")
 from crawler import *
 
-sys.path.append("../../lib/log")
+sys.path.append("../lib/log")
 from log import *
 
 def usage():
@@ -24,7 +25,7 @@ if __name__ == "__main__":
         exit(-1)
 
     # 日志初始化
-    log_init("../../../log/crawler.log")
+    log_init("../../log/crawler.log")
 
     # 新建爬虫对象
     crawler = Crawler()
@@ -35,10 +36,14 @@ if __name__ == "__main__":
         crawler.crawl_stock()
     elif func == "transaction":
         # 爬取交易信息
-        stock_code = "all"
-        if len(sys.argv) == 3:
-            stock_code = sys.argv[2]
-        crawler.crawl_transaction(stock_code)
+        if len(sys.argv) != 4:
+            print("Parameter is invalid!")
+            exit(-1)
+
+        stock_code = sys.argv[2] # 股票代码
+        start_date = sys.argv[3] # 起始日期. 格式:YYYY-MM-DD
+
+        crawler.crawl_transaction(stock_code, start_date)
     else:
         usage()
 

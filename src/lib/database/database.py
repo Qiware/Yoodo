@@ -38,14 +38,21 @@ class Database():
 
         sql = f'INSERT INTO t_transaction(stock_key, date, \
                         open_price, close_price, top_price, \
-                        bottom_price, volume, turnover, create_time, update_time) \
-                    VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                        bottom_price, volume, turnover, turnover_ratio, \
+                        create_time, update_time) \
+                    VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
-        execute = cursor.execute(sql, (data["stock_key"], data["date"],
-                                       data["open_price"], data["close_price"],
-                                       data["top_price"], data["bottom_price"],
-                                       data["volume"], data["turnover"],
-                                       data["create_time"], data["update_time"]))
+        execute = cursor.execute(sql, (data["stock_key"],
+                                       data["date"],
+                                       data["open_price"],
+                                       data["close_price"],
+                                       data["top_price"],
+                                       data["bottom_price"],
+                                       data["volume"],
+                                       data["turnover"],
+                                       data["turnover_ratio"],
+                                       data["create_time"],
+                                       data["update_time"]))
 
         self.mysql.commit()
 
@@ -61,21 +68,31 @@ class Database():
         cursor = self.mysql.cursor()
 
         sql = f'UPDATE t_transaction SET open_price=%s, \
-                        close_price=%s, top_price=%s, bottom_price=%s, \
-                        volume=%s, turnover=%s, update_time=%s \
+                        close_price=%s, \
+                        top_price=%s, \
+                        bottom_price=%s, \
+                        volume=%s, \
+                        turnover=%s, \
+                        turnover_ratio=%s, \
+                        update_time=%s \
                     WHERE stock_key=%s AND date=%s'
 
-        cursor.execute(sql, (data["open_price"], data["close_price"],
-                             data["top_price"], data["bottom_price"],
-                             data["volume"], data["turnover"],
-                             data["update_time"], data["stock_key"], data["date"]))
+        cursor.execute(sql, (data["open_price"],
+                             data["close_price"],
+                             data["top_price"],
+                             data["bottom_price"],
+                             data["volume"],
+                             data["turnover"],
+                             data["turnover_ratio"],
+                             data["update_time"],
+                             data["stock_key"], data["date"]))
 
         self.mysql.commit()
 
         cursor.close()
 
     def set_transaction(self, data):
-        ''' 更新交易数据: 开盘价、最高价、最低价、收盘价、交易量、交易额等
+        ''' 更新交易数据: 开盘价、最高价、最低价、收盘价、交易量、交易额、换手率等
             @Param data: 股票交易信息(dict类型)
         '''
         old_data = self.get_transaction(data["stock_key"], data["date"])
@@ -106,8 +123,8 @@ class Database():
         cursor.close()
 
         if item is None:
-            logging.debug("Select data from database failed. stock_key:%s date:%s days:%s",
-                          stock_key, date, days)
+            logging.debug("Select data from database failed. stock_key:%s date:%s",
+                          stock_key, date)
             return None
 
         # 数据整合处理
@@ -160,7 +177,7 @@ class Database():
 
         sql = f'SELECT stock_key, date, open_price, \
                         close_price, top_price, bottom_price, \
-                        volume, turnover \
+                        volume, turnover, turnover_ratio \
                     FROM t_transaction \
                     WHERE stock_key=%s AND date<=%s ORDER BY date DESC LIMIT %s'
 
@@ -184,6 +201,7 @@ class Database():
             data["bottom_price"] = float(item[5])
             data["volume"] = int(item[6])
             data["turnover"] = float(item[7])
+            data["turnover_ratio"] = float(item[8])
             result.append(data)
         return result
 

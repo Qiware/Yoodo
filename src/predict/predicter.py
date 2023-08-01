@@ -45,7 +45,7 @@ class Predicter():
             stock_key = stock["key"]
 
             # 加载特征数据
-            feature = self.data.load_featue(stock_key, date, days)
+            feature = self.data.load_feature(stock_key, date, days)
             if feature is None:
                 logging.info("Load feature failed! stock_key:%s date:%s days:%d", stock_key, date, days)
                 continue
@@ -53,8 +53,8 @@ class Predicter():
             # 进行结果预测
             ratio = model.predict(feature)
 
-            print("predict: %s %s %s" % (stock_key, ratio[0], stock["name"]))
-            logging.info("predict: %s %s %s", stock_key, ratio[0], stock["name"])
+            print("predict: %s %s %s %s %s" % (stock_key, date, days, ratio[0], stock["name"]))
+            logging.info("predict: %s %s %s %s %s", stock_key, date, days, ratio[0], stock["name"])
 
             # 更新预测结果
             self.data.update_predict(stock_key, date, days, float(ratio[0]))

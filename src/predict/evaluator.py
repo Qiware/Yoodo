@@ -37,6 +37,8 @@ class Evaluator():
         for stock in stock_list:
             stock_key = stock["key"]
 
+            print("Evaluate predict. stock_key:%s date:%s days:%s" %(stock_key, date, days))
+
             # 获取股票最近的(days + 1)条记录
             transaction_list = self.data.get_transaction_list(
                     stock_key, date, days+1)

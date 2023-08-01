@@ -55,6 +55,7 @@ class Data():
             item["bottom_price"] = transaction_list[index]["bottom_price"] # 最低价
             item["volume"] = transaction_list[index]["volume"] # 交易量
             item["turnover"] = transaction_list[index]["turnover"] # 交易额
+            item["turnover_ratio"] = transaction_list[index]["turnover_ratio"] # 换手率
 
             index += 1
             while (index < (num+1)*days):
@@ -62,8 +63,9 @@ class Data():
                 item["bottom_price"] = min(item["bottom_price"], transaction_list[index]["bottom_price"])
                 item["volume"] = item["volume"] + transaction_list[index]["volume"]
                 item["turnover"] = item["turnover"] + transaction_list[index]["turnover"]
+                item["turnover_ratio"] = item["turnover_ratio"] + transaction_list[index]["turnover_ratio"]
                 index += 1
-            logging.debug("Transaction group data: %s", item)
+            logging.debug("Transaction group data:%s", item)
             transaction_group.append(item)
             num += 1
 
@@ -131,7 +133,7 @@ class Data():
                 prev = transaction_list[index+1]
                 if (index - TRAIN_DATA_TRANSACTION_NUM + 1) != offset:
                     train_data += ","
-                train_data += "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (
+                train_data += "%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f" % (
                         # 开盘价波动率(与'前周期'比较)
                         self.ratio(prev["close_price"], curr["open_price"]),
                         # 收盘价波动率(与'前周期'比较)
@@ -155,7 +157,10 @@ class Data():
                         # 最高价和收盘价比较(与'本周期'收盘价比较)
                         self.ratio(curr["close_price"], curr["top_price"]),
                         # 最低价和收盘价比较(与'本周期'收盘价比较)
-                        self.ratio(curr["close_price"], curr["bottom_price"]))
+                        self.ratio(curr["close_price"], curr["bottom_price"]),
+
+                        # 换手率
+                        curr["turnover_ratio"])
                 index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
             price_ratio = self.ratio(
@@ -233,6 +238,8 @@ class Data():
             # 与本周期的收盘价比较
             feature.append(self.ratio(curr["close_price"], curr["top_price"]))
             feature.append(self.ratio(curr["close_price"], curr["bottom_price"]))
+            # 换手率
+            feature.append(curr["turnover_ratio"])
             index -= 1
 
         logging.info("Generate feature by transaction list success. stock_key:%s transaction_list:%d feature:%d",
@@ -244,12 +251,13 @@ class Data():
         ''' 获取交易列表 '''
         return self.database.get_transaction_list(stock_key, date, num)
 
-    def load_featue(self, stock_key, date, days):
+    def load_feature(self, stock_key, date, days):
         ''' 加载特征数据 '''
         feature = list()
 
         # 查询所需数据
-        transaction_list = self.database.get_transaction_list(stock_key, date, TRAIN_DATA_TRANSACTION_NUM*(days+1))
+        transaction_list = self.database.get_transaction_list(
+                stock_key, date, TRAIN_DATA_TRANSACTION_NUM*(days+1))
 
         # 交易数据聚合分组
         transaction_group = self.group_transaction_by_days(transaction_list, days)
@@ -257,7 +265,8 @@ class Data():
         # 生成训练样本
         item = self.gen_feature_by_transaction_list(stock_key, transaction_group)
         if item is None:
-            logging.error("Generate feature by transaction list failed! stock_key:%s transaction_list:%d", stock_key, len(transaction_list))
+            logging.error("Generate feature by transaction list failed! stock_key:%s transaction_list:%d",
+                          stock_key, len(transaction_list))
             return None
 
         feature.append(item)

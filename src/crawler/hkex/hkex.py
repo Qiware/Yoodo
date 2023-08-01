@@ -8,9 +8,8 @@ import time
 import urllib
 import requests	# pip3 install requests
 
-# 港交所股票代码范围
-HKEX_STOCK_CODE_MIN = 1 # 港股股票代码最小值
-HKEX_STOCK_CODE_MAX = 3999 # 港股股票代码最大值
+from const import *
+from baidu import *
 
 # 获取多久的数据
 HKEX_LASTEST_TODAY = 1 # 获取最近今天的数据(时)
@@ -56,6 +55,8 @@ class HKEX():
     def __init__(self):
         ''' 初始化 '''
         self.token = self.get_token()
+        # 百度
+        self.baidu = Baidu()
 
     def get_token(self):
         ''' 获取TOKEN '''
@@ -119,42 +120,12 @@ class HKEX():
             return dict()
         return data["quote"]
 
-    def get_transaction(self, stock_code, span, days=HKEX_LASTEST_1MONTH):
-        ''' 获取交易数据: 开盘价、最高价、最低价、收盘价、交易量、交易额等
+    def get_kline(self, stock_code, start_time):
+        ''' 获取交易K线数据: 开盘价、最高价、最低价、收盘价、交易量、交易额、换手率等
             @Param code: 股票代码
             @Param num: K线数量
         '''
-
-        # 准备请求参数
-        headers = { 'Content-Type' : 'application/json' }
-
-        timestamp = int(time.time() * 1000)
-
-        url =  HKEX_GET_CHART_DATA2_URL % (span, days, int(stock_code), self.token, timestamp, timestamp, timestamp)
-
-        # 发起拉取请求
-        rsp = requests.get(url=url, headers=headers)
-        if rsp is None:
-            logging.error("Get transaction failed!")
-            return dict()
-
-        # 结果解析
-        data = self.parse(rsp.text)
-        if "data" not in data.keys():
-            logging.error("No 'data' field!")
-            return dict()
-        data = data["data"]
-        if "responsecode" not in data.keys():
-            logging.error("No 'responsecode' field!")
-            return dict()
-        if data["responsecode"] != HKEX_RESPONE_CODE_OK:
-            logging.error("'responsecode' is invalid!")
-            return dict()
-        if "datalist" not in data.keys():
-            logging.error("No 'datalist' field!")
-            return dict()
-        return data["datalist"]
-
+        return self.baidu.get_kline(stock_code, start_time, KLINE_KTYPE_DAY, KLINE_GROUP_HKEX)
 
 if __name__ == "__main__":
     hkex = HKEX()
@@ -170,5 +141,5 @@ if __name__ == "__main__":
     #stock_code = HKEX_STOCK_CODE_MIN
     #while (stock_code <= HKEX_STOCK_CODE_MAX):
     #    print("Stock code: ", stock_code)
-    #    print(hkex.get_transaction(stock_code, HKEX_SPAN_DAY))
+    #    print(hkex.get_kline(stock_code, "2023-07-01"))
     #    stock_code += 1

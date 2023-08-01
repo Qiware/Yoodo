@@ -8,8 +8,9 @@ import time
 import logging
 
 from hkex import *
+from const import *
 
-sys.path.append("../../lib/database")
+sys.path.append("../lib/database")
 from database import *
 
 # 港交所KEY
@@ -83,7 +84,7 @@ class Crawler():
         transaction["stock_key"] = self.gen_stock_key(HKEX_EXCHAGE_KEY, stock_code)
 
         # 交易日期(YYYYMMDD)
-        transaction_timestamp = int(data[HKEX_TRANSACTION_TIMESTAMP])/1000
+        transaction_timestamp = int(data["timestamp"])
         transaction_date = time.localtime(transaction_timestamp)
 
         transaction["date"] = self.gen_date(
@@ -92,58 +93,68 @@ class Crawler():
                 transaction_date.tm_mday)
 
         # 开盘价
-        if data[HKEX_TRANSACTION_OPEN_PRICE] is None:
+        if data["open_price"] is None:
+            logging.error("Open price is none! date:%s stock_code:%s open_price:%f",
+                          transaction["date"], stock_code, transaction["open_price"])
             return None
 
-        transaction["open_price"] = float(data[HKEX_TRANSACTION_OPEN_PRICE])
-        if transaction["open_price"] <= 0:
-            logging.error("Open price is invalid! stock_code:%s open_price:%f", stock_code, transaction["open_price"])
-            return None
+        transaction["open_price"] = float(data["open_price"])
 
         # 收盘价
-        if data[HKEX_TRANSACTION_CLOSE_PRICE] is None:
+        if data["close_price"] is None:
+            logging.error("Close price is none! date:%s stock_code:%s close_price:%f",
+                          transaction["date"], stock_code, transaction["close_price"])
             return None
 
-        transaction["close_price"] = float(data[HKEX_TRANSACTION_CLOSE_PRICE])
-        if transaction["close_price"] <= 0:
-            logging.error("Close price is invalid! stock_code:%s close_price:%f", stock_code, transaction["close_price"])
-            return None
+        transaction["close_price"] = float(data["close_price"])
 
         # 最高价
-        if data[HKEX_TRANSACTION_TOP_PRICE] is None:
+        if data["top_price"] is None:
+            logging.error("Top price is none! date:%s stock_code:%s top_price:%f",
+                          transaction["date"], stock_code, transaction["top_price"])
             return None
 
-        transaction["top_price"] = float(data[HKEX_TRANSACTION_TOP_PRICE])
-        if transaction["top_price"] <= 0:
-            logging.error("Top price is invalid! stock_code:%s top_price:%f", stock_code, transaction["top_price"])
-            return None
+        transaction["top_price"] = float(data["top_price"])
 
         # 最低价
-        if data[HKEX_TRANSACTION_BOTTOM_PRICE] is None:
+        if data["bottom_price"] is None:
+            logging.error("Bottom price is none! date:%s stock_code:%s bottom_price:%f",
+                          transaction["date"], stock_code, transaction["bottom_price"])
             return None
 
-        transaction["bottom_price"] = float(data[HKEX_TRANSACTION_BOTTOM_PRICE])
-        if transaction["bottom_price"] <= 0:
-            logging.error("Bottom price is invalid! stock_code:%s bottom_price:%f", stock_code, transaction["bottom_price"])
-            return None
+        transaction["bottom_price"] = float(data["bottom_price"])
 
         # 交易量
-        if data[HKEX_TRANSACTION_VOLUME] is None:
+        if data["volume"] is None:
+            logging.error("Volume is none! date:%s stock_code:%s volume:%d",
+                          transaction["date"], stock_code, transaction["volume"])
             return None
 
-        transaction["volume"] = int(data[HKEX_TRANSACTION_VOLUME])
+        transaction["volume"] = int(data["volume"])
         if transaction["volume"] <= 0:
-            logging.error("Volume is invalid! stock_code:%s volume:%d", stock_code, transaction["volume"])
+            logging.error("Volume is none! date:%s stock_code:%s volume:%d",
+                          transaction["date"], stock_code, transaction["volume"])
             return None
 
         # 交易额
-        if data[HKEX_TRANSACTION_TURNOVER] is None:
+        if data["turnover"] is None:
+            logging.error("Turnover is invalid! date:%s stock_code:%s turnover:%f",
+                          transaction["date"], stock_code, transaction["turnover"])
             return None
 
-        transaction["turnover"] = float(data[HKEX_TRANSACTION_TURNOVER])
+        transaction["turnover"] = float(data["turnover"])
         if transaction["turnover"] <= 0:
-            logging.error("Turnover is invalid! stock_code:%s turnover:%f", stock_code, transaction["turnover"])
+            logging.error("Turnover is invalid! date:%s stock_code:%s turnover:%d",
+                          transaction["date"], stock_code, transaction["turnover"])
             return None
+
+        # 换手率
+        if data["turnover_ratio"] is None:
+            logging.error("Turnover ratio is none! date:%s stock_code:%s turnover_ratio:%f",
+                          transaction["date"], stock_code, transaction["turnover_ratio"])
+            return None
+
+        transaction["turnover_ratio"] = float(data["turnover_ratio"])
 
         # 创建时间
         curr_timestamp = int(time.time())
@@ -153,11 +164,16 @@ class Crawler():
 
         return transaction
 
-    def _crawl_transaction(self, stock_code):
+    def _crawl_transaction(self, stock_code, start_date):
         ''' 爬取指定股票交易信息 '''
 
         # 爬取交易数据
-        data_list = self.hkex.get_transaction(stock_code, HKEX_SPAN_DAY, HKEX_LASTEST_2YEAR)
+        data_list = self.hkex.get_kline(stock_code, start_date)
+        if data_list is None:
+            logging.error("Get hkex kline failed! stock_code:%s start_date:%s",
+                          stock_code, start_date)
+            return None
+
         print(data_list)
 
         # 遍历交易数据
@@ -173,13 +189,16 @@ class Crawler():
 
         return None
 
-    def crawl_transaction(self, stock_code):
-        ''' 爬取交易信息 '''
+    def crawl_transaction(self, stock_code, start_date):
+        ''' 爬取交易信息
+            @Param stock_code: 股票代码
+            @Param start_date: 开始日期. 格式: YYYY-MM-DD
+        '''
 
         # 判断是否爬取所有交易
         if str(stock_code) != "all":
             # 爬取指定股票交易
-            self._crawl_transaction(stock_code)
+            self._crawl_transaction(stock_code, start_date)
             return
 
         # 获取股票列表
@@ -198,4 +217,4 @@ class Crawler():
             logging.info("Crawl transaction data. stock_key:%s", stock_key)
 
             # 获取交易数据
-            self._crawl_transaction(stock_code)
+            self._crawl_transaction(stock_code, start_date)
