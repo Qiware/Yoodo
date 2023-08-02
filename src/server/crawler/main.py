@@ -8,7 +8,7 @@ import logging
 sys.path.append("./hkex")
 from crawler import *
 
-sys.path.append("../lib/log")
+sys.path.append("../../lib/repo/log")
 from log import *
 
 def usage():
@@ -25,7 +25,7 @@ if __name__ == "__main__":
         exit(-1)
 
     # 日志初始化
-    log_init("../../log/crawler.log")
+    log_init("../../../log/crawler.log")
 
     # 新建爬虫对象
     crawler = Crawler()

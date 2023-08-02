@@ -50,11 +50,15 @@ class Baidu():
 
         url =  KLINE_URL % (int(stock_code), start_date, ktype, group)
 
+        logging.debug("Get transaction. url:%s", url)
+
         # 发起拉取请求
         rsp = requests.get(url=url, headers=headers)
         if rsp is None:
             logging.error("Get transaction failed!")
             return dict()
+
+        logging.debug("Get transaction:%s", rsp.text)
 
         # 结果解析
         data = json.loads(rsp.text)
@@ -132,12 +136,11 @@ class Baidu():
 
             transaction["timestamp"] = int(values[index_timestamp]) # 时间戳
             transaction["open_price"] = float(values[index_open_price]) # 开盘价
-            transaction["close_price"] = float(values[index_open_price]) # 收盘价
+            transaction["close_price"] = float(values[index_close_price]) # 收盘价
             transaction["volume"] = int(values[index_volume]) # 交易量
             transaction["top_price"] = float(values[index_top_price]) # 最高价
             transaction["bottom_price"] = float(values[index_bottom_price]) # 最低价
             transaction["turnover"] = float(values[index_turnover]) # 交易额
-            #transaction["ratio"] = float(values[index_ratio]) # 涨跌率
             transaction["turnover_ratio"] = float(values[index_turnover_ratio]) # 换手率
 
             transaction_list.append(transaction)

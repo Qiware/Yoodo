@@ -10,7 +10,7 @@ import logging
 from hkex import *
 from const import *
 
-sys.path.append("../lib/database")
+sys.path.append("../../lib/repo/database")
 from database import *
 
 # 港交所KEY
@@ -168,7 +168,7 @@ class Crawler():
         ''' 爬取指定股票交易信息 '''
 
         # 爬取交易数据
-        data_list = self.hkex.get_kline(stock_code, start_date)
+        data_list = self.hkex.get_kline_from_hkex(stock_code, start_date)
         if data_list is None:
             logging.error("Get hkex kline failed! stock_code:%s start_date:%s",
                           stock_code, start_date)

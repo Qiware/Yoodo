@@ -28,6 +28,7 @@ HKEX_SPAN_WEEK = 7 # 按周维度
 HKEX_SPAN_MONTH = 8 # 按月维度
 
 # 获取交易数据(交易时间、开盘价、最高价、最低价、收盘价、交易量、交易额)
+# @Param span: 时间维度
 # @Param int: 时间间隔
 # @Param ric: 股票代码(如: 0700.HK)
 # @Param token: TOKEN
@@ -120,12 +121,106 @@ class HKEX():
             return dict()
         return data["quote"]
 
-    def get_kline(self, stock_code, start_time):
+    def get_kline_from_baidu(self, stock_code, start_time):
         ''' 获取交易K线数据: 开盘价、最高价、最低价、收盘价、交易量、交易额、换手率等
             @Param code: 股票代码
             @Param num: K线数量
         '''
         return self.baidu.get_kline(stock_code, start_time, KLINE_KTYPE_DAY, KLINE_GROUP_HKEX)
+
+
+    def get_kline_from_hkex(self, stock_code, start_time):
+        ''' 获取交易K线数据: 开盘价、最高价、最低价、收盘价、交易量、交易额等
+            @Param code: 股票代码
+            @Param num: K线数量
+        '''
+
+        days=HKEX_LASTEST_2YEAR
+
+        # 准备请求参数
+        headers = { 'Content-Type' : 'application/json' }
+
+        timestamp = int(time.time() * 1000)
+
+        url =  HKEX_GET_CHART_DATA2_URL % (HKEX_SPAN_DAY, days, int(stock_code), self.token, timestamp, timestamp, timestamp)
+
+        # 发起拉取请求
+        rsp = requests.get(url=url, headers=headers)
+        if rsp is None:
+            logging.error("Get transaction failed!")
+            return dict()
+
+        # 结果解析
+        data = self.parse(rsp.text)
+        if "data" not in data.keys():
+            logging.error("No 'data' field!")
+            return dict()
+        data = data["data"]
+        if "responsecode" not in data.keys():
+            logging.error("No 'responsecode' field!")
+            return dict()
+        if data["responsecode"] != HKEX_RESPONE_CODE_OK:
+            logging.error("'responsecode' is invalid!")
+            return dict()
+        if ("datalist" not in data.keys()) or (not isinstance(data["datalist"], list)):
+            logging.error("No 'datalist' field or invalid.")
+            return dict()
+        return self.parse_kline_from_hkex(data["datalist"])
+
+    def parse_kline_from_hkex(self, data_list):
+        ''' 解析从HKEX获取的KLINE数据 '''
+        transaction_list = list()
+
+        index_timestamp = 0 # 时间戳(单位: 毫秒)
+        index_open_price = 1 # 开盘价
+        index_top_price = 2 # 最高价
+        index_bottom_price = 3 # 最低价
+        index_close_price = 4 # 收盘价
+        index_volume = 5 # 交易量
+        index_turnover = 6 # 交易额
+
+        for data in data_list:
+            transaction = dict()
+
+            # 时间戳
+            transaction["timestamp"] = int(data[index_timestamp] / 1000)
+
+            # 开盘价
+            if data[index_open_price] is None:
+                continue
+            transaction["open_price"] = float(data[index_open_price])
+
+            # 最高价
+            if data[index_top_price] is None:
+                continue
+            transaction["top_price"] = float(data[index_top_price])
+
+            # 最低价
+            if data[index_bottom_price] is None:
+                continue
+            transaction["bottom_price"] = float(data[index_bottom_price])
+
+            # 收盘价
+            if data[index_close_price] is None:
+                continue
+            transaction["close_price"] = float(data[index_close_price])
+
+            # 交易量
+            if data[index_volume] is None:
+                continue
+            transaction["volume"] = float(data[index_volume])
+
+            # 交易额
+            if data[index_turnover] is None:
+                continue
+            transaction["turnover"] = float(data[index_turnover])
+
+            # 换手率
+            transaction["turnover_ratio"] = 0
+
+            transaction_list.append(transaction)
+
+        return transaction_list
 
 if __name__ == "__main__":
     hkex = HKEX()
