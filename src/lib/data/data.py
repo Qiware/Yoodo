@@ -6,9 +6,9 @@ import time
 import joblib
 import logging
 
-sys.path.append("../lib/log")
+sys.path.append("../../lib/repo/log")
 from log import *
-sys.path.append("../lib/database")
+sys.path.append("../../lib/repo/database")
 from database import *
 
 # 拉取训练交易数据条目
@@ -38,7 +38,7 @@ class Data():
 
     def gen_train_data_fpath(self, date, days):
         ''' 生成训练数据的路径 '''
-        return "./data/%s-%ddays.dat" % (str(date), int(days))
+        return "../../../data/train/%s-%ddays.dat" % (str(date), int(days))
 
     def group_transaction_by_days(self, transaction_list, days):
         ''' 交易数据间隔days分组 '''
@@ -323,20 +323,3 @@ class Data():
 
         # 更新预测结果
         self.database.update_predict_real(data)
-
-if __name__ == "__main__":
-    # 提取参数
-    action = sys.argv[1]
-    date = sys.argv[2]
-    days = int(sys.argv[3])
-
-    # 初始化日志
-    log_init("../../log/trainer.log"+str(date)+"-"+str(days))
-
-    trainer = Trainer()
-    if action == "update":
-        print("Update model. date:%s days:%s" % (date, days))
-        trainer.update(date, days)
-    elif action == "rebuild":
-        print("Rebuild model. date:%s days:%s" % (date, days))
-        trainer.rebuild(date, days)

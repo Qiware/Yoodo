@@ -57,7 +57,7 @@ class Model():
 
     def _gen_model_fpath(self, days):
         ''' 生成预测模型的路径 '''
-        return "./model/%ddays.mod" % (int(days))
+        return "../../../model/%ddays.mod" % (int(days))
 
     def _load(self):
         ''' 加载预测模型 '''

@@ -14,10 +14,13 @@ from sklearn.linear_model import LinearRegression
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import train_test_split
 
-sys.path.append("../lib/log")
+sys.path.append("../../lib/log")
 from log import *
 
+sys.path.append("../../lib/data")
 from data import Data
+
+sys.path.append("../../lib/model")
 from model import Model
 
 # 拉取训练交易数据条目
@@ -60,16 +63,3 @@ class Predicter():
             self.data.update_predict(stock_key, date, days, float(ratio[0]))
         
         return None
-
-if __name__ == "__main__":
-
-    date = int(sys.argv[1])
-    days = int(sys.argv[2])
-
-    log_init("../../log/predicter.log" + str(date) + "-" + str(days))
-
-    # 新建对象
-    pred = Predicter()
-
-    # 结果预测
-    pred.predict(date, days)

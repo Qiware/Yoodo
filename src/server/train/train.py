@@ -8,10 +8,13 @@ import logging
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-sys.path.append("../lib/log")
+sys.path.append("../../lib/repo/log")
 from log import *
 
+sys.path.append("../../lib/data")
 from data import Data
+
+sys.path.append("../../lib/model")
 from model import Model
 
 # 拉取训练交易数据条目
