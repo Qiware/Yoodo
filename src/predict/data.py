@@ -29,7 +29,12 @@ class Data():
             @Param start_val: 开始值
             @Param end_val: 结束值
         '''
-        return (end_val - start_val) / start_val * 100
+        diff = (end_val - start_val)
+        if diff == 0:
+            return 0
+        if (start_val == 0):
+            return 100
+        return  diff / start_val * 100
 
     def gen_train_data_fpath(self, date, days):
         ''' 生成训练数据的路径 '''
