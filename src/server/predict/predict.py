@@ -23,6 +23,10 @@ from data import Data
 sys.path.append("../../lib/model")
 from model import Model
 
+
+sys.path.append("../../lib/repo/dtime")
+from dtime import *
+
 # 拉取训练交易数据条目
 GET_TRANSACTION_NUM = 1000
 
@@ -62,4 +66,52 @@ class Predicter():
             # 更新预测结果
             self.data.update_predict(stock_key, date, days, float(ratio[0]))
         
+        return None
+
+    def evaluate(self, date, days):
+        ''' 评估预测结果
+            @Param date: 被预测日期
+            @Param days: 预测周期
+        '''
+
+        if days == 0:
+            logging.error("Parameter 'days' invalid! days:%d", days)
+            return None
+
+        # 获取股票列表
+        stock_list = self.data.get_all_stock()
+        for stock in stock_list:
+            stock_key = stock["key"]
+
+            print("Evaluate predict. stock_key:%s date:%s days:%s" %(stock_key, date, days))
+
+            # 获取股票最近的(days + 1)条记录
+            transaction_list = self.data.get_transaction_list(
+                    stock_key, date, days+1)
+            if (transaction_list is None):
+                logging.error("Get transaction list failed! stock_key:%s date:%s days:%d",
+                              stock_key, date, days)
+                continue
+            elif len(transaction_list) < (days+1):
+                logging.error("Get transaction list not enough! stock_key:%s date:%s days:%d",
+                              stock_key, date, days)
+                continue
+
+            # 计算实际涨幅数据
+            base = transaction_list[days] # 基准交易
+            lastest = transaction_list[0] # 被预测日期最后一条交易
+
+            real_price = lastest["close_price"]
+            real_ratio = (lastest["close_price"] - base["close_price"]) / base["close_price"] * 100
+
+            # 更新数据库
+            start_date = int(base["date"])
+            start_timestamp = date_to_timestamp(base["date"])
+            end_date = int(transaction_list[days-1]["date"])
+
+            timestamp = start_timestamp
+            while(timestamp < end_timestamp):
+                self.data.update_predict_real(stock_key, date, days, real_price, real_ratio)
+                timestamp += 86400
+
         return None

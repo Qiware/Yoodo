@@ -23,6 +23,9 @@ GET_TRANSACTION_MAX_NUM = 1000
 # 单条训练样本拥有的交易数据条目
 TRAIN_DATA_TRANSACTION_NUM = 30
 
+# 训练分组数
+TRAIN_GROUP_NUM = 100
+
 # 股票预测
 class Trainer():
     def __init__(self):
@@ -41,7 +44,24 @@ class Trainer():
         # 新建模型
         model = Model(days, is_rebuild)
 
-        model.fit(feature_train, target_train) # 训练
+        feature_num = int(len(feature_train) / TRAIN_GROUP_NUM)
+
+        group_index = 0
+        while(True):
+            # 计算偏移量
+            begin = group_index * feature_num
+            if begin >= len(feature_train):
+                break
+            end = (group_index + 1) * feature_num
+
+            print("Train processing %f ..." % (group_index+1))
+
+            # 训练模型
+            if end <= len(feature_train):
+                model.fit(feature_train[begin:end], target_train[begin:end]) # 训练
+            else:
+                model.fit(feature_train[begin:], target_train[begin:]) # 训练
+            group_index += 1
 
         model.dump() # 固化模型
 
