@@ -21,3 +21,11 @@ def date_to_timestamp(date):
     ta = time.strptime(dt, "%Y-%m-%d %H:%M:%S")
 
     return int(time.mktime(ta))
+
+def timestamp_to_date(timestamp):
+    ''' 将时间戳转为日期. 格式:YYYYMMDD '''
+    lt = time.localtime(timestamp)
+
+    return "%04d%02d%02d" % (lt.tm_year, lt.tm_mon, lt.tm_mday)
+
+

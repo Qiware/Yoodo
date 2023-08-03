@@ -56,6 +56,7 @@ class Crawler():
         stock["name"] = str(data["name"]) # 股票名称
         stock["total"] = int(data["total"]) # 总股本数量
         stock["market_cap"] = float(data["market_cap"]) # 总市值
+        stock["product_type"] = data["product_type"] # 产品类型
 
         timestamp = int(time.time())
         stock["create_time"] = time.localtime(timestamp)
@@ -64,10 +65,10 @@ class Crawler():
         # 更新股票信息
         return self.database.set_stock(stock)
 
-    def crawl_stock(self):
+    def crawl_stock(self, start=HKEX_STOCK_CODE_MIN, end=HKEX_STOCK_CODE_MAX):
         ''' 爬取全部股票信息 '''
-        stock_code = HKEX_STOCK_CODE_MIN
-        while (stock_code <= HKEX_STOCK_CODE_MAX):
+        stock_code = int(start)
+        while (stock_code <= int(end)):
             print("Crawl stock data. stock_code:%s" % (stock_code))
             # 爬取股票数据
             self._crawl_stock(stock_code)

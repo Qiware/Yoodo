@@ -135,6 +135,7 @@ class HKEX():
         data["name"] = str(resp["nm"]) # 股票名称
         data["total"] = str_to_digit(resp["amt_os"]) # 总股本数量
         data["market_cap"] = str_with_unit_to_digit(resp["mkt_cap"], resp["mkt_cap_u"])  # 总市值
+        data["product_type"] = resp["product_type"].upper()  # 产品类型
 
         return data
 

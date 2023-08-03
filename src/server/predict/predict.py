@@ -52,9 +52,10 @@ class Predicter():
             stock_key = stock["stock_key"]
 
             # 加载特征数据
-            feature = self.data.load_feature(stock_key, date, days)
+            base_date, feature = self.data.load_feature(stock_key, date, days)
             if feature is None:
-                logging.info("Load feature failed! stock_key:%s date:%s days:%d", stock_key, date, days)
+                logging.error("Load feature failed! stock_key:%s date:%s days:%d",
+                             stock_key, date, days)
                 continue
 
             # 进行结果预测
@@ -64,7 +65,7 @@ class Predicter():
             logging.info("predict: %s %s %s %s %s", stock_key, date, days, ratio[0], stock["name"])
 
             # 更新预测结果
-            self.data.update_predict(stock_key, date, days, float(ratio[0]))
+            self.data.update_predict(stock_key, date, days, base_date, float(ratio[0]))
         
         return None
 
@@ -104,15 +105,10 @@ class Predicter():
             real_price = lastest["close_price"]
             real_ratio = (lastest["close_price"] - base["close_price"]) / base["close_price"] * 100
 
-            # 更新数据库
-            start_date = int(base["date"])
-            start_timestamp = date_to_timestamp(start_date)
-            end_date = int(transaction_list[days-1]["date"])
-            end_timestamp = date_to_timestamp(end_date)
+            print("Evaluate predict. stock_key:%s date:%s days:%s base_date:%s" %(stock_key, date, days, base["date"]))
 
-            timestamp = start_timestamp
-            while(timestamp < end_timestamp):
-                self.data.update_predict_real(stock_key, date, days, real_price, real_ratio)
-                timestamp += 86400
+            # 更新数据库
+            self.data.update_predict_real(
+                    stock_key, base["date"], days, real_price, real_ratio)
 
         return None

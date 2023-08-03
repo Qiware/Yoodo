@@ -33,7 +33,7 @@ if __name__ == "__main__":
     func = sys.argv[1]
     if func == "stock":
         # 爬取股票信息
-        crawler.crawl_stock()
+        crawler.crawl_stock(sys.argv[2])
     elif func == "transaction":
         # 爬取交易信息
         if len(sys.argv) != 4:

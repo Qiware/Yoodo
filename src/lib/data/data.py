@@ -266,6 +266,12 @@ class Data():
         # 查询所需数据
         transaction_list = self.database.get_transaction_list(
                 stock_key, date, TRAIN_DATA_TRANSACTION_NUM*(days+1))
+        if transaction_list is None:
+            logging.error("Get transaction list failed! stock_key:%s date:%s days:%s",
+                          stock_key, date, days)
+            return date, None
+
+        lastest = transaction_list[0]
 
         # 交易数据聚合分组
         transaction_group = self.group_transaction_by_days(transaction_list, days)
@@ -275,11 +281,11 @@ class Data():
         if item is None:
             logging.error("Generate feature by transaction list failed! stock_key:%s transaction_list:%d",
                           stock_key, len(transaction_list))
-            return None
+            return date, None
 
         feature.append(item)
 
-        return feature
+        return lastest["date"], feature
 
     def get_all_stock(self):
         ''' 获取所有股票  '''
@@ -289,20 +295,33 @@ class Data():
         ''' 获取优质股票  '''
         return self.database.get_good_stock()
 
-    def update_predict(self, stock_key, date, days, ratio):
-        ''' 更新预测数据 '''
+    def update_predict(self, stock_key, date, days, base_date, ratio):
+        ''' 更新预测数据
+            @Param date: 评估时间
+            @Param days: 评估周期
+            @Param base_date: 基于哪天的数据
+            @Param ratio: 预估涨幅
+        '''
 
         # 获取基准价格
-        base_price = float(0)
         transaction_list = self.database.get_transaction_list(stock_key, date, 1)
-        if len(transaction_list) != 0:
-            base_price = transaction_list[0]["close_price"]
+        if len(transaction_list) == 0:
+            logging.error("Get transaction list failed! stock_key:%s date:%s",
+                          stock_key, date)
+            return
+        if base_date != transaction_list[0]["date"]:
+            logging.error("Data was updated! stock_key:%s date:%s",
+                          stock_key, date)
+            return
+
+        base_price = transaction_list[0]["close_price"]
 
         # 准备数据
         data = dict()
         data["stock_key"] = stock_key
         data["date"] = date
         data["days"] = int(days)
+        data["base_date"] = base_date
         data["base_price"] = base_price
         data["pred_price"] = base_price + base_price*(ratio/100)
         data["pred_ratio"] = ratio
@@ -314,13 +333,13 @@ class Data():
         # 更新预测结果
         self.database.set_predict(data)
 
-    def update_predict_real(self, stock_key, date, days, real_price, real_ratio):
+    def update_predict_real(self, stock_key, base_date, days, real_price, real_ratio):
         ''' 更新预测数据中的真实数据 '''
 
         # 准备数据
         data = dict()
         data["stock_key"] = stock_key
-        data["date"] = date
+        data["base_date"] = base_date
         data["days"] = int(days)
         data["real_price"] = real_price
         data["real_ratio"] = real_ratio

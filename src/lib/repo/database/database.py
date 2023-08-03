@@ -361,20 +361,21 @@ class Database():
 
         logging.debug("Call _add_predict(). data:%s", data)
 
+        # 生成SQL语句
+        sql, conditions = self.gen_insert_sql("t_predict", data)
+
+        logging.debug("sql:%s conditions:%s", sql, conditions)
+
+        # 执行SQL语句
         cursor = self.mysql.cursor()
 
-        sql = f'INSERT INTO t_predict(stock_key, date, days, \
-                        base_price, pred_price, pred_ratio, create_time, update_time) \
-                    VALUES(%s,%s,%s,%s,%s,%s,%s,%s)'
-
-        cursor.execute(sql, (data["stock_key"], data["date"],
-                             data["days"], data["base_price"],
-                             data["pred_price"], data["pred_ratio"],
-                             data["create_time"], data["update_time"]))
+        execute = cursor.execute(sql, conditions)
 
         self.mysql.commit()
 
         cursor.close()
+
+        return None
 
     def _update_predict(self, data):
         ''' 更新预测数据 '''
@@ -383,13 +384,14 @@ class Database():
 
         cursor = self.mysql.cursor()
 
-        sql = f'UPDATE t_predict SET base_price=%s, \
-                        pred_price=%s,pred_ratio=%s,update_time=%s \
-                    WHERE stock_key=%s AND date=%s AND days=%s'
+        sql = f'UPDATE t_predict SET base_date=%s, base_price=%s, \
+                    pred_price=%s,pred_ratio=%s,update_time=%s \
+                WHERE stock_key=%s AND date=%s AND days=%s'
 
-        cursor.execute(sql, (data["base_price"], data["pred_price"],
-                             data["pred_ratio"], data["update_time"],
-                             data["stock_key"], data["date"], data["days"]))
+        cursor.execute(sql, (data["base_date"], data["base_price"],
+                             data["pred_price"], data["pred_ratio"],
+                             data["update_time"], data["stock_key"],
+                             data["date"], data["days"]))
 
         self.mysql.commit()
 
@@ -404,17 +406,15 @@ class Database():
 
         sql = f'UPDATE t_predict SET real_price=%s, \
                         real_ratio=%s,update_time=%s \
-                    WHERE stock_key=%s AND date=%s AND days=%s'
+                    WHERE stock_key=%s AND base_date=%s AND days=%s'
 
         cursor.execute(sql, (data["real_price"],
                              data["real_ratio"], data["update_time"],
-                             data["stock_key"], data["date"], data["days"]))
+                             data["stock_key"], data["base_date"], data["days"]))
 
         self.mysql.commit()
 
         cursor.close()
-
-
 
     def set_predict(self, data):
         ''' 设置预测数据
