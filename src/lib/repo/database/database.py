@@ -47,7 +47,7 @@ class Database():
 
         logging.debug("Set stock. data:%s", data)
 
-        old_data = self.get_stock(data["key"])
+        old_data = self.get_stock(data["stock_key"])
         if old_data is None:
             return self._add_stock(data)
         return self._update_stock(data)
@@ -60,7 +60,7 @@ class Database():
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_stock", data)
 
-        logging.debug("sql: %s", sql)
+        logging.debug("sql:%s conditions:%s", sql, conditions)
 
         # 执行SQL语句
         cursor = self.mysql.cursor()
@@ -85,18 +85,18 @@ class Database():
         conditions = list()
 
         for key in data.keys():
-            if (key == "key"):
+            if (key == "stock_key"):
                 continue
             if index != 0:
                 sql += ","
             sql += key+"=%s"
             conditions.append(data[key])
             index += 1
-        sql += " WHERE `key`=%s"
+        sql += " WHERE stock_key=%s"
 
         logging.debug("sql: %s", sql)
 
-        conditions.append(data["key"])
+        conditions.append(data["stock_key"])
 
         # 执行SQL语句
         cursor = self.mysql.cursor()
@@ -232,7 +232,9 @@ class Database():
         # 查询股票列表
         cursor = self.mysql.cursor()
 
-        sql = f'SELECT `key`, name, total, market_cap FROM t_stock WHERE `key`=%s'
+        sql = f'SELECT stock_key, name, total, market_cap \
+                FROM t_stock \
+                WHERE stock_key=%s'
 
         cursor.execute(sql, (stock_key))
 
@@ -246,7 +248,7 @@ class Database():
 
         # 数据整合处理
         data = dict()
-        data["key"] = item[0]
+        data["stock_key"] = item[0]
         data["name"] = item[1]
         data["total"] = item[2]
         data["market_cap"] = item[3]
@@ -259,7 +261,7 @@ class Database():
         # 查询股票列表
         cursor = self.mysql.cursor()
 
-        sql = f'SELECT `key`, name, total, market_cap FROM t_stock'
+        sql = f'SELECT stock_key, name, total, market_cap FROM t_stock'
 
         cursor.execute(sql)
 
@@ -272,7 +274,7 @@ class Database():
 
         for item in items:
             data = dict()
-            data["key"] = item[0] # 股票KEY
+            data["stock_key"] = item[0] # 股票KEY
             data["name"] = item[1] # 企业名称
             data["total"] = item[2] # 总股本数
             data["market_cap"] = item[3] # 总市值
@@ -287,7 +289,9 @@ class Database():
         # 查询股票列表
         cursor = self.mysql.cursor()
 
-        sql = f'SELECT `key`, name, total, market_cap FROM t_stock WHERE market_cap>=%s'
+        sql = f'SELECT stock_key, name, total, market_cap \
+                FROM t_stock \
+                WHERE market_cap>=%s'
 
         cursor.execute(sql, (STOCK_GOOD_MARKET_CAP))
 
@@ -300,7 +304,7 @@ class Database():
 
         for item in items:
             data = dict()
-            data["key"] = item[0] # 股票KEY
+            data["stock_key"] = item[0] # 股票KEY
             data["name"] = item[1] # 企业名称
             data["total"] = item[2] # 总股本数
             data["market_cap"] = item[3] # 总市值

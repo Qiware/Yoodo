@@ -93,7 +93,7 @@ class Data():
         # 获取股票列表
         stock_list = self.database.get_good_stock()
         for stock in stock_list:
-            stock_key = stock["key"]
+            stock_key = stock["stock_key"]
 
             # 拉取交易数据
             transaction_list = self.database.get_transaction_list(stock_key, date, num)

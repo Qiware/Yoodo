@@ -52,7 +52,7 @@ class Crawler():
 
         # 提取有效信息
         stock = dict()
-        stock["key"] = self.gen_stock_key(HKEX_EXCHAGE_KEY, data["stock_code"]) # 股票KEY
+        stock["stock_key"] = self.gen_stock_key(HKEX_EXCHAGE_KEY, data["stock_code"]) # 股票KEY
         stock["name"] = str(data["name"]) # 股票名称
         stock["total"] = int(data["total"]) # 总股本数量
         stock["market_cap"] = float(data["market_cap"]) # 总市值
@@ -69,6 +69,9 @@ class Crawler():
         stock_code = HKEX_STOCK_CODE_MIN
         while (stock_code <= HKEX_STOCK_CODE_MAX):
             print("Crawl stock data. stock_code:%s" % (stock_code))
+            if stock_code < 2138:
+                stock_code += 1
+                continue
             # 爬取股票数据
             self._crawl_stock(stock_code)
 
@@ -181,8 +184,6 @@ class Crawler():
                           stock_code, start_date)
             return None
 
-        print(data_list)
-
         # 遍历交易数据
         for data in data_list:
             # 提取交易信息
@@ -226,7 +227,7 @@ class Crawler():
         # 获取交易数据
         for stock in stock_list:
             # 获取股票代码
-            stock_key = stock["key"].split(":")
+            stock_key = stock["stock_key"].split(":")
             exchange = stock_key[0]
             stock_code = int(stock_key[1])
 

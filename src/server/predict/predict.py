@@ -49,7 +49,7 @@ class Predicter():
         # 获取股票列表
         stock_list = self.data.get_good_stock()
         for stock in stock_list:
-            stock_key = stock["key"]
+            stock_key = stock["stock_key"]
 
             # 加载特征数据
             feature = self.data.load_feature(stock_key, date, days)
@@ -81,7 +81,7 @@ class Predicter():
         # 获取股票列表
         stock_list = self.data.get_good_stock()
         for stock in stock_list:
-            stock_key = stock["key"]
+            stock_key = stock["stock_key"]
 
             print("Evaluate predict. stock_key:%s date:%s days:%s" %(stock_key, date, days))
 
