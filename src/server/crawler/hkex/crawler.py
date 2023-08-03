@@ -44,27 +44,25 @@ class Crawler():
     def _crawl_stock(self, stock_code):
         ''' 爬取指定股票信息 '''
 
-        try:
-            # 爬取股票数据
-            data = self.hkex.get_stock(stock_code)
-            if len(data) == 0:
-                logging.error("Get stock data failed! stock_code:%s", stock_code)
-                return None
+        # 爬取股票数据
+        data = self.hkex.get_stock(stock_code)
+        if len(data) == 0:
+            logging.error("Get stock data failed! stock_code:%s", stock_code)
+            return None
 
-            # 提取有效信息
-            stock = dict()
-            stock["key"] = self.gen_stock_key(HKEX_EXCHAGE_KEY, data["sym"])
-            stock["name"] = str(data["nm"])
+        # 提取有效信息
+        stock = dict()
+        stock["key"] = self.gen_stock_key(HKEX_EXCHAGE_KEY, data["stock_code"]) # 股票KEY
+        stock["name"] = str(data["name"]) # 股票名称
+        stock["total"] = int(data["total"]) # 总股本数量
+        stock["market_cap"] = float(data["market_cap"]) # 总市值
 
-            timestamp = int(time.time())
-            stock["create_time"] = time.localtime(timestamp)
-            stock["update_time"] = time.localtime(timestamp)
+        timestamp = int(time.time())
+        stock["create_time"] = time.localtime(timestamp)
+        stock["update_time"] = time.localtime(timestamp)
 
-            # 更新股票信息
-            return self.database.set_stock(stock)
-        except Exception as e:
-            logging.error("Crawl stock failed! stock_code:%d errmsg:%s", stock_code, e)
-            return e
+        # 更新股票信息
+        return self.database.set_stock(stock)
 
     def crawl_stock(self):
         ''' 爬取全部股票信息 '''

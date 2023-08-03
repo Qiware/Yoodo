@@ -2,6 +2,7 @@
 
 # 爬取港交所数据
 
+import sys
 import json
 import logging
 import time
@@ -10,6 +11,9 @@ import requests	# pip3 install requests
 
 from const import *
 from baidu import *
+
+sys.path.append("../../lib/repo/digit")
+from digit import *
 
 # 获取多久的数据
 HKEX_LASTEST_TODAY = 1 # 获取最近今天的数据(时)
@@ -108,7 +112,7 @@ class HKEX():
         if rsp is None:
             return dict()
 
-        # 结果解析
+        # 结果校验
         data = self.parse(rsp.text)
         if "data" not in data.keys():
             return dict()
@@ -119,7 +123,20 @@ class HKEX():
             return dict()
         if "quote" not in data.keys():
             return dict()
-        return data["quote"]
+
+        # 结果解析
+        return self.parse_stock_resp(data["quote"])
+
+    def parse_stock_resp(self, resp):
+        ''' 解析股票信息 '''
+        data = dict()
+
+        data["stock_code"] = resp["sym"] # 股票代码
+        data["name"] = str(resp["nm"]) # 股票名称
+        data["total"] = str_to_digit(resp["amt_os"]) # 总股本数量
+        data["market_cap"] = str_with_unit_to_digit(resp["mkt_cap"], resp["mkt_cap_u"])  # 总市值
+
+        return data
 
     def get_kline_from_baidu(self, stock_code, start_time):
         ''' 获取交易K线数据: 开盘价、最高价、最低价、收盘价、交易量、交易额、换手率等

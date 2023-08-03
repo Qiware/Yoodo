@@ -46,6 +46,8 @@ class Trainer():
 
         feature_num = int(len(feature_train) / TRAIN_GROUP_NUM)
 
+        print("Train processing ...")
+
         group_index = 0
         while(True):
             # 计算偏移量
@@ -54,13 +56,13 @@ class Trainer():
                 break
             end = (group_index + 1) * feature_num
 
-            print("Train processing %f ..." % (group_index+1))
-
             # 训练模型
             if end <= len(feature_train):
                 model.fit(feature_train[begin:end], target_train[begin:end]) # 训练
+                print("Train processing %f ..." % end/len(feature_train))
             else:
                 model.fit(feature_train[begin:], target_train[begin:]) # 训练
+                print("Train processing 100...")
             group_index += 1
 
         model.dump() # 固化模型

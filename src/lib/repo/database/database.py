@@ -11,31 +11,10 @@ class Database():
         ''' 初始化 '''
         self.mysql = pymysql.connect(host="localhost", port=3306, user="root", password="", db="exchange", charset="utf8")
 
-    def set_stock(self, data):
-        ''' 更新股票基础信息: 股票代码、企业名称等
-            @Param data: 股票基础信息(dict类型)
-        '''
+    def gen_insert_sql(self, table, data):
+        ''' 生成SQL INSERT语句 '''
 
-        cursor = self.mysql.cursor()
-
-        sql = f'INSERT INTO t_stock(`key`, name, create_time, update_time) \
-                    VALUES(%s, %s, %s, %s)'
-
-        cursor.execute(sql, (data["key"], data["name"], data["create_time"], data["update_time"]))
-
-        self.mysql.commit()
-
-        cursor.close()
-
-        return None
-
-    def _add_transaction(self, data):
-        ''' 新增交易数据 '''
-
-        logging.debug("Call _add_transaction(). data:%s", data)
-
-        # 生成SQL语句
-        sql = f'INSERT INTO t_transaction('
+        sql = "INSERT INTO " + table + "("
 
         conditions = list()
 
@@ -56,11 +35,90 @@ class Database():
             index += 1
         sql += ")"
 
+        return sql, tuple(conditions)
+
+    def set_stock(self, data):
+        ''' 更新股票基础信息: 股票代码、企业名称等
+            @Param data: 股票基础信息(dict类型)
+        '''
+
+        logging.debug("Set stock. data:%s", data)
+
+        old_data = self.get_stock(data["key"])
+        if old_data is None:
+            return self._add_stock(data)
+        return self._update_stock(data)
+
+    def _add_stock(self, data):
+        ''' 新增股票数据 '''
+
+        logging.debug("Call _add_stock(). data:%s", data)
+
+        # 生成SQL语句
+        sql, conditions = self.gen_insert_sql("t_stock", data)
+
         logging.debug("sql: %s", sql)
 
+        # 执行SQL语句
         cursor = self.mysql.cursor()
 
-        execute = cursor.execute(sql, tuple(conditions))
+        execute = cursor.execute(sql, conditions)
+
+        self.mysql.commit()
+
+        cursor.close()
+
+        return None
+
+    def _update_stock(self, data):
+        ''' 更新股票数据 '''
+
+        logging.debug("Call _update_stock(). data:%s", data)
+
+        # 生成SQL语句
+        sql = f'UPDATE t_stock SET '
+
+        index = 0
+        conditions = list()
+
+        for key in data.keys():
+            if (key == "key"):
+                continue
+            if index != 0:
+                sql += ","
+            sql += key+"=%s"
+            conditions.append(data[key])
+            index += 1
+        sql += " WHERE `key`=%s"
+
+        logging.debug("sql: %s", sql)
+
+        conditions.append(data["key"])
+
+        # 执行SQL语句
+        cursor = self.mysql.cursor()
+
+        cursor.execute(sql, tuple(conditions))
+
+        self.mysql.commit()
+
+        cursor.close()
+
+
+    def _add_transaction(self, data):
+        ''' 新增交易数据 '''
+
+        logging.debug("Call _add_transaction(). data:%s", data)
+
+        # 生成SQL语句
+        sql, conditions = self.gen_insert_sql("t_transaction", data)
+
+        logging.debug("sql: %s", sql)
+
+        # 执行SQL语句
+        cursor = self.mysql.cursor()
+
+        execute = cursor.execute(sql, conditions)
 
         self.mysql.commit()
 
@@ -162,6 +220,33 @@ class Database():
         data["ma20_volume"] = float(item[14])
 
         return data
+
+    def get_stock(self, stock_key):
+        ''' 获取指定股票信息
+            @Param stock_key: 股票KEY
+        '''
+
+        # 查询股票列表
+        cursor = self.mysql.cursor()
+
+        sql = f'SELECT `key`, name FROM t_stock WHERE `key`=%s'
+
+        cursor.execute(sql, (stock_key))
+
+        item = cursor.fetchone()
+
+        cursor.close()
+
+        if item is None:
+            logging.error("Get stock data failed! stock_key:%s", stock_key)
+            return None
+
+        # 数据整合处理
+        data = dict()
+        data["key"] = item[0]
+        data["name"] = item[1]
+        return data
+
 
     def get_all_stock(self):
         ''' 获取所有股票列表 '''
