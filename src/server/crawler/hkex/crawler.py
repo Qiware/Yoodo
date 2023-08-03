@@ -74,8 +74,12 @@ class Crawler():
 
             stock_code += 1
 
-    def gen_transaction(self, stock_code, data):
-        ''' 生成交易数据 '''
+    def gen_transaction(self, stock_code, stock_data, data):
+        ''' 生成交易数据
+            @Param stock_code: 股票代码
+            @Param stock_data: 股票信息
+            @Param data: 交易数据
+        '''
         transaction = dict()
 
         # 股票KEY
@@ -152,7 +156,12 @@ class Crawler():
                           transaction["date"], stock_code, transaction["turnover_ratio"])
             return None
 
-        transaction["turnover_ratio"] = float(data["turnover_ratio"])
+        if stock_data["total"] == 0:
+            logging.error("Total of stock is invalid! date:%s stock_code:%s turnover_ratio:%f",
+                          transaction["date"], stock_code, transaction["turnover_ratio"])
+            return None
+
+        transaction["turnover_ratio"] = transaction["turnover"] / stock_data["total"] * 100
 
         # 创建时间
         curr_timestamp = int(time.time())
@@ -162,7 +171,7 @@ class Crawler():
 
         return transaction
 
-    def _crawl_transaction(self, stock_code, start_date):
+    def _crawl_transaction(self, stock_code, stock_data, start_date):
         ''' 爬取指定股票交易信息 '''
 
         # 爬取交易数据
@@ -177,7 +186,7 @@ class Crawler():
         # 遍历交易数据
         for data in data_list:
             # 提取交易信息
-            transaction = self.gen_transaction(stock_code, data)
+            transaction = self.gen_transaction(stock_code, stock_data, data)
             if transaction is None:
                 logging.error("Gen transaction failed! stock_code:%s ", stock_code)
                 continue
@@ -195,8 +204,17 @@ class Crawler():
 
         # 判断是否爬取所有交易
         if str(stock_code) != "all":
+            # 获取指定股票信息
+            stock_key = self.gen_stock_key(HKEX_EXCHAGE_KEY, stock_code)
+
+            stock_data = self.database.get_stock(stock_key)
+            if stock_data is None:
+                logging.error("Get stock failed! stock_code:%s", stock_code)
+                return
+
             # 爬取指定股票交易
-            self._crawl_transaction(stock_code, start_date)
+            self._crawl_transaction(stock_code, stock_data, start_date)
+
             return
 
         # 获取股票列表
@@ -211,10 +229,8 @@ class Crawler():
             stock_key = stock["key"].split(":")
             exchange = stock_key[0]
             stock_code = int(stock_key[1])
-            if stock_code < 1953:
-                continue
 
             logging.info("Crawl transaction data. stock_key:%s", stock_key)
 
             # 获取交易数据
-            self._crawl_transaction(stock_code, start_date)
+            self._crawl_transaction(stock_code, stock, start_date)

@@ -91,7 +91,7 @@ class Data():
         fp = open(self.gen_train_data_fpath(date, days), "w")
 
         # 获取股票列表
-        stock_list = self.database.get_all_stock()
+        stock_list = self.database.get_good_stock()
         for stock in stock_list:
             stock_key = stock["key"]
 
@@ -281,6 +281,10 @@ class Data():
     def get_all_stock(self):
         ''' 获取所有股票  '''
         return self.database.get_all_stock()
+
+    def get_good_stock(self):
+        ''' 获取优质股票  '''
+        return self.database.get_good_stock()
 
     def update_predict(self, stock_key, date, days, ratio):
         ''' 更新预测数据 '''

@@ -5,6 +5,9 @@
 import logging
 import pymysql
 
+# 优质股票市值 >= 100亿
+STOCK_GOOD_MARKET_CAP = 10000000000
+
 # 数据库操作
 class Database():
     def __init__(self):
@@ -229,7 +232,7 @@ class Database():
         # 查询股票列表
         cursor = self.mysql.cursor()
 
-        sql = f'SELECT `key`, name FROM t_stock WHERE `key`=%s'
+        sql = f'SELECT `key`, name, total, market_cap FROM t_stock WHERE `key`=%s'
 
         cursor.execute(sql, (stock_key))
 
@@ -245,8 +248,10 @@ class Database():
         data = dict()
         data["key"] = item[0]
         data["name"] = item[1]
-        return data
+        data["total"] = item[2]
+        data["market_cap"] = item[3]
 
+        return data
 
     def get_all_stock(self):
         ''' 获取所有股票列表 '''
@@ -254,7 +259,7 @@ class Database():
         # 查询股票列表
         cursor = self.mysql.cursor()
 
-        sql = f'SELECT `key`, name FROM t_stock'
+        sql = f'SELECT `key`, name, total, market_cap FROM t_stock'
 
         cursor.execute(sql)
 
@@ -267,8 +272,38 @@ class Database():
 
         for item in items:
             data = dict()
-            data["key"] = item[0]
-            data["name"] = item[1]
+            data["key"] = item[0] # 股票KEY
+            data["name"] = item[1] # 企业名称
+            data["total"] = item[2] # 总股本数
+            data["market_cap"] = item[3] # 总市值
+            result.append(data)
+        return result
+
+    def get_good_stock(self):
+        ''' 获取优质股票列表
+            @Note: 市值超过100亿的股票, 则认为是优质股票.
+        '''
+
+        # 查询股票列表
+        cursor = self.mysql.cursor()
+
+        sql = f'SELECT `key`, name, total, market_cap FROM t_stock WHERE market_cap>=%s'
+
+        cursor.execute(sql, (STOCK_GOOD_MARKET_CAP))
+
+        items = cursor.fetchall()
+
+        cursor.close()
+
+        # 数据整合处理
+        result = list()
+
+        for item in items:
+            data = dict()
+            data["key"] = item[0] # 股票KEY
+            data["name"] = item[1] # 企业名称
+            data["total"] = item[2] # 总股本数
+            data["market_cap"] = item[3] # 总市值
             result.append(data)
         return result
 

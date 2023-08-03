@@ -47,7 +47,7 @@ class Predicter():
         model = Model(days)
 
         # 获取股票列表
-        stock_list = self.data.get_all_stock()
+        stock_list = self.data.get_good_stock()
         for stock in stock_list:
             stock_key = stock["key"]
 
@@ -79,7 +79,7 @@ class Predicter():
             return None
 
         # 获取股票列表
-        stock_list = self.data.get_all_stock()
+        stock_list = self.data.get_good_stock()
         for stock in stock_list:
             stock_key = stock["key"]
 

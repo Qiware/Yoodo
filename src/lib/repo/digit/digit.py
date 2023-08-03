@@ -9,7 +9,10 @@ def str_to_digit(s):
     ''' 将字符串转为数字
         @Param s: 数值串(如: 3,111.63)
     '''
-    return float(s.replace(",", ""))
+    s = s.replace(",", "")
+    if len(s) == 0:
+        return float(0)
+    return float(s)
 
 def str_with_unit_to_digit(s, unit):
     ''' 将金额转为数字

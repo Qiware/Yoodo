@@ -38,6 +38,7 @@ if __name__ == "__main__":
         # 爬取交易信息
         if len(sys.argv) != 4:
             print("Parameter is invalid!")
+            print("python3 main.py transaction 00001 20100101")
             exit(-1)
 
         stock_code = sys.argv[2] # 股票代码
