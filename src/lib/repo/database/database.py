@@ -34,25 +34,33 @@ class Database():
 
         logging.debug("Call _add_transaction(). data:%s", data)
 
+        # 生成SQL语句
+        sql = f'INSERT INTO t_transaction('
+
+        conditions = list()
+
+        index = 0
+        for key in data.keys():
+            if index != 0:
+                sql += ","
+            sql += key
+            conditions.append(data[key])
+            index += 1
+        sql += ") VALUES("
+
+        index = 0
+        for key in data.keys():
+            if index != 0:
+                sql += ","
+            sql += "%s"
+            index += 1
+        sql += ")"
+
+        logging.debug("sql: %s", sql)
+
         cursor = self.mysql.cursor()
 
-        sql = f'INSERT INTO t_transaction(stock_key, date, \
-                        open_price, close_price, top_price, \
-                        bottom_price, volume, turnover, turnover_ratio, \
-                        create_time, update_time) \
-                    VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-
-        execute = cursor.execute(sql, (data["stock_key"],
-                                       data["date"],
-                                       data["open_price"],
-                                       data["close_price"],
-                                       data["top_price"],
-                                       data["bottom_price"],
-                                       data["volume"],
-                                       data["turnover"],
-                                       data["turnover_ratio"],
-                                       data["create_time"],
-                                       data["update_time"]))
+        execute = cursor.execute(sql, tuple(conditions))
 
         self.mysql.commit()
 
@@ -65,27 +73,31 @@ class Database():
 
         logging.debug("Call _update_transaction(). data:%s", data)
 
+        # 生成SQL语句
+        sql = f'UPDATE t_transaction SET '
+
+        index = 0
+        conditions = list()
+
+        for key in data.keys():
+            if (key == "stock_key") or (key == "date"):
+                continue
+            if index != 0:
+                sql += ","
+            sql += key+"=%s"
+            conditions.append(data[key])
+            index += 1
+        sql += " WHERE stock_key=%s AND date=%s"
+
+        logging.debug("sql: %s", sql)
+
+        conditions.append(data["stock_key"])
+        conditions.append(data["date"])
+
+        # 执行SQL语句
         cursor = self.mysql.cursor()
 
-        sql = f'UPDATE t_transaction SET open_price=%s, \
-                        close_price=%s, \
-                        top_price=%s, \
-                        bottom_price=%s, \
-                        volume=%s, \
-                        turnover=%s, \
-                        turnover_ratio=%s, \
-                        update_time=%s \
-                    WHERE stock_key=%s AND date=%s'
-
-        cursor.execute(sql, (data["open_price"],
-                             data["close_price"],
-                             data["top_price"],
-                             data["bottom_price"],
-                             data["volume"],
-                             data["turnover"],
-                             data["turnover_ratio"],
-                             data["update_time"],
-                             data["stock_key"], data["date"]))
+        cursor.execute(sql, tuple(conditions))
 
         self.mysql.commit()
 
@@ -112,7 +124,10 @@ class Database():
         sql = f'SELECT stock_key, date, \
                     open_price, close_price, \
                     top_price, bottom_price, \
-                    volume, turnover \
+                    volume, turnover, turnover_ratio, \
+                    ma5_avg_price, ma5_volume,  \
+                    ma10_avg_price, ma10_volume,  \
+                    ma20_avg_price, ma20_volume  \
                 FROM t_transaction \
                 WHERE stock_key=%s AND date=%s'
 
@@ -138,6 +153,13 @@ class Database():
         data["bottom_price"] = float(item[5])
         data["volume"] = float(item[6])
         data["turnover"] = float(item[7])
+        data["turnover_ratio"] = float(item[8])
+        data["ma5_avg_price"] = float(item[9])
+        data["ma5_volume"] = float(item[10])
+        data["ma10_avg_price"] = float(item[11])
+        data["ma10_volume"] = float(item[12])
+        data["ma20_avg_price"] = float(item[13])
+        data["ma20_volume"] = float(item[14])
 
         return data
 

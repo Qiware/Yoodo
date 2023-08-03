@@ -13,7 +13,7 @@ from predict import *
 
 if __name__ == "__main__":
 
-    date = int(sys.argv[1])
+    date = sys.argv[1]
     days = int(sys.argv[2])
 
     log_init("../../../log/evalutor.log" + str(date) + "-" + str(days))

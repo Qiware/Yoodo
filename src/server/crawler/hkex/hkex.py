@@ -218,6 +218,15 @@ class HKEX():
             # 换手率
             transaction["turnover_ratio"] = 0
 
+            # 数据修正(只有收盘价大于0时)
+            if (transaction["open_price"] < 0) \
+                    and (transaction["top_price"] < 0) \
+                    and (transaction["bottom_price"] < 0) \
+                    and (transaction["close_price"] > 0):
+                    transaction["open_price"] = transaction["close_price"]
+                    transaction["top_price"] = transaction["close_price"]
+                    transaction["bottom_price"] = transaction["close_price"]
+
             transaction_list.append(transaction)
 
         return transaction_list

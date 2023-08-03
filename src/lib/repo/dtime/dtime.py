@@ -10,9 +10,11 @@ def date_to_timestamp(date):
         @Param date: 日期. 格式:YYYYMMDD
     '''
 
-    year = date[0:4]
-    month = date[4:6]
-    day = date[6:8]
+    date_str = str(date)
+
+    year = int(date_str[0:4])
+    month = int(date_str[4:6])
+    day = int(date_str[6:8])
 
     dt = "%04d-%02d-%02d 00:00:00" % (year, month, day)
 

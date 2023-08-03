@@ -213,6 +213,8 @@ class Crawler():
             stock_key = stock["key"].split(":")
             exchange = stock_key[0]
             stock_code = int(stock_key[1])
+            if stock_code < 1953:
+                continue
 
             logging.info("Crawl transaction data. stock_key:%s", stock_key)
 

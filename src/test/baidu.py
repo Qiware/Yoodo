@@ -9,7 +9,7 @@ import requests	# pip3 install requests
 # 获取交易数据(交易时间、开盘价、最高价、最低价、收盘价、交易量、交易额)
 # @Param code: 股票代码(如: 00700)
 #HKEX_GET_CHART_DATA_URL = "https://finance.pae.baidu.com/selfselect/getstockquotation?all=1&code=%05d&isIndex=false&isBk=false&isBlock=false&isFutures=false&isStock=true&newFormat=1&is_kc=0&start_time=2004-06-16+00:00:00&ktype=1&group=quotation_kline_hk&finClientType=pc"
-HKEX_GET_CHART_DATA_URL = "https://finance.pae.baidu.com/selfselect/getstockquotation?all=1&code=%05d&isIndex=false&isBk=false&isBlock=false&isFutures=false&isStock=true&newFormat=1&is_kc=0&start_time=2023-07-28+00:00:00&ktype=1&group=quotation_kline_hk&finClientType=pc"
+HKEX_GET_CHART_DATA_URL = "https://finance.pae.baidu.com/selfselect/getstockquotation?all=1&code=%05d&isIndex=false&isBk=false&isBlock=false&isFutures=false&isStock=true&newFormat=1&is_kc=0&start_time=2022-07-28+00:00:00&ktype=1&group=quotation_kline_hk&finClientType=pc"
 
 HK_STOCK_CODE_MIN = 1 # 港股股票代码最小值
 HK_STOCK_CODE_MAX = 3999 # 港股股票代码最大值

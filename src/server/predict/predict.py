@@ -106,8 +106,9 @@ class Predicter():
 
             # 更新数据库
             start_date = int(base["date"])
-            start_timestamp = date_to_timestamp(base["date"])
+            start_timestamp = date_to_timestamp(start_date)
             end_date = int(transaction_list[days-1]["date"])
+            end_timestamp = date_to_timestamp(end_date)
 
             timestamp = start_timestamp
             while(timestamp < end_timestamp):
