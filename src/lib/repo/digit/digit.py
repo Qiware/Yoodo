@@ -28,7 +28,7 @@ def str_with_unit_to_digit(s, unit):
         return digit * AMOUNT_UNIT_B
     elif unit.upper() == "":
         return digit
-    return None
+    return 0
 
 
 def digit(d, unit):
