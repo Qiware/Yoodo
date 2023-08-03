@@ -232,7 +232,7 @@ class Database():
         # 查询股票列表
         cursor = self.mysql.cursor()
 
-        sql = f'SELECT stock_key, name, total, market_cap \
+        sql = f'SELECT stock_key, name, total, market_cap, disable \
                 FROM t_stock \
                 WHERE stock_key=%s'
 
@@ -250,8 +250,9 @@ class Database():
         data = dict()
         data["stock_key"] = item[0]
         data["name"] = item[1]
-        data["total"] = item[2]
-        data["market_cap"] = item[3]
+        data["total"] = int(item[2])
+        data["market_cap"] = float(item[3])
+        data["disable"] = int(item[4])
 
         return data
 
@@ -261,7 +262,9 @@ class Database():
         # 查询股票列表
         cursor = self.mysql.cursor()
 
-        sql = f'SELECT stock_key, name, total, market_cap FROM t_stock'
+        sql = f'SELECT stock_key, name, total, market_cap, disable \
+                FROM t_stock \
+                WHERE disable=0'
 
         cursor.execute(sql)
 
@@ -274,10 +277,11 @@ class Database():
 
         for item in items:
             data = dict()
-            data["stock_key"] = item[0] # 股票KEY
-            data["name"] = item[1] # 企业名称
-            data["total"] = item[2] # 总股本数
-            data["market_cap"] = item[3] # 总市值
+            data["stock_key"] = str(item[0]) # 股票KEY
+            data["name"] = str(item[1]) # 企业名称
+            data["total"] = int(item[2]) # 总股本数
+            data["market_cap"] = float(item[3]) # 总市值
+            data["disable"] = int(item[4]) # 是否禁用
             result.append(data)
         return result
 
@@ -289,9 +293,9 @@ class Database():
         # 查询股票列表
         cursor = self.mysql.cursor()
 
-        sql = f'SELECT stock_key, name, total, market_cap \
+        sql = f'SELECT stock_key, name, total, market_cap, disable \
                 FROM t_stock \
-                WHERE market_cap>=%s'
+                WHERE market_cap>=%s AND disable=0'
 
         cursor.execute(sql, (STOCK_GOOD_MARKET_CAP))
 
@@ -306,8 +310,9 @@ class Database():
             data = dict()
             data["stock_key"] = item[0] # 股票KEY
             data["name"] = item[1] # 企业名称
-            data["total"] = item[2] # 总股本数
-            data["market_cap"] = item[3] # 总市值
+            data["total"] = int(item[2]) # 总股本数
+            data["market_cap"] = float(item[3]) # 总市值
+            data["disable"] = int(item[4]) # 是否禁用
             result.append(data)
         return result
 

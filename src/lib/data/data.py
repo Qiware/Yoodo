@@ -112,7 +112,7 @@ class Data():
         ''' 通过交易列表生成训练数据
             @Param stock_key: 股票KEY
             @Param transaction_list: 交易数据
-            @Param fname: 训练数据输出文件
+            @Param fp: 文件指针
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
         '''
 
@@ -150,6 +150,8 @@ class Data():
                 train_data += ",%f" % (self.ratio(prev["volume"], curr["volume"]))
                 # 交易额波动率(与'前周期'比较)
                 train_data += ",%f" % (self.ratio(prev["turnover"], curr["turnover"]))
+                # 换手率波动率(与'前周期'比较)
+                train_data += ",%f" % (self.ratio(prev["turnover_ratio"], curr["turnover_ratio"]))
 
                 # 收盘价波动率(与'本周期'开盘价比较)
                 train_data += ",%f" % (self.ratio(curr["open_price"], curr["close_price"]))
@@ -236,6 +238,7 @@ class Data():
             feature.append(self.ratio(prev["close_price"], curr["bottom_price"]))
             feature.append(self.ratio(prev["volume"], curr["volume"]))
             feature.append(self.ratio(prev["turnover"], curr["turnover"]))
+            feature.append(self.ratio(prev["turnover_ratio"], curr["turnover_ratio"]))
             # 与本周期的开盘价比较
             feature.append(self.ratio(curr["open_price"], curr["close_price"]))
             feature.append(self.ratio(curr["open_price"], curr["top_price"]))

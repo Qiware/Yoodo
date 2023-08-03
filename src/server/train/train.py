@@ -59,7 +59,7 @@ class Trainer():
             # 训练模型
             if end <= len(feature_train):
                 model.fit(feature_train[begin:end], target_train[begin:end]) # 训练
-                print("Train processing %f ..." % end/len(feature_train))
+                print("Train processing %f ..." % (float(end)/len(feature_train)* 100))
             else:
                 model.fit(feature_train[begin:], target_train[begin:]) # 训练
                 print("Train processing 100...")

@@ -69,9 +69,6 @@ class Crawler():
         stock_code = HKEX_STOCK_CODE_MIN
         while (stock_code <= HKEX_STOCK_CODE_MAX):
             print("Crawl stock data. stock_code:%s" % (stock_code))
-            if stock_code < 2138:
-                stock_code += 1
-                continue
             # 爬取股票数据
             self._crawl_stock(stock_code)
 
@@ -160,8 +157,8 @@ class Crawler():
             return None
 
         if stock_data["total"] == 0:
-            logging.error("Total of stock is invalid! date:%s stock_code:%s turnover_ratio:%f",
-                          transaction["date"], stock_code, transaction["turnover_ratio"])
+            logging.error("Total of stock is invalid! date:%s stock_code:%s",
+                          transaction["date"], stock_code)
             return None
 
         transaction["turnover_ratio"] = transaction["turnover"] / stock_data["total"] * 100
@@ -211,6 +208,10 @@ class Crawler():
             stock_data = self.database.get_stock(stock_key)
             if stock_data is None:
                 logging.error("Get stock failed! stock_code:%s", stock_code)
+                return
+
+            if stock_data["disable"] == 1:
+                logging.error("Stock is disable! stock_code:%s", stock_code)
                 return
 
             # 爬取指定股票交易
