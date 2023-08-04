@@ -195,30 +195,11 @@ class Crawler():
 
         return None
 
-    def crawl_transaction(self, stock_code, start_date):
+    def crawl_transaction(self, begin_stock_code, start_date):
         ''' 爬取交易信息
             @Param stock_code: 股票代码
             @Param start_date: 开始日期. 格式: YYYY-MM-DD
         '''
-
-        # 判断是否爬取所有交易
-        if str(stock_code) != "all":
-            # 获取指定股票信息
-            stock_key = self.gen_stock_key(HKEX_EXCHAGE_KEY, stock_code)
-
-            stock_data = self.database.get_stock(stock_key)
-            if stock_data is None:
-                logging.error("Get stock failed! stock_code:%s", stock_code)
-                return
-
-            if stock_data["disable"] == 1:
-                logging.error("Stock is disable! stock_code:%s", stock_code)
-                return
-
-            # 爬取指定股票交易
-            self._crawl_transaction(stock_code, stock_data, start_date)
-
-            return
 
         # 获取股票列表
         stock_list = self.database.get_all_stock()
@@ -232,6 +213,8 @@ class Crawler():
             stock_key = stock["stock_key"].split(":")
             exchange = stock_key[0]
             stock_code = int(stock_key[1])
+            if stock_code < int(begin_stock_code):
+                continue
 
             logging.info("Crawl transaction data. stock_key:%s", stock_key)
 

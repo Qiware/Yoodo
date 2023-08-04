@@ -199,8 +199,7 @@ class Database():
         cursor.close()
 
         if item is None:
-            logging.debug("Select data from database failed. stock_key:%s date:%s",
-                          stock_key, date)
+            logging.debug("No found. stock_key:%s date:%s", stock_key, date)
             return None
 
         # 数据整合处理
