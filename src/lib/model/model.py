@@ -33,20 +33,10 @@ class Model():
     def new(self):
         ''' 新建模型 '''
         return MLPRegressor(
-                hidden_layer_sizes=(500, 300, 100),
-                activation='relu', solver='adam',
-                alpha=0.0001, batch_size='auto',
-                learning_rate='constant',
-                learning_rate_init=0.001,
-                power_t=0.5, max_iter=5000,
-                shuffle=True, random_state=None,
-                tol=0.0001, verbose=False,
-                warm_start=False, momentum=0.9,
-                nesterovs_momentum=True,
-                early_stopping=False,
-                validation_fraction=0.1,
-                beta_1=0.9, beta_2=0.999,
-                epsilon=1e-08, n_iter_no_change=10, max_fun=15000)
+                hidden_layer_sizes=(500, 500, 500, 500, 500),
+                activation='tanh',
+                max_iter=10000,
+                learning_rate = "adaptive")
 
     def ratio(self, start_val, end_val):
         ''' 波动比率

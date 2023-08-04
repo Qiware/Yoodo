@@ -16,7 +16,7 @@ if __name__ == "__main__":
     date = sys.argv[1]
     days = int(sys.argv[2])
 
-    log_init("../../../log/evalutor.log" + str(date) + "-" + str(days))
+    log_init("../../../log/evalutor.log")
 
     # 新建对象
     pred = Predicter()

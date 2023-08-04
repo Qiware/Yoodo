@@ -7,6 +7,7 @@ import logging
 
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_squared_error
 
 sys.path.append("../../lib/repo/log")
 from log import *
@@ -70,27 +71,14 @@ class Trainer():
         # 模型评估
         predict_test = model.predict(feature_test)
 
-        index = 0
-        right_count = 0
-        wrong_count = 0
-        zero_count = 0
-        while (index < len(target_test)):
-            mul = predict_test[index] * target_test[index]
-            if mul > 0:
-                right_count += 1
-            elif (mul == 0) and ((target_test[index] == 0) or ((predict_test[index] == 0) and (target_test[index] > 0))):
-                zero_count += 1
-            else:
-                wrong_count += 1
-            logging.debug("feature[%d] %s", index, feature_test[index])
-            logging.debug("compare[%d] %s:%s", index, predict_test[index], target_test[index])
-            index += 1
+        # 计算R2值
+        r2 = r2_score(target_test, predict_test)
 
-        sample_count = right_count + wrong_count + zero_count
-        logging.debug("right_count:%d/%f wrong_count:%d/%f zero_count:%d/%f",
-                      right_count, float(right_count)/sample_count,
-                      wrong_count, float(wrong_count)/sample_count,
-                      zero_count, float(zero_count)/sample_count)
+        # 计算MSE值
+        mse = mean_squared_error(target_test, predict_test)
+
+        print('R2值为：', r2)
+        print('MSE值为：', mse)
 
         return None
 
