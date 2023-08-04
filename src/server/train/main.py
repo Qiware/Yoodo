@@ -20,7 +20,7 @@ if __name__ == "__main__":
     days = int(sys.argv[3])
 
     # 初始化日志
-    log_init("../../../log/trainer.log"+str(date)+"-"+str(days))
+    log_init("../../../log/trainer.log")
 
     trainer = Trainer()
     if action == "update":

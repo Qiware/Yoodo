@@ -29,7 +29,7 @@ if __name__ == "__main__":
         print("Date is out of range! err:%s", e)
         exit(-1)
 
-    log_init("../../../log/predicter.log" + str(date) + "-" + str(days))
+    log_init("../../../log/predicter.log")
 
     # 新建对象
     pred = Predicter()
