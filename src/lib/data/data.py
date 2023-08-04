@@ -266,7 +266,7 @@ class Data():
         # 查询所需数据
         transaction_list = self.database.get_transaction_list(
                 stock_key, date, TRAIN_DATA_TRANSACTION_NUM*(days+1))
-        if transaction_list is None:
+        if (transaction_list is None) or (len(transaction_list) == 0):
             logging.error("Get transaction list failed! stock_key:%s date:%s days:%s",
                           stock_key, date, days)
             return date, None

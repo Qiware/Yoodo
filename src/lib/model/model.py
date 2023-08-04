@@ -33,7 +33,7 @@ class Model():
     def new(self):
         ''' 新建模型 '''
         return MLPRegressor(
-                hidden_layer_sizes=(500, 100),
+                hidden_layer_sizes=(500, 300, 100),
                 activation='relu', solver='adam',
                 alpha=0.0001, batch_size='auto',
                 learning_rate='constant',

@@ -5,8 +5,8 @@
 import logging
 import pymysql
 
-# 优质股票市值 >= 100亿
-STOCK_GOOD_MARKET_CAP = 10000000000
+# 优质股票市值 >= 300亿
+STOCK_GOOD_MARKET_CAP = 30000000000
 
 # 数据库操作
 class Database():

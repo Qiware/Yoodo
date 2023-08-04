@@ -151,7 +151,7 @@ class Crawler():
                           transaction["date"], stock_code, transaction["turnover"])
             return None
 
-        # 换手率
+        # 换手率 = 交易量 / 总股本数
         if data["turnover_ratio"] is None:
             logging.error("Turnover ratio is none! date:%s stock_code:%s turnover_ratio:%f",
                           transaction["date"], stock_code, transaction["turnover_ratio"])
@@ -162,7 +162,7 @@ class Crawler():
                           transaction["date"], stock_code)
             return None
 
-        transaction["turnover_ratio"] = transaction["turnover"] / stock_data["total"] * 100
+        transaction["turnover_ratio"] = transaction["volume"] / stock_data["total"] * 100
 
         # 创建时间
         curr_timestamp = int(time.time())
