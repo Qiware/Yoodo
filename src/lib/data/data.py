@@ -11,11 +11,8 @@ from log import *
 sys.path.append("../../lib/repo/database")
 from database import *
 
-# 拉取训练交易数据条目
-GET_TRANSACTION_MAX_NUM = 1000
-
 # 单条训练样本拥有的交易数据条目
-TRAIN_DATA_TRANSACTION_NUM = 30
+TRAIN_DATA_TRANSACTION_NUM = 20
 
 # 数据处理
 class Data():

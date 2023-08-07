@@ -136,6 +136,12 @@ class HKEX():
         data["total"] = str_to_digit(resp["amt_os"]) # 总股本数量
         data["market_cap"] = str_with_unit_to_digit(resp["mkt_cap"], resp["mkt_cap_u"])  # 总市值
         data["product_type"] = resp["product_type"].upper()  # 产品类型
+        if "hsic_ind_classification" in resp.keys():
+            data["first_classification"] = resp["hsic_ind_classification"]  # 一级分类
+        if "hsic_sub_sector_classification" in resp.keys():
+            data["second_classification"] = resp["hsic_sub_sector_classification"]  # 二级分类
+        if "summary" in resp.keys():
+            data["introduction"] = resp["summary"]  # 公司介绍
 
         return data
 

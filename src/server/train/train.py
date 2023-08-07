@@ -6,6 +6,7 @@ import joblib
 import logging
 
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_squared_error
 
@@ -20,9 +21,6 @@ from model import Model
 
 # 拉取训练交易数据条目
 GET_TRANSACTION_MAX_NUM = 1000
-
-# 单条训练样本拥有的交易数据条目
-TRAIN_DATA_TRANSACTION_NUM = 30
 
 # 训练分组数
 TRAIN_GROUP_NUM = 100
@@ -79,6 +77,14 @@ class Trainer():
 
         print('R2值为：', r2)
         print('MSE值为：', mse)
+
+        '''结果可视化'''
+        xx = range(0, len(target_test))
+        plt.figure(figsize=(8,6))
+        plt.scatter(xx, target_test,color="red",label="Sample Point",linewidth=3)
+        plt.plot(xx, predict_test,color="orange",label="Fitting Line",linewidth=2)
+        plt.legend()
+        plt.show()
 
         return None
 

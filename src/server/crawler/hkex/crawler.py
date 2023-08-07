@@ -57,6 +57,12 @@ class Crawler():
         stock["total"] = int(data["total"]) # 总股本数量
         stock["market_cap"] = float(data["market_cap"]) # 总市值
         stock["product_type"] = data["product_type"] # 产品类型
+        if "first_classification" in data.keys():
+            stock["first_classification"] = data["first_classification"]  # 一级分类
+        if "second_classification" in data.keys():
+            stock["second_classification"] = data["second_classification"]  # 二级分类
+        if "introduction" in data.keys():
+            stock["introduction"] = data["introduction"]  # 公司介绍
 
         timestamp = int(time.time())
         stock["create_time"] = time.localtime(timestamp)

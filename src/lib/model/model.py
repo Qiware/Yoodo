@@ -33,10 +33,11 @@ class Model():
     def new(self):
         ''' 新建模型 '''
         return MLPRegressor(
-                hidden_layer_sizes=(500, 500, 500, 500, 500),
+                hidden_layer_sizes=(200, 200, 200, 200, 200, 200),
                 activation='tanh',
-                max_iter=10000,
-                learning_rate = "adaptive")
+                max_iter=100000,
+                learning_rate = "adaptive",
+                learning_rate_init=0.001)
 
     def ratio(self, start_val, end_val):
         ''' 波动比率
