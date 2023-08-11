@@ -11,6 +11,7 @@ from sklearn.metrics import r2_score
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.neural_network import MLPRegressor
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
 
 sys.path.append("../lib/log")
@@ -32,6 +33,7 @@ class Model():
 
     def new(self):
         ''' 新建模型 '''
+        #return MLPClassifier(
         return MLPRegressor(
                 hidden_layer_sizes=(200, 200, 200, 200, 200, 200),
                 activation='tanh',

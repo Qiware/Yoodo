@@ -41,7 +41,7 @@ class Crawler():
         ''' 生成股票KEY '''
         return "%s:%05d" % (exchange_code, int(stock_code))
 
-    def _crawl_stock(self, stock_code):
+    def crawl_stock_by_stock_code(self, stock_code):
         ''' 爬取指定股票信息 '''
 
         # 爬取股票数据
@@ -77,7 +77,7 @@ class Crawler():
         while (stock_code <= int(end)):
             print("Crawl stock data. stock_code:%s" % (stock_code))
             # 爬取股票数据
-            self._crawl_stock(stock_code)
+            self.crawl_stock_by_stock_code(stock_code)
 
             stock_code += 1
 
@@ -170,6 +170,34 @@ class Crawler():
 
         transaction["turnover_ratio"] = transaction["volume"] / stock_data["total"] * 100
 
+        # 查询交易列表
+        history_transaction_list = self.database.get_transaction_list(
+                transaction["stock_key"], int(transaction["date"])-1, 20)
+
+        # MA5平均价格
+        transaction["ma5_avg_price"] = self.compute_avg_price(
+                transaction["close_price"], history_transaction_list, 5)
+
+        # MA10平均价格
+        transaction["ma10_avg_price"] = self.compute_avg_price(
+                transaction["close_price"], history_transaction_list, 10)
+
+        # MA20平均价格
+        transaction["ma20_avg_price"] = self.compute_avg_price(
+                transaction["close_price"], history_transaction_list, 20)
+
+        # MA5交易量
+        transaction["ma5_volume"] = self.compute_volume(
+                transaction["volume"], history_transaction_list, 5)
+
+        # MA10交易量
+        transaction["ma10_volume"] = self.compute_volume(
+                transaction["volume"], history_transaction_list, 10)
+
+        # MA20交易量
+        transaction["ma20_volume"] = self.compute_volume(
+                transaction["volume"], history_transaction_list, 20)
+
         # 创建时间
         curr_timestamp = int(time.time())
         transaction["create_time"] = time.localtime(curr_timestamp)
@@ -177,6 +205,50 @@ class Crawler():
         transaction["update_time"] = time.localtime(curr_timestamp)
 
         return transaction
+
+    def compute_avg_price(self, today_close_price, history_transaction_list, days):
+        ''' 计算股票days天的平均价格
+            @Param today_close_price: 今日收盘价
+            @Param history_transaction_list: 交易列表
+            @Param days: 天数
+        '''
+
+        total_price = today_close_price
+        if len(history_transaction_list) == 0:
+            return total_price
+
+        tl = history_transaction_list
+        if len(history_transaction_list) > (days-1):
+            tl = history_transaction_list[:days-1]
+
+        for item in tl:
+            total_price += float(item["close_price"])
+
+        return total_price / (len(tl)+1)
+
+    def compute_volume(self, today_volume, history_transaction_list, days):
+        ''' 计算股票days天的累积交易量
+            @Param volume: 今日交易量
+            @Param transaction_list: 交易列表
+            @Param days: 天数
+            @注意事项: 天数不足时, 则用平均数 * days返回.
+        '''
+
+        total_volume = today_volume
+        if len(history_transaction_list) == 0:
+            return total_volume * days
+
+        tl = history_transaction_list
+        if len(history_transaction_list) > (days-1):
+            tl = history_transaction_list[:days-1]
+
+        for item in tl:
+            total_volume += item["volume"]
+
+        if len(history_transaction_list) < (days-1):
+            return  int((total_volume/(len(history_transaction_list)+1)) * days)
+
+        return total_volume
 
     def _crawl_transaction(self, stock_code, stock_data, start_date):
         ''' 爬取指定股票交易信息 '''

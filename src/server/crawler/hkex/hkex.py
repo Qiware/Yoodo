@@ -159,7 +159,7 @@ class HKEX():
             @Param num: K线数量
         '''
 
-        days=HKEX_LASTEST_2YEAR
+        days = HKEX_LASTEST_2YEAR
 
         # 准备请求参数
         headers = { 'Content-Type' : 'application/json' }
