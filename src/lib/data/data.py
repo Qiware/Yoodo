@@ -59,14 +59,35 @@ class Data():
             item["turnover"] = transaction_list[index]["turnover"] # 交易额
             item["turnover_ratio"] = transaction_list[index]["turnover_ratio"] # 换手率
 
+            item["ma5_avg_price"] = transaction_list[index]["ma5_avg_price"] # MA5平均价格
+            item["ma10_avg_price"] = transaction_list[index]["ma10_avg_price"] # MA10平均价格
+            item["ma20_avg_price"] = transaction_list[index]["ma20_avg_price"] # MA20平均价格
+
+            item["ma5_volume"] = transaction_list[index]["ma5_volume"] # MA5交易量
+            item["ma10_volume"] = transaction_list[index]["ma10_volume"] # MA10交易量
+            item["ma20_volume"] = transaction_list[index]["ma20_volume"] # MA20交易量
+
             index += 1
             while (index < (num+1)*days):
                 item["top_price"] = max(item["top_price"], transaction_list[index]["top_price"])
                 item["bottom_price"] = min(item["bottom_price"], transaction_list[index]["bottom_price"])
-                item["volume"] = item["volume"] + transaction_list[index]["volume"]
-                item["turnover"] = item["turnover"] + transaction_list[index]["turnover"]
-                item["turnover_ratio"] = item["turnover_ratio"] + transaction_list[index]["turnover_ratio"]
+
+                item["volume"] += transaction_list[index]["volume"]
+                item["turnover"] += transaction_list[index]["turnover"]
+                item["turnover_ratio"] += transaction_list[index]["turnover_ratio"]
+
+                item["ma5_avg_price"] += transaction_list[index]["ma5_avg_price"]
+                item["ma10_avg_price"] += transaction_list[index]["ma10_avg_price"]
+                item["ma20_avg_price"] += transaction_list[index]["ma20_avg_price"]
+
+                item["ma5_volume"] += transaction_list[index]["ma5_volume"]
+                item["ma10_volume"] += transaction_list[index]["ma10_volume"]
+                item["ma20_volume"] += transaction_list[index]["ma20_volume"]
+
                 index += 1
+            item["ma5_avg_price"] /= days
+            item["ma10_avg_price"] /= days
+            item["ma20_avg_price"] /= days
             logging.debug("Transaction group data:%s", item)
             transaction_group.append(item)
             num += 1
@@ -166,6 +187,16 @@ class Data():
                 # 换手率
                 train_data += ",%f" % (curr["turnover_ratio"])
 
+                # 收盘价和平均价格的比值
+                train_data += ",%f" % (self.ratio(curr["ma5_avg_price"], curr["close_price"]))
+                train_data += ",%f" % (self.ratio(curr["ma10_avg_price"], curr["close_price"]))
+                train_data += ",%f" % (self.ratio(curr["ma20_avg_price"], curr["close_price"]))
+
+                # 交易量和平均交易量的比值
+                train_data += ",%f" % (self.ratio(curr["ma5_volume"], curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma10_volume"], curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma20_volume"], curr["volume"]))
+
                 index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
             price_ratio = self.ratio(
@@ -240,6 +271,16 @@ class Data():
 
                 # 换手率
                 train_data += ",%f" % (curr["turnover_ratio"])
+
+                # 收盘价和平均价格的比值
+                train_data += ",%f" % (self.ratio(curr["ma5_avg_price"], curr["close_price"]))
+                train_data += ",%f" % (self.ratio(curr["ma10_avg_price"], curr["close_price"]))
+                train_data += ",%f" % (self.ratio(curr["ma20_avg_price"], curr["close_price"]))
+
+                # 交易量和平均交易量的比值
+                train_data += ",%f" % (self.ratio(curr["ma5_volume"], curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma10_volume"], curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma20_volume"], curr["volume"]))
 
                 index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
@@ -321,6 +362,14 @@ class Data():
             feature.append(self.ratio(curr["close_price"], curr["bottom_price"]))
             # 换手率
             feature.append(curr["turnover_ratio"])
+            # 收盘价和平均价格的比值
+            feature.append(self.ratio(curr["ma5_avg_price"], curr["close_price"]))
+            feature.append(self.ratio(curr["ma10_avg_price"], curr["close_price"]))
+            feature.append(self.ratio(curr["ma20_avg_price"], curr["close_price"]))
+            # 交易量和平均交易量的比值
+            feature.append(self.ratio(curr["ma5_volume"], curr["volume"]))
+            feature.append(self.ratio(curr["ma10_volume"], curr["volume"]))
+            feature.append(self.ratio(curr["ma20_volume"], curr["volume"]))
             index -= 1
 
         logging.info("Generate feature by transaction list success. stock_key:%s transaction_list:%d feature:%d",

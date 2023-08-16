@@ -1,23 +1,16 @@
 # encoding=utf-8
 
+# 训练模型: 基类型
+
 import os
 import sys
 import joblib
 import logging
 
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import r2_score
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.linear_model import LinearRegression
 from sklearn.neural_network import MLPRegressor
-from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import train_test_split
 
 sys.path.append("../lib/log")
 from log import *
-sys.path.append("../lib/database")
-from database import *
 
 class Model():
     def __init__(self, days, is_rebuild=False):
@@ -27,19 +20,18 @@ class Model():
         '''
         self.days = days
         if is_rebuild:
-            self.model = self.new()
+            self.model = self._new()
         else:
             self.model = self._load()
 
-    def new(self):
+    def _new(self):
         ''' 新建模型 '''
-        #return MLPClassifier(
         return MLPRegressor(
-                hidden_layer_sizes=(200, 200, 200, 200, 200, 200),
+                hidden_layer_sizes=(500, 400, 300, 200, 200, 200),
                 activation='tanh',
-                max_iter=100000,
+                max_iter=10000,
                 learning_rate = "adaptive",
-                learning_rate_init=0.001)
+                learning_rate_init=0.0001)
 
     def ratio(self, start_val, end_val):
         ''' 波动比率

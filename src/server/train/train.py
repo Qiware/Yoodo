@@ -17,7 +17,8 @@ sys.path.append("../../lib/data")
 from data import Data
 
 sys.path.append("../../lib/model")
-from model import Model
+from regressor import Regressor
+from classifier import Classifier
 
 # 拉取训练交易数据条目
 GET_TRANSACTION_MAX_NUM = 1000
@@ -41,7 +42,7 @@ class Trainer():
                 feature, target, test_size=0.05, random_state=1)
 
         # 新建模型
-        model = Model(days, is_rebuild)
+        model = Regressor(days, is_rebuild)
 
         feature_num = int(len(feature_train) / TRAIN_GROUP_NUM)
 
