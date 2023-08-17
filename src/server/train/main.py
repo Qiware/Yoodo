@@ -15,9 +15,9 @@ from train import *
 
 if __name__ == "__main__":
     # 提取参数
-    action = sys.argv[1]
-    date = sys.argv[2]
-    days = int(sys.argv[3])
+    action = sys.argv[1] # 行为(update:增量更新 rebuild:模型重建)
+    date = sys.argv[2] # 训练数据截止日期(格式: YYYYMMDD)
+    days = int(sys.argv[3]) # 周期(天)
 
     # 初始化日志
     log_init("../../../log/trainer.log")

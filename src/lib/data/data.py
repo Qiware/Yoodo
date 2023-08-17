@@ -21,17 +21,23 @@ class Data():
         self.database = Database()
         pass
 
-    def ratio(self, start_val, end_val):
+    def ratio(self, base_val, val):
         ''' 波动比率
-            @Param start_val: 开始值
-            @Param end_val: 结束值
+            @Param base_val: 基准值
+            @Param val: 当前值
         '''
-        diff = (end_val - start_val)
+        diff = (val - base_val)
         if diff == 0:
             return 0
-        if (start_val == 0):
+        if (base_val == 0):
             return 100
-        return  diff / start_val * 100
+        return  diff / base_val * 100
+
+    def gen_classify(self, price_ratio):
+        ''' 生成分类
+            @Param price_ratio: 涨价幅度
+        '''
+        return int(price_ratio/5) * 5
 
     def gen_train_data_fpath(self, date, days):
         ''' 生成训练数据的路径 '''
@@ -120,8 +126,8 @@ class Data():
             transaction_group = self.group_transaction_by_days(transaction_list, days)
 
             # 生成训练样本
-            self.gen_train_data_by_transaction_list(stock_key, transaction_group, fp)
-            #self.gen_class_train_data_by_transaction_list(stock_key, transaction_group, fp)
+            #self.gen_train_data_by_transaction_list(stock_key, transaction_group, fp)
+            self.gen_classify_train_data_by_transaction_list(stock_key, transaction_group, fp)
 
         fp.close()
 
@@ -193,9 +199,9 @@ class Data():
                 train_data += ",%f" % (self.ratio(curr["ma20_avg_price"], curr["close_price"]))
 
                 # 交易量和平均交易量的比值
-                train_data += ",%f" % (self.ratio(curr["ma5_volume"], curr["volume"]))
-                train_data += ",%f" % (self.ratio(curr["ma10_volume"], curr["volume"]))
-                train_data += ",%f" % (self.ratio(curr["ma20_volume"], curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma5_volume"], 5*curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma10_volume"], 10*curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma20_volume"], 20*curr["volume"]))
 
                 index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
@@ -212,7 +218,7 @@ class Data():
 
         return None
 
-    def gen_class_train_data_by_transaction_list(self, stock_key, transaction_list, fp):
+    def gen_classify_train_data_by_transaction_list(self, stock_key, transaction_list, fp):
         ''' 通过交易列表生成训练数据(分类)
             @Param stock_key: 股票KEY
             @Param transaction_list: 交易数据
@@ -220,7 +226,8 @@ class Data():
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
         '''
 
-        logging.debug("Call gen_train_data_by_transaction_list(). stock_key:%s", stock_key)
+        logging.debug("Call gen_class_train_data_by_transaction_list(). stock_key:%s",
+                      stock_key)
 
         train_data_list = list()
 
@@ -278,16 +285,17 @@ class Data():
                 train_data += ",%f" % (self.ratio(curr["ma20_avg_price"], curr["close_price"]))
 
                 # 交易量和平均交易量的比值
-                train_data += ",%f" % (self.ratio(curr["ma5_volume"], curr["volume"]))
-                train_data += ",%f" % (self.ratio(curr["ma10_volume"], curr["volume"]))
-                train_data += ",%f" % (self.ratio(curr["ma20_volume"], curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma5_volume"], 5*curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma10_volume"], 10*curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma20_volume"], 20*curr["volume"]))
 
                 index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
             price_ratio = self.ratio(
                     transaction_list[offset]["close_price"],
                     transaction_list[offset-1]["close_price"])
-            train_data += ",%d\n" % (int(price_ratio/5))
+            classify = self.gen_classify(price_ratio)
+            train_data += ",%d\n" % (classify)
 
             train_data_list.append(train_data)
             offset -= 1

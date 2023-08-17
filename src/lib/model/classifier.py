@@ -21,8 +21,16 @@ class Classifier(Model):
     def _new(self):
         ''' 新建模型 '''
         return MLPClassifier(
-                hidden_layer_sizes=(500, 400, 300, 200, 200, 200),
-                activation='tanh',
-                max_iter=10000,
-                learning_rate = "adaptive",
-                learning_rate_init=0.0001)
+                solver='sgd',
+                activation='tanh', # tanh, relu, logistic
+                alpha=1e-4,
+                hidden_layer_sizes=(500, 500, 500,),
+                random_state=1,
+                max_iter=100000,
+                verbose=100,
+                learning_rate="adaptive",
+                learning_rate_init=0.001)
+
+    def _gen_model_fpath(self, days):
+        ''' 生成分类预测模型的路径 '''
+        return "../../../model/c-%ddays.mod" % (int(days))

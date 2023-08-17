@@ -26,3 +26,7 @@ class Regressor(Model):
                 max_iter=10000,
                 learning_rate = "adaptive",
                 learning_rate_init=0.0001)
+
+    def _gen_model_fpath(self, days):
+        ''' 生成回归预测模型的路径 '''
+        return "../../../model/r-%ddays.mod" % (int(days))

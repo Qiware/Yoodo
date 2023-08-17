@@ -5,8 +5,8 @@ import sys
 import joblib
 import logging
 
-import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_squared_error
 
@@ -42,7 +42,9 @@ class Trainer():
                 feature, target, test_size=0.05, random_state=1)
 
         # 新建模型
-        model = Regressor(days, is_rebuild)
+        scaler = StandardScaler()
+
+        model = Classifier(days, is_rebuild)
 
         feature_num = int(len(feature_train) / TRAIN_GROUP_NUM)
 
@@ -58,17 +60,23 @@ class Trainer():
 
             # 训练模型
             if end <= len(feature_train):
-                model.fit(feature_train[begin:end], target_train[begin:end]) # 训练
+                feature_train_sclaed = scaler.fit_transform(feature_train[begin:end])
+
+                model.fit(feature_train_sclaed, target_train[begin:end]) # 训练
                 print("Train processing %f ..." % (float(end)/len(feature_train)* 100))
             else:
-                model.fit(feature_train[begin:], target_train[begin:]) # 训练
+                feature_train_sclaed = scaler.fit_transform(feature_train[begin:])
+
+                model.fit(feature_train_sclaed, target_train[begin:]) # 训练
                 print("Train processing 100...")
             group_index += 1
 
         model.dump() # 固化模型
 
         # 模型评估
-        predict_test = model.predict(feature_test)
+        feature_test_sclaed = scaler.transform(feature_test)
+
+        predict_test = model.predict(feature_test_sclaed)
 
         # 计算R2值
         r2 = r2_score(target_test, predict_test)
@@ -76,6 +84,7 @@ class Trainer():
         # 计算MSE值
         mse = mean_squared_error(target_test, predict_test)
 
+        print('模型评估值为：', r2)
         print('R2值为：', r2)
         print('MSE值为：', mse)
 

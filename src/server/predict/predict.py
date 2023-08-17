@@ -2,17 +2,9 @@
 # 君子爱财 取之有道
 
 import sys
-import time
-import joblib
 import logging
 
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import r2_score
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.linear_model import LinearRegression
-from sklearn.neural_network import MLPRegressor
-from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 sys.path.append("../../lib/log")
 from log import *
@@ -21,7 +13,8 @@ sys.path.append("../../lib/data")
 from data import Data
 
 sys.path.append("../../lib/model")
-from model import Model
+#from model import Model
+from classifier import Classifier
 
 
 sys.path.append("../../lib/repo/dtime")
@@ -43,8 +36,10 @@ class Predicter():
     def predict(self, date, days):
         ''' 数据预测 '''
 
+        scaler = StandardScaler()
+
         # 加载模型
-        model = Model(days)
+        model = Classifier(days)
 
         # 获取股票列表
         stock_list = self.data.get_good_stock()
@@ -59,7 +54,9 @@ class Predicter():
                 continue
 
             # 进行结果预测
-            ratio = model.predict(feature)
+            feature_sclaed = scaler.fit_transform(feature)
+
+            ratio = model.predict(feature_sclaed)
 
             print("predict: %s %s %s %s %s" % (stock_key, date, days, ratio[0], stock["name"]))
             logging.info("predict: %s %s %s %s %s", stock_key, date, days, ratio[0], stock["name"])
