@@ -4,7 +4,9 @@
 import sys
 import logging
 
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
 sys.path.append("../../lib/log")
 from log import *
@@ -14,6 +16,7 @@ from data import Data
 
 sys.path.append("../../lib/model")
 #from model import Model
+from regressor import Regressor
 from classifier import Classifier
 
 
@@ -36,10 +39,22 @@ class Predicter():
     def predict(self, date, days):
         ''' 数据预测 '''
 
+        # 特征归一化处理
         scaler = StandardScaler()
+        #scaler = MinMaxScaler()
+
+        # 加载训练数据
+        feature, target = self.data.load_train_data("20230701", days)
+
+        # 划分训练集和测试集
+        feature_train, feature_test, target_train, target_test = train_test_split(
+                feature, target, test_size=0.05, random_state=1)
+
+        feature_train_scaled = scaler.fit_transform(feature_train)
 
         # 加载模型
-        model = Classifier(days)
+        #model = Classifier(days)
+        model = Regressor(days)
 
         # 获取股票列表
         stock_list = self.data.get_good_stock()
@@ -54,9 +69,15 @@ class Predicter():
                 continue
 
             # 进行结果预测
-            feature_sclaed = scaler.fit_transform(feature)
+            #print(feature)
+            feature_scaled = scaler.transform(feature)
+            print(feature_scaled)
 
-            ratio = model.predict(feature_sclaed)
+            #feature_inverse_scaled = scaler.inverse_transform(feature_scaled)
+            #print(feature_inverse_scaled)
+
+            ratio = model.predict(feature_scaled)
+            #ratio = [0]
 
             print("predict: %s %s %s %s %s" % (stock_key, date, days, ratio[0], stock["name"]))
             logging.info("predict: %s %s %s %s %s", stock_key, date, days, ratio[0], stock["name"])

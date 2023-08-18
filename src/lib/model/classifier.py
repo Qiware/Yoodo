@@ -27,7 +27,7 @@ class Classifier(Model):
                 hidden_layer_sizes=(500, 500, 500,),
                 random_state=1,
                 max_iter=100000,
-                verbose=100,
+                verbose=True,
                 learning_rate="adaptive",
                 learning_rate_init=0.001)
 

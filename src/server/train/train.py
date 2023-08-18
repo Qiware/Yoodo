@@ -23,9 +23,6 @@ from classifier import Classifier
 # 拉取训练交易数据条目
 GET_TRANSACTION_MAX_NUM = 1000
 
-# 训练分组数
-TRAIN_GROUP_NUM = 100
-
 # 股票预测
 class Trainer():
     def __init__(self):
@@ -38,61 +35,46 @@ class Trainer():
         feature, target = self.data.load_train_data(date, days)
 
         # 划分训练集和测试集
-        feature_train, feature_test, target_train, target_test = train_test_split(
+        x_train, x_test, y_train, y_test = train_test_split(
                 feature, target, test_size=0.05, random_state=1)
 
         # 新建模型
         scaler = StandardScaler()
 
-        model = Classifier(days, is_rebuild)
+        #model = Classifier(days, is_rebuild)
+        model = Regressor(days, is_rebuild)
 
-        feature_num = int(len(feature_train) / TRAIN_GROUP_NUM)
+        feature_num = int(len(x_train) / TRAIN_GROUP_NUM)
 
         print("Train processing ...")
 
-        group_index = 0
-        while(True):
-            # 计算偏移量
-            begin = group_index * feature_num
-            if begin >= len(feature_train):
-                break
-            end = (group_index + 1) * feature_num
+        # 训练模型
+        x_train_scaled = scaler.fit_transform(x_train)
 
-            # 训练模型
-            if end <= len(feature_train):
-                feature_train_sclaed = scaler.fit_transform(feature_train[begin:end])
-
-                model.fit(feature_train_sclaed, target_train[begin:end]) # 训练
-                print("Train processing %f ..." % (float(end)/len(feature_train)* 100))
-            else:
-                feature_train_sclaed = scaler.fit_transform(feature_train[begin:])
-
-                model.fit(feature_train_sclaed, target_train[begin:]) # 训练
-                print("Train processing 100...")
-            group_index += 1
+        model.fit(x_train_scaled, y_train) # 训练
 
         model.dump() # 固化模型
 
         # 模型评估
-        feature_test_sclaed = scaler.transform(feature_test)
+        x_test_scaled = scaler.transform(x_test)
 
-        predict_test = model.predict(feature_test_sclaed)
+        y_predict = model.predict(x_test_scaled)
 
         # 计算R2值
-        r2 = r2_score(target_test, predict_test)
+        r2 = r2_score(y_test, y_predict)
 
         # 计算MSE值
-        mse = mean_squared_error(target_test, predict_test)
+        mse = mean_squared_error(y_test, y_predict)
 
         print('模型评估值为：', r2)
         print('R2值为：', r2)
         print('MSE值为：', mse)
 
         '''结果可视化'''
-        xx = range(0, len(target_test))
+        xy = range(0, len(y_test))
         plt.figure(figsize=(8,6))
-        plt.scatter(xx, target_test,color="red",label="Sample Point",linewidth=3)
-        plt.plot(xx, predict_test,color="orange",label="Fitting Line",linewidth=2)
+        plt.scatter(xy, y_test,color="red",label="Sample Point",linewidth=3)
+        plt.plot(xy, y_predict,color="orange",label="Predict line",linewidth=2)
         plt.legend()
         plt.show()
 

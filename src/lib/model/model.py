@@ -50,7 +50,7 @@ class Model():
         fpath = self._gen_model_fpath(self.days)
         if not os.path.isfile(fpath):
             logging.error("Model is not exist! fpath:%s", fpath)
-            return self.new()
+            return self._new()
 
         # 加载模型
         return joblib.load(fpath)

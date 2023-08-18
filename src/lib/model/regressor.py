@@ -24,7 +24,8 @@ class Regressor(Model):
                 hidden_layer_sizes=(500, 400, 300, 200, 200, 200),
                 activation='tanh',
                 max_iter=10000,
-                learning_rate = "adaptive",
+                verbose=True,
+                #learning_rate = "adaptive",
                 learning_rate_init=0.0001)
 
     def _gen_model_fpath(self, days):

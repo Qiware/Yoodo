@@ -126,8 +126,8 @@ class Data():
             transaction_group = self.group_transaction_by_days(transaction_list, days)
 
             # 生成训练样本
-            #self.gen_train_data_by_transaction_list(stock_key, transaction_group, fp)
-            self.gen_classify_train_data_by_transaction_list(stock_key, transaction_group, fp)
+            self.gen_train_data_by_transaction_list(stock_key, transaction_group, fp)
+            #self.gen_classify_train_data_by_transaction_list(stock_key, transaction_group, fp)
 
         fp.close()
 
@@ -199,9 +199,9 @@ class Data():
                 train_data += ",%f" % (self.ratio(curr["ma20_avg_price"], curr["close_price"]))
 
                 # 交易量和平均交易量的比值
-                train_data += ",%f" % (self.ratio(curr["ma5_volume"], 5*curr["volume"]))
-                train_data += ",%f" % (self.ratio(curr["ma10_volume"], 10*curr["volume"]))
-                train_data += ",%f" % (self.ratio(curr["ma20_volume"], 20*curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma5_volume"], curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma10_volume"], curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma20_volume"], curr["volume"]))
 
                 index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
@@ -285,9 +285,9 @@ class Data():
                 train_data += ",%f" % (self.ratio(curr["ma20_avg_price"], curr["close_price"]))
 
                 # 交易量和平均交易量的比值
-                train_data += ",%f" % (self.ratio(curr["ma5_volume"], 5*curr["volume"]))
-                train_data += ",%f" % (self.ratio(curr["ma10_volume"], 10*curr["volume"]))
-                train_data += ",%f" % (self.ratio(curr["ma20_volume"], 20*curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma5_volume"], curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma10_volume"], curr["volume"]))
+                train_data += ",%f" % (self.ratio(curr["ma20_volume"], curr["volume"]))
 
                 index -= 1
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
