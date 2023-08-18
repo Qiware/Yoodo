@@ -44,8 +44,6 @@ class Trainer():
         #model = Classifier(days, is_rebuild)
         model = Regressor(days, is_rebuild)
 
-        feature_num = int(len(x_train) / TRAIN_GROUP_NUM)
-
         print("Train processing ...")
 
         # 训练模型
