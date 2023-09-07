@@ -21,11 +21,11 @@ class Regressor(Model):
     def _new(self):
         ''' 新建模型 '''
         return MLPRegressor(
-                hidden_layer_sizes=(500, 400, 300, 200, 200, 200),
-                activation='tanh',
-                max_iter=10000,
+                hidden_layer_sizes=(1000, 1000, 1000, 1000, 1000),
+                activation='relu',
+                max_iter=20000,
                 verbose=True,
-                #learning_rate = "adaptive",
+                learning_rate = "invscaling",
                 learning_rate_init=0.0001)
 
     def _gen_model_fpath(self, days):

@@ -145,13 +145,19 @@ class HKEX():
 
         return data
 
-    def get_kline_from_baidu(self, stock_code, start_time):
-        ''' 获取交易K线数据: 开盘价、最高价、最低价、收盘价、交易量、交易额、换手率等
+    def get_hsi_kline(self):
+        ''' 获取恒生指数K线数据: 开盘价、最高价、最低价、收盘价等
             @Param code: 股票代码
             @Param num: K线数量
         '''
-        return self.baidu.get_kline(stock_code, start_time, KLINE_KTYPE_DAY, KLINE_GROUP_HKEX)
+        return self.baidu.get_hsi_kline()
 
+    def get_hz2083_kline(self):
+        ''' 获取'恒生科技指数'K线数据: 开盘价、最高价、最低价、收盘价等
+            @Param code: 股票代码
+            @Param num: K线数量
+        '''
+        return self.baidu.get_hz2083_kline()
 
     def get_kline_from_hkex(self, stock_code, start_time):
         ''' 获取交易K线数据: 开盘价、最高价、最低价、收盘价、交易量、交易额等

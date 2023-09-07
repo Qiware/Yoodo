@@ -12,6 +12,11 @@ from sklearn.neural_network import MLPRegressor
 sys.path.append("../lib/log")
 from log import *
 
+# 模型类型
+MODEL_REGRESSOR = "r" # 线性模型
+MODEL_CLASSIFIER = "c" # 分类模型
+
+
 class Model():
     def __init__(self, days, is_rebuild=False):
         ''' 初始化

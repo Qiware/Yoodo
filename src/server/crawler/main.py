@@ -45,6 +45,10 @@ if __name__ == "__main__":
         start_date = sys.argv[3] # 起始日期. 格式:YYYY-MM-DD
 
         crawler.crawl_transaction(stock_code, start_date)
+    elif func == "index":
+        # 爬取指数数据
+        crawler.crawl_hsi_index() # 恒生指数
+        crawler.crawl_hz2083_index() # 恒生科技指数
     else:
         usage()
 

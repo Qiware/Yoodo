@@ -11,15 +11,30 @@ from log import *
 sys.path.append("../../lib/repo/database")
 from database import *
 
+# 恒生指数KEY
+STOCK_KEY_HSI = "hkex:hsi" # 恒生指数
+STOCK_KEY_HZ2083 = "hkex:hz2083" # 恒生科技指数
+
 # 单条训练样本拥有的交易数据条目
 TRAIN_DATA_TRANSACTION_NUM = 20
+
+# 查询所有交易数据
+TRANSACTION_NUM_ALL = 999999
+
+# 股票市值50亿
+STOCK_MARKET_CAP_5B = 5000000000
+# 股票市值200亿
+STOCK_MARKET_CAP_20B = 20000000000
 
 # 数据处理
 class Data():
     def __init__(self):
         # 连接数据库
         self.database = Database()
-        pass
+
+        # 查询指数数据
+        self.hsi_index_list = self.get_hsi_index() # 恒生指数
+        self.hz2083_index_list = self.get_hz2083_index() # 恒生科技指数
 
     def ratio(self, base_val, val):
         ''' 波动比率
@@ -37,6 +52,8 @@ class Data():
         ''' 生成分类
             @Param price_ratio: 涨价幅度
         '''
+        if price_ratio < 0:
+            price_ratio -= 5
         return int(price_ratio/5) * 5
 
     def gen_train_data_fpath(self, date, days):
@@ -44,7 +61,10 @@ class Data():
         return "../../../data/train/%s-%ddays.dat" % (str(date), int(days))
 
     def group_transaction_by_days(self, transaction_list, days):
-        ''' 交易数据间隔days分组 '''
+        ''' 交易数据间隔days分组
+            @Param transaction_list: 交易列表(倒序)
+            @Param days: 周期
+        '''
 
         transaction_group = list()
         group_num = int(len(transaction_list) / days)
@@ -56,8 +76,8 @@ class Data():
             item = dict()
 
             item["stock_key"] = transaction_list[index]["stock_key"] # 股票KEY
-            item["open_price"] = transaction_list[index]["open_price"] # 开盘价(取第一天开盘价)
-            item["close_price"] = transaction_list[index+days-1]["close_price"] # 收盘价(取最后一天收盘价)
+            item["open_price"] = transaction_list[index+days-1]["open_price"] # 开盘价(取第一天开盘价)
+            item["close_price"] = transaction_list[index]["close_price"] # 收盘价(取最后一天收盘价)
 
             item["top_price"] = transaction_list[index]["top_price"] # 最高价
             item["bottom_price"] = transaction_list[index]["bottom_price"] # 最低价
@@ -73,8 +93,33 @@ class Data():
             item["ma10_volume"] = transaction_list[index]["ma10_volume"] # MA10交易量
             item["ma20_volume"] = transaction_list[index]["ma20_volume"] # MA20交易量
 
+            # 恒生指数
+            curr_date = transaction_list[index]["date"]
+            last_date = transaction_list[index+days-1]["date"]
+
+            item["hsi_open_price"] = self.hsi_index_list[last_date]["open_price"] # 开盘价(取第一天开盘价)
+            item["hsi_close_price"] = self.hsi_index_list[curr_date]["close_price"] # 收盘价(取最后一天收盘价)
+            item["hsi_top_price"] = self.hsi_index_list[curr_date]["top_price"] # 最高价
+            item["hsi_bottom_price"] = self.hsi_index_list[curr_date]["bottom_price"] # 最低价
+            item["hsi_turnover"] = self.hsi_index_list[curr_date]["turnover"] # 交易额
+            item["hsi_ma5_avg_price"] = self.hsi_index_list[curr_date]["ma5_avg_price"] # MA5平均价格
+            item["hsi_ma10_avg_price"] = self.hsi_index_list[curr_date]["ma10_avg_price"] # MA10平均价格
+            item["hsi_ma20_avg_price"] = self.hsi_index_list[curr_date]["ma20_avg_price"] # MA20平均价格
+
+            # 恒生科技指数
+            item["hz2083_open_price"] = self.hz2083_index_list[last_date]["open_price"] # 开盘价(取第一天开盘价)
+            item["hz2083_close_price"] = self.hz2083_index_list[curr_date]["close_price"] # 收盘价(取最后一天收盘价)
+            item["hz2083_top_price"] = self.hz2083_index_list[curr_date]["top_price"] # 最高价
+            item["hz2083_bottom_price"] = self.hz2083_index_list[curr_date]["bottom_price"] # 最低价
+            item["hz2083_turnover"] = self.hz2083_index_list[curr_date]["turnover"] # 交易额
+            item["hz2083_ma5_avg_price"] = self.hz2083_index_list[curr_date]["ma5_avg_price"] # MA5平均价格
+            item["hz2083_ma10_avg_price"] = self.hz2083_index_list[curr_date]["ma10_avg_price"] # MA10平均价格
+            item["hz2083_ma20_avg_price"] = self.hz2083_index_list[curr_date]["ma20_avg_price"] # MA20平均价格
+
             index += 1
             while (index < (num+1)*days):
+                curr_date = transaction_list[index]["date"]
+
                 item["top_price"] = max(item["top_price"], transaction_list[index]["top_price"])
                 item["bottom_price"] = min(item["bottom_price"], transaction_list[index]["bottom_price"])
 
@@ -90,11 +135,38 @@ class Data():
                 item["ma10_volume"] += transaction_list[index]["ma10_volume"]
                 item["ma20_volume"] += transaction_list[index]["ma20_volume"]
 
+                # 恒生指数
+                item["hsi_top_price"] = max(item["hsi_top_price"], self.hsi_index_list[curr_date]["top_price"])
+                item["hsi_bottom_price"] = min(item["hsi_bottom_price"], self.hsi_index_list[curr_date]["bottom_price"])
+                item["hsi_turnover"] += self.hsi_index_list[curr_date]["turnover"]
+                item["hsi_ma5_avg_price"] += self.hsi_index_list[curr_date]["ma5_avg_price"]
+                item["hsi_ma10_avg_price"] += self.hsi_index_list[curr_date]["ma10_avg_price"]
+                item["hsi_ma20_avg_price"] += self.hsi_index_list[curr_date]["ma20_avg_price"]
+
+                # 恒生科技指数
+                item["hz2083_top_price"] = max(item["hz2083_top_price"], self.hz2083_index_list[curr_date]["top_price"])
+                item["hz2083_bottom_price"] = min(item["hz2083_bottom_price"], self.hz2083_index_list[curr_date]["bottom_price"])
+                item["hz2083_turnover"] += self.hz2083_index_list[curr_date]["turnover"]
+                item["hz2083_ma5_avg_price"] += self.hz2083_index_list[curr_date]["ma5_avg_price"]
+                item["hz2083_ma10_avg_price"] += self.hz2083_index_list[curr_date]["ma10_avg_price"]
+                item["hz2083_ma20_avg_price"] += self.hz2083_index_list[curr_date]["ma20_avg_price"]
+
                 index += 1
+
             item["ma5_avg_price"] /= days
             item["ma10_avg_price"] /= days
             item["ma20_avg_price"] /= days
-            logging.debug("Transaction group data:%s", item)
+
+            item["hsi_ma5_avg_price"] /= days
+            item["hsi_ma10_avg_price"] /= days
+            item["hsi_ma20_avg_price"] /= days
+
+            item["hz2083_ma5_avg_price"] /= days
+            item["hz2083_ma10_avg_price"] /= days
+            item["hz2083_ma20_avg_price"] /= days
+
+            logging.debug("Transaction group. date:%s data:%s", curr_date, item)
+
             transaction_group.append(item)
             num += 1
 
@@ -268,36 +340,76 @@ class Data():
 
         feature = list()
 
-        # 生成特征数据(注意: 最有一个作为起始基准)
+        # 生成特征数据(注意: 最后一个作为起始基准)
         index = TRAIN_DATA_TRANSACTION_NUM - 1
         while (index >= 0):
             curr = transaction_list[index]
             prev = transaction_list[index+1]
+
             # 与前周期的比较
             feature.append(self.ratio(prev["close_price"], curr["open_price"]))
             feature.append(self.ratio(prev["close_price"], curr["close_price"]))
             feature.append(self.ratio(prev["close_price"], curr["top_price"]))
             feature.append(self.ratio(prev["close_price"], curr["bottom_price"]))
+
             feature.append(self.ratio(prev["volume"], curr["volume"]))
             feature.append(self.ratio(prev["turnover"], curr["turnover"]))
             feature.append(self.ratio(prev["turnover_ratio"], curr["turnover_ratio"]))
+
+            feature.append(self.ratio(prev["hsi_close_price"], curr["hsi_open_price"]))
+            feature.append(self.ratio(prev["hsi_close_price"], curr["hsi_close_price"]))
+            feature.append(self.ratio(prev["hsi_close_price"], curr["hsi_top_price"]))
+            feature.append(self.ratio(prev["hsi_close_price"], curr["hsi_bottom_price"]))
+
+            feature.append(self.ratio(prev["hz2083_close_price"], curr["hz2083_open_price"]))
+            feature.append(self.ratio(prev["hz2083_close_price"], curr["hz2083_close_price"]))
+            feature.append(self.ratio(prev["hz2083_close_price"], curr["hz2083_top_price"]))
+            feature.append(self.ratio(prev["hz2083_close_price"], curr["hz2083_bottom_price"]))
+
             # 与本周期的开盘价比较
             feature.append(self.ratio(curr["open_price"], curr["close_price"]))
             feature.append(self.ratio(curr["open_price"], curr["top_price"]))
             feature.append(self.ratio(curr["open_price"], curr["bottom_price"]))
+
+            feature.append(self.ratio(curr["hsi_open_price"], curr["hsi_close_price"]))
+            feature.append(self.ratio(curr["hsi_open_price"], curr["hsi_top_price"]))
+            feature.append(self.ratio(curr["hsi_open_price"], curr["hsi_bottom_price"]))
+
+            feature.append(self.ratio(curr["hz2083_open_price"], curr["hz2083_close_price"]))
+            feature.append(self.ratio(curr["hz2083_open_price"], curr["hz2083_top_price"]))
+            feature.append(self.ratio(curr["hz2083_open_price"], curr["hz2083_bottom_price"]))
+
             # 与本周期的收盘价比较
             feature.append(self.ratio(curr["close_price"], curr["top_price"]))
             feature.append(self.ratio(curr["close_price"], curr["bottom_price"]))
+
+            feature.append(self.ratio(curr["hsi_close_price"], curr["hsi_top_price"]))
+            feature.append(self.ratio(curr["hsi_close_price"], curr["hsi_bottom_price"]))
+
+            feature.append(self.ratio(curr["hz2083_close_price"], curr["hz2083_top_price"]))
+            feature.append(self.ratio(curr["hz2083_close_price"], curr["hz2083_bottom_price"]))
+
             # 换手率
             feature.append(curr["turnover_ratio"])
+
             # 收盘价和平均价格的比值
             feature.append(self.ratio(curr["ma5_avg_price"], curr["close_price"]))
             feature.append(self.ratio(curr["ma10_avg_price"], curr["close_price"]))
             feature.append(self.ratio(curr["ma20_avg_price"], curr["close_price"]))
+
+            feature.append(self.ratio(curr["hsi_ma5_avg_price"], curr["hsi_close_price"]))
+            feature.append(self.ratio(curr["hsi_ma10_avg_price"], curr["hsi_close_price"]))
+            feature.append(self.ratio(curr["hsi_ma20_avg_price"], curr["hsi_close_price"]))
+
+            feature.append(self.ratio(curr["hz2083_ma5_avg_price"], curr["hz2083_close_price"]))
+            feature.append(self.ratio(curr["hz2083_ma10_avg_price"], curr["hz2083_close_price"]))
+            feature.append(self.ratio(curr["hz2083_ma20_avg_price"], curr["hz2083_close_price"]))
+
             # 交易量和平均交易量的比值
             feature.append(self.ratio(curr["ma5_volume"], curr["volume"]))
             feature.append(self.ratio(curr["ma10_volume"], curr["volume"]))
             feature.append(self.ratio(curr["ma20_volume"], curr["volume"]))
+
             index -= 1
 
         logging.info("Generate feature by transaction list success. transaction_list:%d feature:%d",
@@ -399,3 +511,137 @@ class Data():
 
         # 更新预测结果
         self.database.update_predict_real(data)
+
+    def get_potential_stock(self, date):
+        ''' 获取潜力股(隔夜持股法)
+            @Desc: 1.涨幅在3%~5%之间
+                   2.量比排名: 剔除量比小于1的股票
+                   3.换手率排名: 剔除换手率>10%和<5%的股票
+                   4.按市值排名: 剔除市值大于200亿和小于50亿的股票
+                   5.成交量忽高忽低的删掉, 只保留成交量持续放大的股票
+                   6.K线形态: 高位票或没有支撑的删掉
+                   7.看分时图: 全天运行的分时均价上方必须强于大盘
+                   8.两点半左右创出当日的新高, 回踩均线不跌破, 就是买点.
+        '''
+        # 拉取所有股票当天交易数据
+        potential_stock_list = list() # 潜力股列表
+
+        stock_list = self.database.get_all_stock()
+        for stock in stock_list:
+            stock_key = stock["stock_key"]
+
+            # 拉取当天交易数据
+            transaction_list = self.database.get_transaction_list(stock_key, date, 3)
+            if len(transaction_list) < 5:
+                logging.info("Get transaction list failed! stock_key:%s date:%s",
+                             stock_key, date)
+                continue
+            if date - int(transaction_list[0]["date"]) > 7:
+                logging.info("Long time not exchange! stock_key:%s date:%s",
+                             stock_key, transaction_list[0]["date"])
+                continue
+
+            # 判断是否为潜力股
+            if self.is_potential_stock(stock, transaction_list):
+                potential_stock_list.append(stock_key)
+
+        return potential_stock_list
+
+    def is_potential_stock(self, stock, transaction_list):
+        ''' 是否是潜力股
+            @Desc: 1.涨幅在3%~5%之间
+                   2.量比排名: 剔除量比小于1的股票
+                   3.换手率排名: 剔除换手率>10%和<5%的股票
+                   4.按市值排名: 剔除市值大于200亿和小于50亿的股票
+                   5.成交量忽高忽低的删掉, 只保留成交量持续放大的股票
+                   6.K线形态: 高位票或没有支撑的删掉
+                   7.看分时图: 全天运行的分时均价上方必须强于大盘
+                   8.两点半左右创出当日的新高, 回踩均线不跌破, 就是买点.
+        '''
+        curr = transaction_list[0] # 今天交易数据
+
+        # 1.当天涨幅在2% ~ 5%之间
+        ratio = self.ratio(curr["open_price"], curr["close_price"])
+        if (ratio < 2) or (ratio > 5):
+            logging.info("Price ratio out of [2, 5]. stock_key:%s ratio:%s",
+                         stock["stock_key"], ratio)
+            return False
+
+        # 2.量比排名: 剔除量比小于1的股票
+        ratio = self.ratio(curr["ma5_volume"], 5 * curr["volume"])
+        if ratio < 1:
+            logging.info("Volume ratio out of [1, ~). stock_key:%s ratio:%s",
+                         stock["stock_key"], ratio)
+            return False
+
+        # 3.换手率排名: 剔除换手率>10%和<4%的股票
+        if (curr["turnover_ratio"] > 10) or (curr["turnover_ratio"] < 4):
+            logging.info("Turnover ratio out of [4, 10]. stock_key:%s turnover_ratio:%s",
+                         stock["stock_key"], curr["turnover_ratio"])
+            return False
+
+        # 4.按市值排名: 剔除市值大于200亿和小于50亿的股票
+        if (stock["market_cap"] > STOCK_MARKET_CAP_20B) \
+                or (stock["market_cap"] < STOCK_MARKET_CAP_5B):
+            logging.info("Market cap out of [5B, 20B]. stock_key:%s market_cap:%s",
+                         stock["stock_key"], stock["market_cap"])
+            return False
+
+        # 5.成交量忽高忽低的删掉, 只保留成交量持续放大的股票
+        index = 0
+        max_index = len(transaction_list)-1
+        while(index < max_index):
+            if transaction_list[index]["volume"] <= transaction_list[index+1]["volume"]:
+                logging.info("Volume not add. stock_key:%s", stock["stock_key"])
+                return False
+            index += 1 
+
+        # 6.K线形态: 高位票或没有支撑的删掉
+
+        # 7.看分时图: 全天运行的分时均价上方必须强于大盘
+
+        # 8.两点半左右创出当日的新高, 回踩均线不跌破, 就是买点.
+
+        return True
+
+    def get_hsi_index(self):
+        ''' 获取恒生指数数据 '''
+        transaction_list = self.database.get_all_transaction_list_by_stock_key(STOCK_KEY_HSI)
+        if (transaction_list is None) or (len(transaction_list) == 0):
+            logging.error("Get hsi index transaction list failed! stock_key:%s",
+                          STOCK_KEY_HSI)
+            return None
+
+        hsi_index_list = dict()
+
+        for item in transaction_list:
+            hsi_index_list[item["date"]] = item
+
+        return hsi_index_list
+
+    def get_hz2083_index(self):
+        ''' 获取'恒生科技指数'数据 '''
+        transaction_list = self.database.get_all_transaction_list_by_stock_key(STOCK_KEY_HZ2083)
+        if (transaction_list is None) or (len(transaction_list) == 0):
+            logging.error("Get hz2083 index transaction list failed! stock_key:%s",
+                          STOCK_KEY_HZ2083)
+            return None
+
+        hz2083_index_list = dict()
+
+        for item in transaction_list:
+            hz2083_index_list[item["date"]] = item
+
+        return hz2083_index_list
+
+    def set_transaction_index(self, data):
+        ''' 更新股票指标数据 '''
+
+        curr_timestamp = int(time.time())
+        data["create_time"] = time.localtime(curr_timestamp)
+        data["update_time"] = time.localtime(curr_timestamp)
+
+        # 更新预测结果
+        self.database.set_transaction_index(data)
+
+

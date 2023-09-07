@@ -46,3 +46,5 @@ if __name__ == "__main__":
     stock = Stock()
 
     print(stock.get_khex_kline("00700", 7))
+
+    print("%05d" % (1))

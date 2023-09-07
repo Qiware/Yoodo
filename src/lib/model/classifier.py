@@ -21,15 +21,14 @@ class Classifier(Model):
     def _new(self):
         ''' 新建模型 '''
         return MLPClassifier(
-                solver='sgd',
                 activation='tanh', # tanh, relu, logistic
                 alpha=1e-4,
-                hidden_layer_sizes=(500, 500, 500,),
+                hidden_layer_sizes=(1000, 1000, 1000, 1000, 1000),
                 random_state=1,
                 max_iter=100000,
                 verbose=True,
-                learning_rate="adaptive",
-                learning_rate_init=0.001)
+                learning_rate="invscaling",
+                learning_rate_init=0.0001)
 
     def _gen_model_fpath(self, days):
         ''' 生成分类预测模型的路径 '''

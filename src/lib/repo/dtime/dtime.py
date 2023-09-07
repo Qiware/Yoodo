@@ -10,17 +10,20 @@ def date_to_timestamp(date):
         @Param date: 日期. 格式:YYYYMMDD
     '''
 
-    date_str = str(date)
+    try:
+        date_str = str(date)
 
-    year = int(date_str[0:4])
-    month = int(date_str[4:6])
-    day = int(date_str[6:8])
+        year = int(date_str[0:4])
+        month = int(date_str[4:6])
+        day = int(date_str[6:8])
 
-    dt = "%04d-%02d-%02d 00:00:00" % (year, month, day)
+        dt = "%04d-%02d-%02d 00:00:00" % (year, month, day)
 
-    ta = time.strptime(dt, "%Y-%m-%d %H:%M:%S")
+        ta = time.strptime(dt, "%Y-%m-%d %H:%M:%S")
 
-    return int(time.mktime(ta))
+        return int(time.mktime(ta))
+    except Exception as e:
+        return int(0)
 
 def timestamp_to_date(timestamp):
     ''' 将时间戳转为日期. 格式:YYYYMMDD '''
@@ -28,4 +31,10 @@ def timestamp_to_date(timestamp):
 
     return "%04d%02d%02d" % (lt.tm_year, lt.tm_mon, lt.tm_mday)
 
+
+def get_current_date():
+    ''' 获取当前日期. 格式:YYYYMMDD '''
+    lt = time.localtime(time.time())
+
+    return "%04d%02d%02d" % (lt.tm_year, lt.tm_mon, lt.tm_mday)
 

@@ -15,7 +15,7 @@ sys.path.append("../../lib/data")
 from data import Data
 
 sys.path.append("../../lib/model")
-#from model import Model
+from model import *
 from regressor import Regressor
 from classifier import Classifier
 
@@ -36,25 +36,24 @@ class Predicter():
         # 数据处理
         self.data = Data()
 
-    def predict(self, date, days):
-        ''' 数据预测 '''
+    def get_potential_stock(self, date):
+        ''' 获取潜力股 '''
+        return self.data.get_potential_stock(date)
 
-        # 特征归一化处理
-        scaler = StandardScaler()
-        #scaler = MinMaxScaler()
-
-        # 加载训练数据
-        feature, target = self.data.load_train_data("20230701", days)
-
-        # 划分训练集和测试集
-        feature_train, feature_test, target_train, target_test = train_test_split(
-                feature, target, test_size=0.05, random_state=1)
-
-        feature_train_scaled = scaler.fit_transform(feature_train)
+    def predict(self, model_type, date, days):
+        ''' 数据预测
+            @Param model_type: 预测模型(r:线性模型 c:分类模型)
+            @Param date: 预测日期
+            @Param days: 预测周期
+        '''
 
         # 加载模型
-        #model = Classifier(days)
-        model = Regressor(days)
+        scaler = StandardScaler()
+        model = None
+        if model_type == MODEL_REGRESSOR:
+            model = Regressor(days)
+        elif model_type == MODEL_REGRESSOR:
+            model = Classifier(days)
 
         # 获取股票列表
         stock_list = self.data.get_good_stock()
@@ -69,15 +68,14 @@ class Predicter():
                 continue
 
             # 进行结果预测
-            #print(feature)
-            feature_scaled = scaler.transform(feature)
+            feature_scaled = None
+            if stock_key == "hkex:00001":
+                feature_scaled = scaler.fit_transform(feature)
+            else:
+                feature_scaled = scaler.transform(feature)
             print(feature_scaled)
 
-            #feature_inverse_scaled = scaler.inverse_transform(feature_scaled)
-            #print(feature_inverse_scaled)
-
             ratio = model.predict(feature_scaled)
-            #ratio = [0]
 
             print("predict: %s %s %s %s %s" % (stock_key, date, days, ratio[0], stock["name"]))
             logging.info("predict: %s %s %s %s %s", stock_key, date, days, ratio[0], stock["name"])
