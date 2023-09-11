@@ -85,14 +85,6 @@ class Data():
             item["turnover"] = transaction_list[index]["turnover"] # 交易额
             item["turnover_ratio"] = transaction_list[index]["turnover_ratio"] # 换手率
 
-            item["ma5_avg_price"] = transaction_list[index]["ma5_avg_price"] # MA5平均价格
-            item["ma10_avg_price"] = transaction_list[index]["ma10_avg_price"] # MA10平均价格
-            item["ma20_avg_price"] = transaction_list[index]["ma20_avg_price"] # MA20平均价格
-
-            item["ma5_volume"] = transaction_list[index]["ma5_volume"] # MA5交易量
-            item["ma10_volume"] = transaction_list[index]["ma10_volume"] # MA10交易量
-            item["ma20_volume"] = transaction_list[index]["ma20_volume"] # MA20交易量
-
             # 恒生指数
             curr_date = transaction_list[index]["date"]
             last_date = transaction_list[index+days-1]["date"]
@@ -102,19 +94,6 @@ class Data():
             item["hsi_top_price"] = self.hsi_index_list[curr_date]["top_price"] # 最高价
             item["hsi_bottom_price"] = self.hsi_index_list[curr_date]["bottom_price"] # 最低价
             item["hsi_turnover"] = self.hsi_index_list[curr_date]["turnover"] # 交易额
-            item["hsi_ma5_avg_price"] = self.hsi_index_list[curr_date]["ma5_avg_price"] # MA5平均价格
-            item["hsi_ma10_avg_price"] = self.hsi_index_list[curr_date]["ma10_avg_price"] # MA10平均价格
-            item["hsi_ma20_avg_price"] = self.hsi_index_list[curr_date]["ma20_avg_price"] # MA20平均价格
-
-            # 恒生科技指数
-            item["hz2083_open_price"] = self.hz2083_index_list[last_date]["open_price"] # 开盘价(取第一天开盘价)
-            item["hz2083_close_price"] = self.hz2083_index_list[curr_date]["close_price"] # 收盘价(取最后一天收盘价)
-            item["hz2083_top_price"] = self.hz2083_index_list[curr_date]["top_price"] # 最高价
-            item["hz2083_bottom_price"] = self.hz2083_index_list[curr_date]["bottom_price"] # 最低价
-            item["hz2083_turnover"] = self.hz2083_index_list[curr_date]["turnover"] # 交易额
-            item["hz2083_ma5_avg_price"] = self.hz2083_index_list[curr_date]["ma5_avg_price"] # MA5平均价格
-            item["hz2083_ma10_avg_price"] = self.hz2083_index_list[curr_date]["ma10_avg_price"] # MA10平均价格
-            item["hz2083_ma20_avg_price"] = self.hz2083_index_list[curr_date]["ma20_avg_price"] # MA20平均价格
 
             index += 1
             while (index < (num+1)*days):
@@ -127,43 +106,12 @@ class Data():
                 item["turnover"] += transaction_list[index]["turnover"]
                 item["turnover_ratio"] += transaction_list[index]["turnover_ratio"]
 
-                item["ma5_avg_price"] += transaction_list[index]["ma5_avg_price"]
-                item["ma10_avg_price"] += transaction_list[index]["ma10_avg_price"]
-                item["ma20_avg_price"] += transaction_list[index]["ma20_avg_price"]
-
-                item["ma5_volume"] += transaction_list[index]["ma5_volume"]
-                item["ma10_volume"] += transaction_list[index]["ma10_volume"]
-                item["ma20_volume"] += transaction_list[index]["ma20_volume"]
-
                 # 恒生指数
                 item["hsi_top_price"] = max(item["hsi_top_price"], self.hsi_index_list[curr_date]["top_price"])
                 item["hsi_bottom_price"] = min(item["hsi_bottom_price"], self.hsi_index_list[curr_date]["bottom_price"])
                 item["hsi_turnover"] += self.hsi_index_list[curr_date]["turnover"]
-                item["hsi_ma5_avg_price"] += self.hsi_index_list[curr_date]["ma5_avg_price"]
-                item["hsi_ma10_avg_price"] += self.hsi_index_list[curr_date]["ma10_avg_price"]
-                item["hsi_ma20_avg_price"] += self.hsi_index_list[curr_date]["ma20_avg_price"]
-
-                # 恒生科技指数
-                item["hz2083_top_price"] = max(item["hz2083_top_price"], self.hz2083_index_list[curr_date]["top_price"])
-                item["hz2083_bottom_price"] = min(item["hz2083_bottom_price"], self.hz2083_index_list[curr_date]["bottom_price"])
-                item["hz2083_turnover"] += self.hz2083_index_list[curr_date]["turnover"]
-                item["hz2083_ma5_avg_price"] += self.hz2083_index_list[curr_date]["ma5_avg_price"]
-                item["hz2083_ma10_avg_price"] += self.hz2083_index_list[curr_date]["ma10_avg_price"]
-                item["hz2083_ma20_avg_price"] += self.hz2083_index_list[curr_date]["ma20_avg_price"]
 
                 index += 1
-
-            item["ma5_avg_price"] /= days
-            item["ma10_avg_price"] /= days
-            item["ma20_avg_price"] /= days
-
-            item["hsi_ma5_avg_price"] /= days
-            item["hsi_ma10_avg_price"] /= days
-            item["hsi_ma20_avg_price"] /= days
-
-            item["hz2083_ma5_avg_price"] /= days
-            item["hz2083_ma10_avg_price"] /= days
-            item["hz2083_ma20_avg_price"] /= days
 
             logging.debug("Transaction group. date:%s data:%s", curr_date, item)
 
@@ -361,11 +309,6 @@ class Data():
             feature.append(self.ratio(prev["hsi_close_price"], curr["hsi_top_price"]))
             feature.append(self.ratio(prev["hsi_close_price"], curr["hsi_bottom_price"]))
 
-            feature.append(self.ratio(prev["hz2083_close_price"], curr["hz2083_open_price"]))
-            feature.append(self.ratio(prev["hz2083_close_price"], curr["hz2083_close_price"]))
-            feature.append(self.ratio(prev["hz2083_close_price"], curr["hz2083_top_price"]))
-            feature.append(self.ratio(prev["hz2083_close_price"], curr["hz2083_bottom_price"]))
-
             # 与本周期的开盘价比较
             feature.append(self.ratio(curr["open_price"], curr["close_price"]))
             feature.append(self.ratio(curr["open_price"], curr["top_price"]))
@@ -375,10 +318,6 @@ class Data():
             feature.append(self.ratio(curr["hsi_open_price"], curr["hsi_top_price"]))
             feature.append(self.ratio(curr["hsi_open_price"], curr["hsi_bottom_price"]))
 
-            feature.append(self.ratio(curr["hz2083_open_price"], curr["hz2083_close_price"]))
-            feature.append(self.ratio(curr["hz2083_open_price"], curr["hz2083_top_price"]))
-            feature.append(self.ratio(curr["hz2083_open_price"], curr["hz2083_bottom_price"]))
-
             # 与本周期的收盘价比较
             feature.append(self.ratio(curr["close_price"], curr["top_price"]))
             feature.append(self.ratio(curr["close_price"], curr["bottom_price"]))
@@ -386,29 +325,8 @@ class Data():
             feature.append(self.ratio(curr["hsi_close_price"], curr["hsi_top_price"]))
             feature.append(self.ratio(curr["hsi_close_price"], curr["hsi_bottom_price"]))
 
-            feature.append(self.ratio(curr["hz2083_close_price"], curr["hz2083_top_price"]))
-            feature.append(self.ratio(curr["hz2083_close_price"], curr["hz2083_bottom_price"]))
-
             # 换手率
             feature.append(curr["turnover_ratio"])
-
-            # 收盘价和平均价格的比值
-            feature.append(self.ratio(curr["ma5_avg_price"], curr["close_price"]))
-            feature.append(self.ratio(curr["ma10_avg_price"], curr["close_price"]))
-            feature.append(self.ratio(curr["ma20_avg_price"], curr["close_price"]))
-
-            feature.append(self.ratio(curr["hsi_ma5_avg_price"], curr["hsi_close_price"]))
-            feature.append(self.ratio(curr["hsi_ma10_avg_price"], curr["hsi_close_price"]))
-            feature.append(self.ratio(curr["hsi_ma20_avg_price"], curr["hsi_close_price"]))
-
-            feature.append(self.ratio(curr["hz2083_ma5_avg_price"], curr["hz2083_close_price"]))
-            feature.append(self.ratio(curr["hz2083_ma10_avg_price"], curr["hz2083_close_price"]))
-            feature.append(self.ratio(curr["hz2083_ma20_avg_price"], curr["hz2083_close_price"]))
-
-            # 交易量和平均交易量的比值
-            feature.append(self.ratio(curr["ma5_volume"], curr["volume"]))
-            feature.append(self.ratio(curr["ma10_volume"], curr["volume"]))
-            feature.append(self.ratio(curr["ma20_volume"], curr["volume"]))
 
             index -= 1
 
@@ -568,11 +486,11 @@ class Data():
             return False
 
         # 2.量比排名: 剔除量比小于1的股票
-        ratio = self.ratio(curr["ma5_volume"], 5 * curr["volume"])
-        if ratio < 1:
-            logging.info("Volume ratio out of [1, ~). stock_key:%s ratio:%s",
-                         stock["stock_key"], ratio)
-            return False
+        #ratio = self.ratio(curr["ma5_volume"], 5 * curr["volume"])
+        #if ratio < 1:
+        #    logging.info("Volume ratio out of [1, ~). stock_key:%s ratio:%s",
+        #                 stock["stock_key"], ratio)
+        #    return False
 
         # 3.换手率排名: 剔除换手率>10%和<4%的股票
         if (curr["turnover_ratio"] > 10) or (curr["turnover_ratio"] < 4):

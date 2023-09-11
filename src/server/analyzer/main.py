@@ -6,7 +6,7 @@ import sys
 import logging
 
 sys.path.append("./logic")
-from index import *
+from analyze import *
 
 sys.path.append("../../lib/repo/log")
 from log import *
@@ -27,8 +27,8 @@ if __name__ == "__main__":
     # 日志初始化
     log_init("../../../log/index.log")
 
-    # 新建指数处理器
-    index = Index()
+    # 新建数据分析
+    analyzer = Analyzer()
 
-    index.rebuild(start_stock_code)
+    analyzer.rebuild(start_stock_code)
 

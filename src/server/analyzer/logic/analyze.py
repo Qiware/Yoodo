@@ -14,7 +14,7 @@ from log import *
 sys.path.append("../../lib/repo/dtime")
 from dtime import *
 
-class Index():
+class Analyzer():
     def __init__(self):
         self.data = Data()
 
@@ -150,6 +150,29 @@ class Index():
             stock_index[date][index_name] = float(item)
             idx += 1
         return 
+
+    def dema(self, stock_index, transaction_list):
+        ''' 计算DEMA指标 '''
+
+        # 抽取交易量列表
+        close_price_list = list()
+        for transaction in transaction_list:
+            close_price_list.append(float(transaction["close_price"]))
+
+        # 计算DEMA指标
+        dema = talib.DEMA(pandas.Series(close_price_list), timeperiod=30)
+
+        idx = 0
+        for item in dema:
+            date = transaction_list[idx]["date"]
+            if math.isnan(item):
+                idx += 1
+                continue
+            if date not in stock_index.keys():
+                stock_index[date] = dict()
+            stock_index[date]["DEMA"] = float(item)
+            idx += 1
+        return
 
     def macd(self, stock_index, transaction_list):
         ''' 计算MACD指标 '''

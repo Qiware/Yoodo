@@ -185,10 +185,7 @@ class Database():
         sql = f'SELECT stock_key, date, \
                     open_price, close_price, \
                     top_price, bottom_price, \
-                    volume, turnover, turnover_ratio, \
-                    ma5_avg_price, ma5_volume,  \
-                    ma10_avg_price, ma10_volume,  \
-                    ma20_avg_price, ma20_volume  \
+                    volume, turnover, turnover_ratio \
                 FROM t_transaction \
                 WHERE stock_key=%s AND date=%s'
 
@@ -214,12 +211,6 @@ class Database():
         data["volume"] = float(item[6])
         data["turnover"] = float(item[7])
         data["turnover_ratio"] = float(item[8])
-        data["ma5_avg_price"] = float(item[9])
-        data["ma5_volume"] = float(item[10])
-        data["ma10_avg_price"] = float(item[11])
-        data["ma10_volume"] = float(item[12])
-        data["ma20_avg_price"] = float(item[13])
-        data["ma20_volume"] = float(item[14])
 
         return data
 
@@ -327,9 +318,7 @@ class Database():
 
         sql = f'SELECT stock_key, date, open_price, \
                         close_price, top_price, bottom_price, \
-                        volume, turnover, turnover_ratio, \
-                        ma5_avg_price, ma10_avg_price, ma20_avg_price, \
-                        ma5_volume, ma10_volume, ma20_volume \
+                        volume, turnover, turnover_ratio \
                     FROM t_transaction \
                     WHERE stock_key=%s AND date<=%s ORDER BY date DESC LIMIT %s'
 
@@ -354,12 +343,6 @@ class Database():
             data["volume"] = int(item[6])
             data["turnover"] = float(item[7])
             data["turnover_ratio"] = float(item[8])
-            data["ma5_avg_price"] = float(item[9])
-            data["ma10_avg_price"] = float(item[10])
-            data["ma20_avg_price"] = float(item[11])
-            data["ma5_volume"] = int(item[12])
-            data["ma10_volume"] = int(item[13])
-            data["ma20_volume"] = int(item[14])
             result.append(data)
         return result
 
@@ -373,9 +356,7 @@ class Database():
 
         sql = f'SELECT stock_key, date, open_price, \
                         close_price, top_price, bottom_price, \
-                        volume, turnover, turnover_ratio, \
-                        ma5_avg_price, ma10_avg_price, ma20_avg_price, \
-                        ma5_volume, ma10_volume, ma20_volume \
+                        volume, turnover, turnover_ratio \
                     FROM t_transaction \
                     WHERE stock_key=%s ORDER BY date DESC'
 
@@ -400,12 +381,6 @@ class Database():
             data["volume"] = int(item[6])
             data["turnover"] = float(item[7])
             data["turnover_ratio"] = float(item[8])
-            data["ma5_avg_price"] = float(item[9])
-            data["ma10_avg_price"] = float(item[10])
-            data["ma20_avg_price"] = float(item[11])
-            data["ma5_volume"] = int(item[12])
-            data["ma10_volume"] = int(item[13])
-            data["ma20_volume"] = int(item[14])
             result.append(data)
         return result
 
