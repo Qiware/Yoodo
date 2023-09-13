@@ -214,7 +214,7 @@ class Analyzer():
 
             if date not in stock_index.keys():
                 stock_index[date] = dict()
-            stock_index[date]["MACD"] = json.dumps(value)
+            stock_index[date]["MACD"] = value
 
             idx += 1
         return
@@ -256,7 +256,7 @@ class Analyzer():
 
             if date not in stock_index.keys():
                 stock_index[date] = dict()
-            stock_index[date]["KDJ"] = json.dumps(value)
+            stock_index[date]["KDJ"] = value
 
             idx += 1
         return
@@ -345,7 +345,7 @@ class Analyzer():
 
             if date not in stock_index.keys():
                 stock_index[date] = dict()
-            stock_index[date]["BOLL"] = json.dumps(value)
+            stock_index[date]["BOLL"] = value
             idx += 1
         return
 
@@ -566,12 +566,9 @@ class Analyzer():
 
     def update(self, stock_key, stock_index):
         ''' 更新股票交易指数 '''
-        for date, index in stock_index.items():
-            for name, value in index.items():
-                item = dict()
-                item["stock_key"] = stock_key
-                item["date"] = date
-                item["name"] = name
-                item["value"] = value
-                self.data.set_transaction_index(item)
-        pass
+        for date, data in stock_index.items():
+            item = dict()
+            item["stock_key"] = stock_key
+            item["date"] = date
+            item["data"] = json.dumps(data)
+            self.data.set_transaction_index(item)
