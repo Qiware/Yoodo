@@ -599,6 +599,47 @@ class Database():
 
         return data
 
+    def get_transaction_index_list(self, stock_key, name, lastest_date):
+        ''' 获取指定交易数据
+            @Param stock_key: 股票KEY
+            @Param name: 指标名称(如: MACD)
+            @Param lastest_date: 最新交易日期(格式: YYYYMMDD)
+        '''
+
+        # 查询交易数据
+        cursor = self.mysql.cursor()
+
+        sql = f'SELECT stock_key, date, name, value \
+                FROM t_transaction_index \
+                WHERE stock_key=%s AND date<=%s AND name=%s'
+
+        cursor.execute(sql, (stock_key, lastest_date, name))
+
+        items = cursor.fetchall()
+
+        cursor.close()
+
+        if item is None:
+            logging.debug("No found. stock_key:%s date:%s name:%s",
+                          stock_key, date, name)
+            return None
+
+        # 数据整合处理
+        data = dict()
+
+        for item in items:
+            date = int(item["date"])
+
+            data[date] = dict()
+
+            data[date]["stock_key"] = str(item[0])
+            data[date]["date"] = int(item[1])
+            data[date]["name"] = str(item[2])
+            data[date]["value"] = item[3]
+
+        return data
+
+
 
 if __name__ == "__main__":
     db = Database()

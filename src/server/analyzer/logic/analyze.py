@@ -72,8 +72,20 @@ class Analyzer():
         # ADOSC指标
         self.adosc(stock_index, transaction_list)
 
-        # OVB指标
+        # OBV指标
         self.obv(stock_index, transaction_list)
+
+        # SAR指标
+        self.sar(stock_index, transaction_list)
+
+        # WILLR指标
+        self.willr(stock_index, transaction_list)
+
+        # CCI指标
+        self.cci(stock_index, transaction_list)
+
+        # EMA指标
+        self.ema(stock_index, transaction_list)
 
         print(stock_index)
 
@@ -409,6 +421,134 @@ class Analyzer():
             stock_index[date]["ADOSC"] = adosc[idx]
             idx += 1
         return
+
+    def sar(self, stock_index, transaction_list):
+        ''' 计算SAR指标 '''
+        print("计算SAR指标")
+
+        # 抽取特征数据
+        top_price_list = list()
+        bottom_price_list = list()
+        for transaction in transaction_list:
+            top_price_list.append(float(transaction["top_price"]))
+            bottom_price_list.append(float(transaction["bottom_price"]))
+
+        sar = talib.SAR(
+                pandas.Series(top_price_list),
+                pandas.Series(bottom_price_list),
+                acceleration=0, maximum=0)
+
+        # 存储SAR值
+        idx = 0
+        while(idx < len(sar)):
+            date = transaction_list[idx]["date"]
+
+            if (math.isnan(sar[idx])):
+                idx += 1
+                continue
+
+            if date not in stock_index.keys():
+                stock_index[date] = dict()
+            stock_index[date]["SAR"] = sar[idx]
+            idx += 1
+        return
+
+    def willr(self, stock_index, transaction_list):
+        ''' 计算WILLR指标 '''
+        print("计算WILLR指标")
+
+        # 抽取特征数据
+        top_price_list = list()
+        bottom_price_list = list()
+        close_price_list = list()
+        for transaction in transaction_list:
+            top_price_list.append(float(transaction["top_price"]))
+            bottom_price_list.append(float(transaction["bottom_price"]))
+            close_price_list.append(float(transaction["close_price"]))
+
+        willr = talib.WILLR(
+                pandas.Series(top_price_list),
+                pandas.Series(bottom_price_list),
+                pandas.Series(close_price_list),
+                timeperiod=14)
+
+        # 存储WILLR值
+        idx = 0
+        while(idx < len(willr)):
+            date = transaction_list[idx]["date"]
+
+            if (math.isnan(willr[idx])):
+                idx += 1
+                continue
+
+            if date not in stock_index.keys():
+                stock_index[date] = dict()
+            stock_index[date]["WILLR"] = willr[idx]
+            idx += 1
+        return
+
+    def cci(self, stock_index, transaction_list):
+        ''' 计算CCI指标 '''
+        print("计算CCI指标")
+
+        # 抽取特征数据
+        top_price_list = list()
+        bottom_price_list = list()
+        close_price_list = list()
+        for transaction in transaction_list:
+            top_price_list.append(float(transaction["top_price"]))
+            bottom_price_list.append(float(transaction["bottom_price"]))
+            close_price_list.append(float(transaction["close_price"]))
+
+        cci = talib.CCI(
+                pandas.Series(top_price_list),
+                pandas.Series(bottom_price_list),
+                pandas.Series(close_price_list),
+                timeperiod=14)
+
+        # 存储CCI值
+        idx = 0
+        while(idx < len(cci)):
+            date = transaction_list[idx]["date"]
+
+            if (math.isnan(cci[idx])):
+                idx += 1
+                continue
+
+            if date not in stock_index.keys():
+                stock_index[date] = dict()
+            stock_index[date]["CCI"] = cci[idx]
+            idx += 1
+        return
+
+    def ema(self, stock_index, transaction_list):
+        ''' 计算EMA指标 '''
+        print("计算EMA指标")
+
+        # 抽取特征数据
+        close_price_list = list()
+        for transaction in transaction_list:
+            close_price_list.append(float(transaction["close_price"]))
+
+        ema = talib.EMA(
+                pandas.Series(close_price_list),
+                timeperiod=6)
+
+        # 存储EMA值
+        idx = 0
+        while(idx < len(ema)):
+            date = transaction_list[idx]["date"]
+
+            if (math.isnan(ema[idx])):
+                idx += 1
+                continue
+
+            if date not in stock_index.keys():
+                stock_index[date] = dict()
+            stock_index[date]["EMA"] = ema[idx]
+            idx += 1
+        return
+
 
     def sort(self, transaction_list):
         ''' 交易列表重排序: 按时间有序 '''

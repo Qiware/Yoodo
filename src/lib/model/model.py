@@ -9,7 +9,7 @@ import logging
 
 from sklearn.neural_network import MLPRegressor
 
-sys.path.append("../lib/log")
+sys.path.append("../../lib/repo/log")
 from log import *
 
 # 模型类型

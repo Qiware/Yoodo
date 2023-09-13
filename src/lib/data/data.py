@@ -6,6 +6,8 @@ import time
 import joblib
 import logging
 
+sys.path.append("../../lib/model")
+from model import *
 sys.path.append("../../lib/repo/log")
 from log import *
 sys.path.append("../../lib/repo/database")
@@ -123,7 +125,7 @@ class Data():
 
         return transaction_group
 
-    def gen_train_data_by_days(self, date, days, num):
+    def gen_train_data_by_days(self, model_type, date, days, num):
         ''' 按days天聚合训练数据
             @Param date: 结束日期
             @Param days: 以days为间隔进行分组
@@ -146,8 +148,10 @@ class Data():
             transaction_group = self.group_transaction_by_days(transaction_list, days)
 
             # 生成训练样本
-            #self.gen_train_data_by_transaction_list(stock_key, transaction_group, fp)
-            self.gen_classify_train_data_by_transaction_list(stock_key, transaction_group, fp)
+            if model_type == MODEL_REGRESSOR:
+                self.gen_train_data_by_transaction_list(stock_key, transaction_group, fp)
+            elif model_type == MODEL_CLASSIFIER:
+                self.gen_classify_train_data_by_transaction_list(stock_key, transaction_group, fp)
 
         fp.close()
 

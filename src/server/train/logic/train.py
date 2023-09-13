@@ -34,6 +34,7 @@ class Trainer():
         # 指定数据源
         self.data = Data()
         self.scaler = StandardScaler()
+        self.model_type = model_type
         if model_type == MODEL_REGRESSOR:
             self.model = Regressor(days, is_rebuild)
         elif model_type == MODEL_CLASSIFIER:
@@ -111,7 +112,8 @@ class Trainer():
         ''' 重建模型 '''
 
         # 生成训练数据
-        self.data.gen_train_data_by_days(date, days, GET_TRANSACTION_MAX_NUM)
+        self.data.gen_train_data_by_days(
+                self.model_type, date, days, GET_TRANSACTION_MAX_NUM)
 
         # 进行模型训练
         self.train(date, days, True)
@@ -121,7 +123,8 @@ class Trainer():
 
         # 生成训练数据
         # 注意事项: 不仅需要训练数据, 还有一个基准数据和目标结果数据, 因此是+2.
-        self.data.gen_train_data_by_days(date, days, days*(TRAIN_DATA_TRANSACTION_NUM+2))
+        self.data.gen_train_data_by_days(
+                self.model_type, date, days, days*(TRAIN_DATA_TRANSACTION_NUM+2))
 
         # 进行模型训练
         self.train(date, days, False)
