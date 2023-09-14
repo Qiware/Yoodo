@@ -11,7 +11,7 @@ import logging
 from hkex import *
 from const import *
 
-sys.path.append("../../lib/repo/database")
+sys.path.append("../../repo/database")
 from database import *
 
 # 港交所KEY

@@ -5,10 +5,10 @@ import sys
 import time
 import logging
 
-sys.path.append("../../lib/repo/log")
+sys.path.append("../../repo/lib/log")
 from log import *
 
-sys.path.append("../../lib/repo/dtime")
+sys.path.append("../../repo/lib/dtime")
 from dtime import *
 
 from predict import *

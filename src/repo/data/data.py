@@ -7,11 +7,11 @@ import json
 import joblib
 import logging
 
-sys.path.append("../../lib/model")
+sys.path.append("../lib/model")
 from model import *
-sys.path.append("../../lib/repo/log")
+sys.path.append("../lib/log")
 from log import *
-sys.path.append("../../lib/repo/database")
+sys.path.append("../database")
 from database import *
 
 from label import Label

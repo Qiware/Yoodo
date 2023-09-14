@@ -8,7 +8,7 @@ import logging
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-sys.path.append("../../lib/repo/log")
+sys.path.append("../../repo/lib/log")
 from log import *
 sys.path.append("../../server/train/logic")
 from logic.train import Trainer
