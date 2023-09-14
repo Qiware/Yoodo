@@ -2,7 +2,6 @@
 # 君子爱财 取之YOODO!
 
 import sys
-import joblib
 import logging
 
 import matplotlib.pyplot as plt
@@ -47,7 +46,7 @@ class Trainer():
 
         # 划分训练集和测试集
         x_train, x_test, y_train, y_test = train_test_split(
-                feature, target, test_size=0.005, random_state=1)
+                feature, target, test_size=0.001, random_state=1)
 
         # 训练模型
         x_train_scaled = self.scaler.fit_transform(x_train)
@@ -72,7 +71,7 @@ class Trainer():
 
         # 预测结果
         # 获取股票列表
-        for date in range(20230701, 20230731):
+        for date in range(20230901, 20230915):
             stock_list = self.data.get_good_stock()
             for stock in stock_list:
                 stock_key = stock["stock_key"]

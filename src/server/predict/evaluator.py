@@ -4,10 +4,9 @@
 # 功能描述: 用于评估模型的预测结果准确性
 
 import sys
-import logging
 
 sys.path.append("../../repo/lib/log")
-from log import *
+from log import log_init
 
 from predict import *
 

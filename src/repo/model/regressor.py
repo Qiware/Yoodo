@@ -5,7 +5,7 @@
 
 from sklearn.neural_network import MLPRegressor
 
-from model import *
+from model import Model
 
 class Regressor(Model):
     def __init__(self, days, is_rebuild=False):
