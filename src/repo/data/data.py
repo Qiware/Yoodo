@@ -4,15 +4,12 @@
 import sys
 import time
 import json
-import joblib
 import logging
 
-sys.path.append("../../lib/model")
-from model import *
-sys.path.append("../../lib/repo/log")
-from log import *
-sys.path.append("../../lib/repo/database")
-from database import *
+sys.path.append("../../repo/database")
+from database import Database
+sys.path.append("../../repo/model")
+from model import MODEL_REGRESSOR, MODEL_CLASSIFIER
 
 from label import Label
 
@@ -34,10 +31,8 @@ STOCK_MARKET_CAP_20B = 20000000000
 # 数据处理
 class Data():
     def __init__(self):
-        self.label = Label()
-
-        # 连接数据库
-        self.database = Database()
+        self.label = Label()  # Label对象
+        self.database = Database()  # 连接数据库
 
         # 查询指数数据
         self.hsi_index_list = self.get_hsi_index() # 恒生指数
@@ -321,6 +316,11 @@ class Data():
                 feature.append(curr_index["MACD"]["DIFF"])
                 feature.append(curr_index["MACD"]["DEA"])
                 feature.append(self.label.ratio(curr_index["MACD"]["DIFF"], curr_index["MACD"]["DEA"]))
+
+                feature.append(self.label.ad_label(curr_index["AD"], prev_index["AD"], curr["close_price"], prev["close_price"]))
+                feature.append(self.label.ratio(curr_index["AD"], prev_index["AD"]))
+
+                feature.append(self.label.adosc_label(curr_index["ADOSC"], prev_index["ADOSC"]))
 
                 index -= 1
             except Exception as e:

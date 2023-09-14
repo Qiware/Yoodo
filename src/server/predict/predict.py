@@ -8,19 +8,19 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
-sys.path.append("../../lib/log")
+sys.path.append("../../repo/lib/log")
 from log import *
 
-sys.path.append("../../lib/data")
+sys.path.append("../../repo/data")
 from data import Data
 
-sys.path.append("../../lib/model")
+sys.path.append("../../repo/model")
 from model import *
 from regressor import Regressor
 from classifier import Classifier
 
 
-sys.path.append("../../lib/repo/dtime")
+sys.path.append("../../repo/lib/dtime")
 from dtime import *
 
 # 拉取训练交易数据条目
