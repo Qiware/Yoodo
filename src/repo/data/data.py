@@ -8,14 +8,15 @@ import logging
 
 sys.path.append("../../repo/database")
 from database import Database
+
 sys.path.append("../../repo/model")
 from model import MODEL_REGRESSOR, MODEL_CLASSIFIER
 
 from label import Label
 
 # 恒生指数KEY
-STOCK_KEY_HSI = "hkex:hsi" # 恒生指数
-STOCK_KEY_HZ2083 = "hkex:hz2083" # 恒生科技指数
+STOCK_KEY_HSI = "hkex:hsi"  # 恒生指数
+STOCK_KEY_HZ2083 = "hkex:hz2083"  # 恒生科技指数
 
 # 单条训练样本拥有的交易数据条目
 TRAIN_DATA_TRANSACTION_NUM = 20
@@ -28,6 +29,7 @@ STOCK_MARKET_CAP_5B = 5000000000
 # 股票市值200亿
 STOCK_MARKET_CAP_20B = 20000000000
 
+
 # 数据处理
 class Data():
     def __init__(self):
@@ -35,8 +37,8 @@ class Data():
         self.database = Database()  # 连接数据库
 
         # 查询指数数据
-        self.hsi_index_list = self.get_hsi_index() # 恒生指数
-        self.hz2083_index_list = self.get_hz2083_index() # 恒生科技指数
+        self.hsi_index_list = self.get_hsi_index()  # 恒生指数
+        self.hz2083_index_list = self.get_hz2083_index()  # 恒生科技指数
 
     def gen_train_data_fpath(self, date, days):
         ''' 生成训练数据的路径 '''
@@ -56,11 +58,11 @@ class Data():
             curr_date = item["date"]
 
             # 填充恒生指数
-            item["hsi_open_price"] = self.hsi_index_list[curr_date]["open_price"] # 开盘价(取第一天开盘价)
-            item["hsi_close_price"] = self.hsi_index_list[curr_date]["close_price"] # 收盘价(取最后一天收盘价)
-            item["hsi_top_price"] = self.hsi_index_list[curr_date]["top_price"] # 最高价
-            item["hsi_bottom_price"] = self.hsi_index_list[curr_date]["bottom_price"] # 最低价
-            item["hsi_turnover"] = self.hsi_index_list[curr_date]["turnover"] # 交易额
+            item["hsi_open_price"] = self.hsi_index_list[curr_date]["open_price"]  # 开盘价(取第一天开盘价)
+            item["hsi_close_price"] = self.hsi_index_list[curr_date]["close_price"]  # 收盘价(取最后一天收盘价)
+            item["hsi_top_price"] = self.hsi_index_list[curr_date]["top_price"]  # 最高价
+            item["hsi_bottom_price"] = self.hsi_index_list[curr_date]["bottom_price"]  # 最低价
+            item["hsi_turnover"] = self.hsi_index_list[curr_date]["turnover"]  # 交易额
 
             # 填充交易指数
             item["index"] = json.loads(index_dict[curr_date]["data"])
@@ -114,7 +116,7 @@ class Data():
         train_data_list = list()
 
         # 判断参数合法性
-        if len(transaction_list) < TRAIN_DATA_TRANSACTION_NUM+1:
+        if len(transaction_list) < TRAIN_DATA_TRANSACTION_NUM + 1:
             logging.error("Transaction data not enough! stock_key:%s", stock_key)
             return None
 
@@ -127,8 +129,8 @@ class Data():
 
             # 生成训练数据
             features = self.gen_feature_by_transaction_list(
-                    stock_key,
-                    transaction_list[offset:offset+TRAIN_DATA_TRANSACTION_NUM+1])
+                stock_key,
+                transaction_list[offset:offset + TRAIN_DATA_TRANSACTION_NUM + 1])
             if features is None:
                 offset -= 1
                 continue
@@ -138,8 +140,8 @@ class Data():
 
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
             price_ratio = self.label.ratio(
-                    transaction_list[offset]["close_price"],
-                    transaction_list[offset-1]["close_price"])
+                transaction_list[offset]["close_price"],
+                transaction_list[offset - 1]["close_price"])
 
             train_data += "%f\n" % (price_ratio)
 
@@ -165,7 +167,7 @@ class Data():
         train_data_list = list()
 
         # 判断参数合法性
-        if len(transaction_list) < TRAIN_DATA_TRANSACTION_NUM+1:
+        if len(transaction_list) < TRAIN_DATA_TRANSACTION_NUM + 1:
             logging.error("Transaction data not enough! stock_key:%s", stock_key)
             return None
 
@@ -178,8 +180,8 @@ class Data():
 
             # 生成训练数据
             features = self.gen_feature_by_transaction_list(
-                    stock_key,
-                    transaction_list[offset:offset+TRAIN_DATA_TRANSACTION_NUM+1])
+                stock_key,
+                transaction_list[offset:offset + TRAIN_DATA_TRANSACTION_NUM + 1])
             if features is None:
                 logging.error("Generate feature by transactionn list failed! stock_key:%s offset:%s",
                               stock_key, offset)
@@ -190,8 +192,8 @@ class Data():
 
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
             price_ratio = self.label.ratio(
-                    transaction_list[offset]["close_price"],
-                    transaction_list[offset-1]["close_price"])
+                transaction_list[offset]["close_price"],
+                transaction_list[offset - 1]["close_price"])
             classify = self.label.gen_classify(price_ratio)
 
             train_data += "%d\n" % (classify)
@@ -226,7 +228,7 @@ class Data():
             target = float(data[-1])
 
             idx = 0
-            while (idx < len(data)-1):
+            while (idx < len(data) - 1):
                 feature.append(float(data[idx]))
                 idx += 1
             feature_list.append(feature)
@@ -241,7 +243,7 @@ class Data():
             @Return: 特征数据列表
         '''
         # 判断参数合法性
-        if len(transaction_list) < (TRAIN_DATA_TRANSACTION_NUM+1):
+        if len(transaction_list) < (TRAIN_DATA_TRANSACTION_NUM + 1):
             logging.error("Transaction data not enough! stock_key:%s", stock_key)
             return None
 
@@ -253,10 +255,10 @@ class Data():
         while (index >= 0):
             try:
                 curr = transaction_list[index]
-                prev = transaction_list[index+1]
+                prev = transaction_list[index + 1]
 
-                curr_index = curr["index"] # 当前周期交易指数
-                prev_index = prev["index"] # 前一周期交易指数
+                curr_index = curr["index"]  # 当前周期交易指数
+                prev_index = prev["index"]  # 前一周期交易指数
 
                 # 与前周期的比较
                 feature.append(self.label.ratio(prev["close_price"], curr["open_price"]))
@@ -317,7 +319,8 @@ class Data():
                 feature.append(curr_index["MACD"]["DEA"])
                 feature.append(self.label.ratio(curr_index["MACD"]["DIFF"], curr_index["MACD"]["DEA"]))
 
-                feature.append(self.label.ad_label(curr_index["AD"], prev_index["AD"], curr["close_price"], prev["close_price"]))
+                feature.append(
+                    self.label.ad_label(curr_index["AD"], prev_index["AD"], curr["close_price"], prev["close_price"]))
                 feature.append(self.label.ratio(curr_index["AD"], prev_index["AD"]))
 
                 feature.append(self.label.adosc_label(curr_index["ADOSC"], prev_index["ADOSC"]))
@@ -343,7 +346,7 @@ class Data():
 
         # 查询所需数据
         transaction_list = self.database.get_transaction_list(
-                stock_key, date, TRAIN_DATA_TRANSACTION_NUM*(days+1))
+            stock_key, date, TRAIN_DATA_TRANSACTION_NUM * (days + 1))
         if (transaction_list is None) or (len(transaction_list) == 0):
             logging.error("Get transaction list failed! stock_key:%s date:%s days:%s",
                           stock_key, date, days)
@@ -401,7 +404,7 @@ class Data():
         data["days"] = int(days)
         data["base_date"] = base_date
         data["base_price"] = base_price
-        data["pred_price"] = base_price + base_price*(ratio/100)
+        data["pred_price"] = base_price + base_price * (ratio / 100)
         data["pred_ratio"] = ratio
 
         curr_timestamp = int(time.time())
@@ -440,7 +443,7 @@ class Data():
                    8.两点半左右创出当日的新高, 回踩均线不跌破, 就是买点.
         '''
         # 拉取所有股票当天交易数据
-        potential_stock_list = list() # 潜力股列表
+        potential_stock_list = list()  # 潜力股列表
 
         stock_list = self.database.get_all_stock()
         for stock in stock_list:
@@ -474,7 +477,7 @@ class Data():
                    7.看分时图: 全天运行的分时均价上方必须强于大盘
                    8.两点半左右创出当日的新高, 回踩均线不跌破, 就是买点.
         '''
-        curr = transaction_list[0] # 今天交易数据
+        curr = transaction_list[0]  # 今天交易数据
 
         # 1.当天涨幅在2% ~ 5%之间
         ratio = self.label.ratio(curr["open_price"], curr["close_price"])
@@ -484,8 +487,8 @@ class Data():
             return False
 
         # 2.量比排名: 剔除量比小于1的股票
-        #ratio = self.label.ratio(curr["ma5_volume"], 5 * curr["volume"])
-        #if ratio < 1:
+        # ratio = self.label.ratio(curr["ma5_volume"], 5 * curr["volume"])
+        # if ratio < 1:
         #    logging.info("Volume ratio out of [1, ~). stock_key:%s ratio:%s",
         #                 stock["stock_key"], ratio)
         #    return False
@@ -505,14 +508,14 @@ class Data():
 
         # 5.成交量忽高忽低的删掉, 只保留成交量持续放大的股票
         index = 0
-        max_index = len(transaction_list)-1
-        while(index < max_index):
-            if transaction_list[index]["volume"] <= transaction_list[index+1]["volume"]:
+        max_index = len(transaction_list) - 1
+        while (index < max_index):
+            if transaction_list[index]["volume"] <= transaction_list[index + 1]["volume"]:
                 logging.info("Volume not add. stock_key:%s", stock["stock_key"])
                 return False
-            index += 1 
+            index += 1
 
-        # 6.K线形态: 高位票或没有支撑的删掉
+            # 6.K线形态: 高位票或没有支撑的删掉
 
         # 7.看分时图: 全天运行的分时均价上方必须强于大盘
 
@@ -559,5 +562,3 @@ class Data():
 
         # 更新预测结果
         self.database.set_transaction_index(data)
-
-
