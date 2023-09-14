@@ -285,9 +285,9 @@ class Database():
 
         sql = f'SELECT stock_key, name, total, market_cap, disable \
                 FROM t_stock \
-                WHERE market_cap>=%s AND disable=0 AND second_classification LIKE %s'
+                WHERE market_cap>=%s AND disable=0'
 
-        cursor.execute(sql, (STOCK_GOOD_MARKET_CAP, "%互联网%"))
+        cursor.execute(sql, (STOCK_GOOD_MARKET_CAP))
 
         items = cursor.fetchall()
 

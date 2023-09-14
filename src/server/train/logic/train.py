@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-# 君子爱财 取之有道
+# 君子爱财 取之YOODO!
 
 import sys
 import joblib

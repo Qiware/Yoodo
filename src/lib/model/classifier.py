@@ -1,4 +1,5 @@
 # encoding=utf-8
+# 君子爱财 取之YOODO!
 
 # 训练模型: 分类模型
 
