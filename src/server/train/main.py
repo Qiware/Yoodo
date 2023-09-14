@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-# 君子爱财 取之有道
+# 君子爱财 取之YOODO!
 
 import sys
 import joblib
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     model = sys.argv[1] # 训练模型(r:线性模型 c:分类模型)
     action = sys.argv[2] # 操作行为(update:增量更新 rebuild:模型重建)
     date = sys.argv[3] # 训练数据截止日期(格式: YYYYMMDD)
-    days = int(sys.argv[4]) # 周期(天)
+    days = 1 #sys.argv[4] # 训练模型预测周期
 
     # 初始化日志
     log_init("../../../log/trainer.log")

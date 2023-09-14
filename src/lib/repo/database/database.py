@@ -285,9 +285,9 @@ class Database():
 
         sql = f'SELECT stock_key, name, total, market_cap, disable \
                 FROM t_stock \
-                WHERE market_cap>=%s AND disable=0 AND second_classification LIKE %s'
+                WHERE market_cap>=%s AND disable=0'
 
-        cursor.execute(sql, (STOCK_GOOD_MARKET_CAP, "%互联网%"))
+        cursor.execute(sql, (STOCK_GOOD_MARKET_CAP))
 
         items = cursor.fetchall()
 
@@ -540,20 +540,19 @@ class Database():
         conditions = list()
 
         for key in data.keys():
-            if (key == "stock_key") or (key == "date") or (key == "name"):
+            if (key == "stock_key") or (key == "date"):
                 continue
             if index != 0:
                 sql += ","
             sql += key+"=%s"
             conditions.append(data[key])
             index += 1
-        sql += " WHERE stock_key=%s AND date=%s AND name=%s"
+        sql += " WHERE stock_key=%s AND date=%s"
 
         logging.debug("sql: %s", sql)
 
         conditions.append(data["stock_key"])
         conditions.append(data["date"])
-        conditions.append(data["name"])
 
         # 执行SQL语句
         cursor = self.mysql.cursor()
@@ -564,21 +563,20 @@ class Database():
 
         cursor.close()
 
-    def get_transaction_index(self, stock_key, date, name):
+    def get_transaction_index(self, stock_key, date):
         ''' 获取指定交易数据
             @Param stock_key: 股票KEY
             @Param date: 交易日期(格式: YYYYMMDD)
-            @Param name: 指标名称(如: MACD)
         '''
 
         # 查询交易数据
         cursor = self.mysql.cursor()
 
-        sql = f'SELECT stock_key, date, name, value \
+        sql = f'SELECT stock_key, date, data \
                 FROM t_transaction_index \
-                WHERE stock_key=%s AND date=%s AND name=%s'
+                WHERE stock_key=%s AND date=%s'
 
-        cursor.execute(sql, (stock_key, date, name))
+        cursor.execute(sql, (stock_key, date))
 
         item = cursor.fetchone()
 
@@ -594,10 +592,46 @@ class Database():
 
         data["stock_key"] = str(item[0])
         data["date"] = int(item[1])
-        data["name"] = str(item[2])
-        data["value"] = item[3]
+        data["data"] = item[2]
+        return data
+
+    def get_transaction_index_list(self, stock_key, lastest_date):
+        ''' 获取指定交易数据
+            @Param stock_key: 股票KEY
+            @Param lastest_date: 最新交易日期(格式: YYYYMMDD)
+        '''
+
+        # 查询交易数据
+        cursor = self.mysql.cursor()
+
+        sql = f'SELECT stock_key, date, data \
+                FROM t_transaction_index \
+                WHERE stock_key=%s AND date<=%s'
+
+        cursor.execute(sql, (stock_key, lastest_date))
+
+        items = cursor.fetchall()
+
+        cursor.close()
+
+        if items is None:
+            logging.debug("No found. stock_key:%s date:%s", stock_key, date)
+            return None
+
+        # 数据整合处理
+        data = dict()
+
+        for item in items:
+            date = int(item[1])
+
+            data[date] = dict()
+
+            data[date]["stock_key"] = str(item[0])
+            data[date]["date"] = int(item[1])
+            data[date]["data"] = item[2]
 
         return data
+
 
 
 if __name__ == "__main__":

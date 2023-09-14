@@ -1,4 +1,5 @@
 # encoding=utf-8
+# 君子爱财 取之YOODO!
 
 # 训练模型: 基类型
 
@@ -9,7 +10,7 @@ import logging
 
 from sklearn.neural_network import MLPRegressor
 
-sys.path.append("../lib/log")
+sys.path.append("../../lib/repo/log")
 from log import *
 
 # 模型类型

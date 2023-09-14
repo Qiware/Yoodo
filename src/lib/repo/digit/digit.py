@@ -1,4 +1,5 @@
 # encoding=utf-8
+# 君子爱财 取之YOODO!
 
 # 单位: 百万
 AMOUNT_UNIT_M = 1000000

@@ -1,15 +1,20 @@
 # -*- coding:utf-8 -*-
-# 君子爱财 取之有道
+# 君子爱财 取之YOODO!
 
 import sys
 import time
+import json
 import joblib
 import logging
 
+sys.path.append("../../lib/model")
+from model import *
 sys.path.append("../../lib/repo/log")
 from log import *
 sys.path.append("../../lib/repo/database")
 from database import *
+
+from label import Label
 
 # 恒生指数KEY
 STOCK_KEY_HSI = "hkex:hsi" # 恒生指数
@@ -29,6 +34,8 @@ STOCK_MARKET_CAP_20B = 20000000000
 # 数据处理
 class Data():
     def __init__(self):
+        self.label = Label()
+
         # 连接数据库
         self.database = Database()
 
@@ -36,94 +43,36 @@ class Data():
         self.hsi_index_list = self.get_hsi_index() # 恒生指数
         self.hz2083_index_list = self.get_hz2083_index() # 恒生科技指数
 
-    def ratio(self, base_val, val):
-        ''' 波动比率
-            @Param base_val: 基准值
-            @Param val: 当前值
-        '''
-        diff = (val - base_val)
-        if diff == 0:
-            return 0
-        if (base_val == 0):
-            return 100
-        return  diff / base_val * 100
-
-    def gen_classify(self, price_ratio):
-        ''' 生成分类
-            @Param price_ratio: 涨价幅度
-        '''
-        if price_ratio < 0:
-            price_ratio -= 5
-        return int(price_ratio/5) * 5
-
     def gen_train_data_fpath(self, date, days):
         ''' 生成训练数据的路径 '''
         return "../../../data/train/%s-%ddays.dat" % (str(date), int(days))
 
-    def group_transaction_by_days(self, transaction_list, days):
-        ''' 交易数据间隔days分组
-            @Param transaction_list: 交易列表(倒序)
-            @Param days: 周期
-        '''
+    def fill_transaction_data(self, stock_key, date, transaction_list):
+        ''' 填充交易数据 '''
 
-        transaction_group = list()
-        group_num = int(len(transaction_list) / days)
+        # 查询交易指数
+        index_dict = self.database.get_transaction_index_list(stock_key, date)
+        if index_dict is None:
+            logging.error("Get transaction index failed! stock_key:%s date:%s", stock_key, date)
+            return None
 
-        num = int(0)
-        while (num < group_num):
-            index = num * days
+        # 填充交易数据
+        for item in transaction_list:
+            curr_date = item["date"]
 
-            item = dict()
-
-            item["stock_key"] = transaction_list[index]["stock_key"] # 股票KEY
-            item["open_price"] = transaction_list[index+days-1]["open_price"] # 开盘价(取第一天开盘价)
-            item["close_price"] = transaction_list[index]["close_price"] # 收盘价(取最后一天收盘价)
-
-            item["top_price"] = transaction_list[index]["top_price"] # 最高价
-            item["bottom_price"] = transaction_list[index]["bottom_price"] # 最低价
-            item["volume"] = transaction_list[index]["volume"] # 交易量
-            item["turnover"] = transaction_list[index]["turnover"] # 交易额
-            item["turnover_ratio"] = transaction_list[index]["turnover_ratio"] # 换手率
-
-            # 恒生指数
-            curr_date = transaction_list[index]["date"]
-            last_date = transaction_list[index+days-1]["date"]
-
-            item["hsi_open_price"] = self.hsi_index_list[last_date]["open_price"] # 开盘价(取第一天开盘价)
+            # 填充恒生指数
+            item["hsi_open_price"] = self.hsi_index_list[curr_date]["open_price"] # 开盘价(取第一天开盘价)
             item["hsi_close_price"] = self.hsi_index_list[curr_date]["close_price"] # 收盘价(取最后一天收盘价)
             item["hsi_top_price"] = self.hsi_index_list[curr_date]["top_price"] # 最高价
             item["hsi_bottom_price"] = self.hsi_index_list[curr_date]["bottom_price"] # 最低价
             item["hsi_turnover"] = self.hsi_index_list[curr_date]["turnover"] # 交易额
 
-            index += 1
-            while (index < (num+1)*days):
-                curr_date = transaction_list[index]["date"]
+            # 填充交易指数
+            item["index"] = json.loads(index_dict[curr_date]["data"])
 
-                item["top_price"] = max(item["top_price"], transaction_list[index]["top_price"])
-                item["bottom_price"] = min(item["bottom_price"], transaction_list[index]["bottom_price"])
+        return transaction_list
 
-                item["volume"] += transaction_list[index]["volume"]
-                item["turnover"] += transaction_list[index]["turnover"]
-                item["turnover_ratio"] += transaction_list[index]["turnover_ratio"]
-
-                # 恒生指数
-                item["hsi_top_price"] = max(item["hsi_top_price"], self.hsi_index_list[curr_date]["top_price"])
-                item["hsi_bottom_price"] = min(item["hsi_bottom_price"], self.hsi_index_list[curr_date]["bottom_price"])
-                item["hsi_turnover"] += self.hsi_index_list[curr_date]["turnover"]
-
-                index += 1
-
-            logging.debug("Transaction group. date:%s data:%s", curr_date, item)
-
-            transaction_group.append(item)
-            num += 1
-
-        logging.info("transaction_list:%d transaction_group:%d",
-                     len(transaction_list), len(transaction_group))
-
-        return transaction_group
-
-    def gen_train_data_by_days(self, date, days, num):
+    def gen_train_data_by_days(self, model_type, date, days, num):
         ''' 按days天聚合训练数据
             @Param date: 结束日期
             @Param days: 以days为间隔进行分组
@@ -139,15 +88,19 @@ class Data():
         for stock in stock_list:
             stock_key = stock["stock_key"]
 
+            logging.debug("Generate train data. stock_key:%s date:%s num:%s", stock_key, date, num)
+
             # 拉取交易数据
             transaction_list = self.database.get_transaction_list(stock_key, date, num)
 
-            # 交易数据聚合分组
-            transaction_group = self.group_transaction_by_days(transaction_list, days)
+            # 填充交易数据
+            transaction_list = self.fill_transaction_data(stock_key, date, transaction_list)
 
             # 生成训练样本
-            #self.gen_train_data_by_transaction_list(stock_key, transaction_group, fp)
-            self.gen_classify_train_data_by_transaction_list(stock_key, transaction_group, fp)
+            if model_type == MODEL_REGRESSOR:
+                self.gen_train_data_by_transaction_list(stock_key, transaction_list, fp)
+            elif model_type == MODEL_CLASSIFIER:
+                self.gen_classify_train_data_by_transaction_list(stock_key, transaction_list, fp)
 
         fp.close()
 
@@ -179,12 +132,17 @@ class Data():
 
             # 生成训练数据
             features = self.gen_feature_by_transaction_list(
+                    stock_key,
                     transaction_list[offset:offset+TRAIN_DATA_TRANSACTION_NUM+1])
+            if features is None:
+                offset -= 1
+                continue
+
             for feature in features:
                 train_data += "%f," % (feature)
 
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
-            price_ratio = self.ratio(
+            price_ratio = self.label.ratio(
                     transaction_list[offset]["close_price"],
                     transaction_list[offset-1]["close_price"])
 
@@ -225,15 +183,21 @@ class Data():
 
             # 生成训练数据
             features = self.gen_feature_by_transaction_list(
+                    stock_key,
                     transaction_list[offset:offset+TRAIN_DATA_TRANSACTION_NUM+1])
+            if features is None:
+                logging.error("Generate feature by transactionn list failed! stock_key:%s offset:%s",
+                              stock_key, offset)
+                offset -= 1
+                continue
             for feature in features:
                 train_data += "%f," % (feature)
 
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
-            price_ratio = self.ratio(
+            price_ratio = self.label.ratio(
                     transaction_list[offset]["close_price"],
                     transaction_list[offset-1]["close_price"])
-            classify = self.gen_classify(price_ratio)
+            classify = self.label.gen_classify(price_ratio)
 
             train_data += "%d\n" % (classify)
 
@@ -275,7 +239,7 @@ class Data():
 
         return feature_list, target_list
 
-    def gen_feature_by_transaction_list(self, transaction_list):
+    def gen_feature_by_transaction_list(self, stock_key, transaction_list):
         ''' 通过交易列表生成特征数据. 返回格式: [x1, x2, x3, ...]
             @Param transaction_list: 交易数据
             @Param fname: 训练数据输出文件
@@ -283,52 +247,86 @@ class Data():
         '''
         # 判断参数合法性
         if len(transaction_list) < (TRAIN_DATA_TRANSACTION_NUM+1):
-            logging.error("Transaction data not enough!")
+            logging.error("Transaction data not enough! stock_key:%s", stock_key)
             return None
 
         feature = list()
+        label = Label()
 
         # 生成特征数据(注意: 最后一个作为起始基准)
         index = TRAIN_DATA_TRANSACTION_NUM - 1
         while (index >= 0):
-            curr = transaction_list[index]
-            prev = transaction_list[index+1]
+            try:
+                curr = transaction_list[index]
+                prev = transaction_list[index+1]
 
-            # 与前周期的比较
-            feature.append(self.ratio(prev["close_price"], curr["open_price"]))
-            feature.append(self.ratio(prev["close_price"], curr["close_price"]))
-            feature.append(self.ratio(prev["close_price"], curr["top_price"]))
-            feature.append(self.ratio(prev["close_price"], curr["bottom_price"]))
+                curr_index = curr["index"] # 当前周期交易指数
+                prev_index = prev["index"] # 前一周期交易指数
 
-            feature.append(self.ratio(prev["volume"], curr["volume"]))
-            feature.append(self.ratio(prev["turnover"], curr["turnover"]))
-            feature.append(self.ratio(prev["turnover_ratio"], curr["turnover_ratio"]))
+                # 与前周期的比较
+                feature.append(self.label.ratio(prev["close_price"], curr["open_price"]))
+                feature.append(self.label.ratio(prev["close_price"], curr["close_price"]))
+                feature.append(self.label.ratio(prev["close_price"], curr["top_price"]))
+                feature.append(self.label.ratio(prev["close_price"], curr["bottom_price"]))
 
-            feature.append(self.ratio(prev["hsi_close_price"], curr["hsi_open_price"]))
-            feature.append(self.ratio(prev["hsi_close_price"], curr["hsi_close_price"]))
-            feature.append(self.ratio(prev["hsi_close_price"], curr["hsi_top_price"]))
-            feature.append(self.ratio(prev["hsi_close_price"], curr["hsi_bottom_price"]))
+                feature.append(self.label.ratio(prev["volume"], curr["volume"]))
+                feature.append(self.label.ratio(prev["turnover"], curr["turnover"]))
+                feature.append(self.label.ratio(prev["turnover_ratio"], curr["turnover_ratio"]))
 
-            # 与本周期的开盘价比较
-            feature.append(self.ratio(curr["open_price"], curr["close_price"]))
-            feature.append(self.ratio(curr["open_price"], curr["top_price"]))
-            feature.append(self.ratio(curr["open_price"], curr["bottom_price"]))
+                feature.append(self.label.ratio(prev["hsi_close_price"], curr["hsi_open_price"]))
+                feature.append(self.label.ratio(prev["hsi_close_price"], curr["hsi_close_price"]))
+                feature.append(self.label.ratio(prev["hsi_close_price"], curr["hsi_top_price"]))
+                feature.append(self.label.ratio(prev["hsi_close_price"], curr["hsi_bottom_price"]))
 
-            feature.append(self.ratio(curr["hsi_open_price"], curr["hsi_close_price"]))
-            feature.append(self.ratio(curr["hsi_open_price"], curr["hsi_top_price"]))
-            feature.append(self.ratio(curr["hsi_open_price"], curr["hsi_bottom_price"]))
+                # 与本周期的开盘价比较
+                feature.append(self.label.ratio(curr["open_price"], curr["close_price"]))
+                feature.append(self.label.ratio(curr["open_price"], curr["top_price"]))
+                feature.append(self.label.ratio(curr["open_price"], curr["bottom_price"]))
 
-            # 与本周期的收盘价比较
-            feature.append(self.ratio(curr["close_price"], curr["top_price"]))
-            feature.append(self.ratio(curr["close_price"], curr["bottom_price"]))
+                feature.append(self.label.ratio(curr["hsi_open_price"], curr["hsi_close_price"]))
+                feature.append(self.label.ratio(curr["hsi_open_price"], curr["hsi_top_price"]))
+                feature.append(self.label.ratio(curr["hsi_open_price"], curr["hsi_bottom_price"]))
 
-            feature.append(self.ratio(curr["hsi_close_price"], curr["hsi_top_price"]))
-            feature.append(self.ratio(curr["hsi_close_price"], curr["hsi_bottom_price"]))
+                # 与本周期的收盘价比较
+                feature.append(self.label.ratio(curr["close_price"], curr["top_price"]))
+                feature.append(self.label.ratio(curr["close_price"], curr["bottom_price"]))
 
-            # 换手率
-            feature.append(curr["turnover_ratio"])
+                feature.append(self.label.ratio(curr["hsi_close_price"], curr["hsi_top_price"]))
+                feature.append(self.label.ratio(curr["hsi_close_price"], curr["hsi_bottom_price"]))
 
-            index -= 1
+                # 换手率
+                feature.append(curr["turnover_ratio"])
+
+                # 与本周期的交易指数比较
+                feature.append(self.label.ratio(curr["close_price"], curr_index["MA5PRC"]))
+                feature.append(self.label.ratio(curr["close_price"], curr_index["MA10PRC"]))
+                feature.append(self.label.ratio(curr["close_price"], curr_index["MA20PRC"]))
+
+                feature.append(self.label.ratio(curr["close_price"], curr_index["BOLL"]["UPPER"]))
+                feature.append(self.label.ratio(curr["close_price"], curr_index["BOLL"]["MIDDLE"]))
+                feature.append(self.label.ratio(curr["close_price"], curr_index["BOLL"]["LOWER"]))
+
+                feature.append(self.label.ratio(curr["volume"], curr_index["MA5VOL"]))
+                feature.append(self.label.ratio(curr["volume"], curr_index["MA10VOL"]))
+                feature.append(self.label.ratio(curr["volume"], curr_index["MA20VOL"]))
+
+                # 交易指数
+                feature.append(self.label.kdj_label(curr_index["KDJ"]))
+                feature.append(self.label.rsi_label(int(curr_index["RSI"])))
+
+                feature.append(self.label.cci_label(int(curr_index["CCI"])))
+                feature.append(self.label.ratio(curr_index["CCI"], prev_index["CCI"]))
+
+                feature.append(curr_index["MACD"]["MACD"])
+                feature.append(curr_index["MACD"]["DIFF"])
+                feature.append(curr_index["MACD"]["DEA"])
+                feature.append(self.label.ratio(curr_index["MACD"]["DIFF"], curr_index["MACD"]["DEA"]))
+
+                index -= 1
+            except Exception as e:
+                logging.error("Generate feature by transaction list failed! stock_key:%s error:%s",
+                              stock_key, e)
+                return None
 
         logging.info("Generate feature by transaction list success. transaction_list:%d feature:%d",
                      len(transaction_list), len(feature))
@@ -353,11 +351,11 @@ class Data():
 
         lastest = transaction_list[0]
 
-        # 交易数据聚合分组
-        transaction_group = self.group_transaction_by_days(transaction_list, days)
+        # 填充交易数据
+        transaction_list = self.fill_transaction_data(stock_key, date, transaction_list)
 
         # 生成训练样本
-        item = self.gen_feature_by_transaction_list(transaction_group)
+        item = self.gen_feature_by_transaction_list(stock_key, transaction_list)
         if item is None:
             logging.error("Generate feature by transaction list failed! stock_key:%s transaction_list:%d",
                           stock_key, len(transaction_list))
@@ -479,14 +477,14 @@ class Data():
         curr = transaction_list[0] # 今天交易数据
 
         # 1.当天涨幅在2% ~ 5%之间
-        ratio = self.ratio(curr["open_price"], curr["close_price"])
+        ratio = self.label.ratio(curr["open_price"], curr["close_price"])
         if (ratio < 2) or (ratio > 5):
             logging.info("Price ratio out of [2, 5]. stock_key:%s ratio:%s",
                          stock["stock_key"], ratio)
             return False
 
         # 2.量比排名: 剔除量比小于1的股票
-        #ratio = self.ratio(curr["ma5_volume"], 5 * curr["volume"])
+        #ratio = self.label.ratio(curr["ma5_volume"], 5 * curr["volume"])
         #if ratio < 1:
         #    logging.info("Volume ratio out of [1, ~). stock_key:%s ratio:%s",
         #                 stock["stock_key"], ratio)
