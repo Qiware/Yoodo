@@ -266,9 +266,9 @@ class Data():
                 feature.append(self.label.ratio(prev["close_price"], curr["top_price"]))
                 feature.append(self.label.ratio(prev["close_price"], curr["bottom_price"]))
 
-                feature.append(self.label.ratio(prev["volume"], curr["volume"]))
-                feature.append(self.label.ratio(prev["turnover"], curr["turnover"]))
-                feature.append(self.label.ratio(prev["turnover_ratio"], curr["turnover_ratio"]))
+                #feature.append(self.label.ratio(prev["volume"], curr["volume"]))
+                #feature.append(self.label.ratio(prev["turnover"], curr["turnover"]))
+                #feature.append(self.label.ratio(prev["turnover_ratio"], curr["turnover_ratio"]))
 
                 feature.append(self.label.ratio(prev["hsi_close_price"], curr["hsi_open_price"]))
                 feature.append(self.label.ratio(prev["hsi_close_price"], curr["hsi_close_price"]))
@@ -314,10 +314,7 @@ class Data():
                 feature.append(self.label.cci_label(int(curr_index["CCI"])))
                 feature.append(self.label.ratio(curr_index["CCI"], prev_index["CCI"]))
 
-                feature.append(curr_index["MACD"]["MACD"])
-                feature.append(curr_index["MACD"]["DIFF"])
-                feature.append(curr_index["MACD"]["DEA"])
-                feature.append(self.label.ratio(curr_index["MACD"]["DIFF"], curr_index["MACD"]["DEA"]))
+                feature.append(self.label.macd_label(curr_index["MACD"], prev_index["MACD"]))
 
                 feature.append(
                     self.label.ad_label(curr_index["AD"], prev_index["AD"], curr["close_price"], prev["close_price"]))

@@ -102,3 +102,25 @@ class Label():
                 return SIGNAL_SUB
             return SIGNAL_NEGATIVE
         return SIGNAL_NONE
+
+    def macd_label(self, curr, prev):
+        ''' MACD特征转为LABEL
+            1.DIF线(快线)由下往上穿越DEA线(慢线)，这种形态叫MACD金叉。金叉会出现
+            在零轴之上，也会出现在零轴之下。在零轴下出现，表示股价止跌回涨，可短
+            线买入；而金叉在零轴上出现时，则表明股价即将开始有较大幅度的反弹，适
+            合长线投资。
+            2.类似的，当DIF线由上往下穿越DEA线，形成MACD死叉。如果死叉在零轴之上
+            出现，意味着股价短期内下跌调整开始，投资者应减仓；若死叉出现在零轴下，
+            则表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓。
+        '''
+        # 判断是否MACD金叉
+        if (curr["DIFF"] > curr["DEA"]) and (prev["DIFF"] < prev["DEA"]):
+            if curr["MACD"] > 0:
+                return 2 # 将有大幅度的反弹, 适合长线投资
+            return 1 # 股票止跌回涨, 可断线买入
+        # 判断是否死叉
+        if (curr["DIFF"] < curr["DEA"]) and (prev["DIFF"] > prev["DEA"]):
+            if curr["MACD"] > 0:
+                return -1 # 意味着股价短期内下跌调整开始，投资者应减仓
+            return -2 # 表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓
+        return 0
