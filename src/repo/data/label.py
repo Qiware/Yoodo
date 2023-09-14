@@ -16,9 +16,9 @@ from database import *
 
 SIGNAL_ADD_PLUS = 3  # 信号: 强烈加仓
 SIGNAL_ADD = 2  # 信号: 加仓
-SIGNAL_POSITIVE = 1  # 信号: 正向
+SIGNAL_POSITIVE = 1  # 信号: 正向(强势)
 SIGNAL_NONE = 0  # 信号: 持平
-SIGNAL_NEGATIVE = -1  # 信号: 负向
+SIGNAL_NEGATIVE = -1  # 信号: 负向(弱势)
 SIGNAL_SUB = -2  # 信号: 减仓
 SIGNAL_SUB_PLUS = -3  # 信号: 强烈减仓
 
@@ -90,4 +90,22 @@ class Label():
         if ((curr_close_price - prev_close_price) > 0) and ((curr_ad - prev_ad) < 0):
             return SIGNAL_SUB
         # 价格和资金量同步
+        return SIGNAL_NONE
+
+    def adosc_label(self, curr_ad, prev_ad):
+        ''' ADOSC特征LABEL
+            1.osc指标实际上是专门以0值为中线，若osc在零线之上，于是市场处于强势状态；
+              若是osc的位置在零线之下，于是市场处于弱势状态。
+            2.假如osc穿过零线上升，那此时就是市场走强，可视为购买信号。
+              反之亦然，假设osc跌破零线继续下行，那么市场变弱，能够视做卖出信号。
+            3.若是osc离零线不近，换言之就是价格远离平均线，这时应注意价格很可能向平均线回归。
+        '''
+        if curr_ad > 0:
+            if prev_ad <= 0:
+                return SIGNAL_ADD
+            return SIGNAL_POSITIVE
+        if curr_ad < 0:
+            if prev_ad >= 0:
+                return SIGNAL_SUB
+            return SIGNAL_NEGATIVE
         return SIGNAL_NONE
