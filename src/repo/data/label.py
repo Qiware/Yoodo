@@ -14,6 +14,14 @@ from log import *
 sys.path.append("../database")
 from database import *
 
+SIGNAL_ADD_PLUS = 3  # 信号: 强烈加仓
+SIGNAL_ADD = 2  # 信号: 加仓
+SIGNAL_POSITIVE = 1  # 信号: 正向
+SIGNAL_NONE = 0  # 信号: 持平
+SIGNAL_NEGATIVE = -1  # 信号: 负向
+SIGNAL_SUB = -2  # 信号: 减仓
+SIGNAL_SUB_PLUS = -3  # 信号: 强烈减仓
+
 # LABEL转换
 class Label():
     def __init__(self):
@@ -41,34 +49,45 @@ class Label():
 
     def kdj_label(self, kdj):
         ''' KDJ特征LABEL '''
-        if int(kdj["K"]) > 90: # 超买
-            return 1
-        elif int(kdj["K"]) < 10: # 超卖
-            return -1
-        return 0
+        if int(kdj["K"]) > 90: # 超买: 减仓
+            return SIGNAL_SUB
+        elif int(kdj["K"]) < 10: # 超卖: 加仓
+            return SIGNAL_ADD
+        return SIGNAL_NONE
 
     def rsi_label(self, rsi):
         ''' RSI特征LABEL '''
-        if rsi > 90: # 严重超买
-            return 3
-        elif rsi > 80: # 超买
-            return 2
+        if rsi > 90: # 严重超买: 强烈减仓
+            return SIGNAL_SUB_PLUS
+        elif rsi > 80: # 超买: 减仓
+            return SIGNAL_SUB
         elif rsi > 50: # 多头涨势
-            return 1
-        elif rsi < 10: # 验证超卖
-            return -3
-        elif rsi < 20: # 超卖
-            return -2
+            return SIGNAL_POSITIVE
+        elif rsi < 10: # 严重超卖: 强烈加仓
+            return SIGNAL_ADD_PLUS
+        elif rsi < 20: # 超卖: 加仓
+            return SIGNAL_ADD
         elif rsi < 50: # 空头跌势
-            return -1
+            return SIGNAL_NEGATIVE
         # 处于50时买卖均衡
-        return 0
+        return SIGNAL_NONE
 
     def cci_label(self, cci):
         ''' CCI特征LABEL '''
-        if cci > 100: # 超买
-            return 1
-        elif cci < -100: # 超卖
-            return -1
+        if cci > 100: # 超买: 减仓
+            return SIGNAL_SUB
+        elif cci < -100: # 超卖: 加仓
+            return SIGNAL_ADD
         # -100 ~ 100表示整盘区间
-        return 0
+        return SIGNAL_NONE
+
+    def ad_label(self, curr_ad, prev_ad, curr_close_price, prev_close_price):
+        ''' AD特征LABEL '''
+        # 底背离: 价格下跌, 但资金在增加(看涨: 买入信号)
+        if ((curr_close_price - prev_close_price) < 0) and ((curr_ad - prev_ad) > 0):
+            return SIGNAL_ADD
+        # 顶背离: 价格上涨, 但资金在减少(看跌: 卖出信号)
+        if ((curr_close_price - prev_close_price) > 0) and ((curr_ad - prev_ad) < 0):
+            return SIGNAL_SUB
+        # 价格和资金量同步
+        return SIGNAL_NONE

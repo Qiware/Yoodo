@@ -322,6 +322,9 @@ class Data():
                 feature.append(curr_index["MACD"]["DEA"])
                 feature.append(self.label.ratio(curr_index["MACD"]["DIFF"], curr_index["MACD"]["DEA"]))
 
+                feature.append(self.label.ad_label(curr_index["AD"], prev_index["AD"], curr["close_price"], prev["close_price"])
+                feature.append(self.label.ratio(curr_index["AD"], prev_index["AD"]))
+
                 index -= 1
             except Exception as e:
                 logging.error("Generate feature by transaction list failed! stock_key:%s error:%s",
