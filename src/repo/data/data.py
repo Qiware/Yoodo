@@ -7,7 +7,7 @@ import json
 import joblib
 import logging
 
-sys.path.append("../lib/model")
+sys.path.append("../model")
 from model import *
 sys.path.append("../lib/log")
 from log import *

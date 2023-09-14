@@ -14,7 +14,7 @@ from log import *
 sys.path.append("../../repo/data")
 from data import Data
 
-sys.path.append("../../repo/lib/model")
+sys.path.append("../../repo/model")
 from model import *
 from regressor import Regressor
 from classifier import Classifier
