@@ -17,12 +17,7 @@ from database import *
 # LABEL转换
 class Label():
     def __init__(self):
-        # 连接数据库
-        self.database = Database()
-
-        # 查询指数数据
-        self.hsi_index_list = self.get_hsi_index() # 恒生指数
-        self.hz2083_index_list = self.get_hz2083_index() # 恒生科技指数
+        pass
 
     def ratio(self, base_val, val):
         ''' 波动比率

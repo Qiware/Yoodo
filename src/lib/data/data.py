@@ -14,6 +14,8 @@ from log import *
 sys.path.append("../../lib/repo/database")
 from database import *
 
+from label import Label
+
 # 恒生指数KEY
 STOCK_KEY_HSI = "hkex:hsi" # 恒生指数
 STOCK_KEY_HZ2083 = "hkex:hz2083" # 恒生科技指数
@@ -32,7 +34,7 @@ STOCK_MARKET_CAP_20B = 20000000000
 # 数据处理
 class Data():
     def __init__(self):
-        self.lable = Label()
+        self.label = Label()
 
         # 连接数据库
         self.database = Database()
@@ -277,13 +279,13 @@ class Data():
                 feature.append(self.label.ratio(prev["hsi_close_price"], curr["hsi_bottom_price"]))
 
                 # 与本周期的开盘价比较
-                feature.append(self.lable.ratio(curr["open_price"], curr["close_price"]))
-                feature.append(self.lable.ratio(curr["open_price"], curr["top_price"]))
-                feature.append(self.lable.ratio(curr["open_price"], curr["bottom_price"]))
+                feature.append(self.label.ratio(curr["open_price"], curr["close_price"]))
+                feature.append(self.label.ratio(curr["open_price"], curr["top_price"]))
+                feature.append(self.label.ratio(curr["open_price"], curr["bottom_price"]))
 
-                feature.append(self.lable.ratio(curr["hsi_open_price"], curr["hsi_close_price"]))
-                feature.append(self.lable.ratio(curr["hsi_open_price"], curr["hsi_top_price"]))
-                feature.append(self.lable.ratio(curr["hsi_open_price"], curr["hsi_bottom_price"]))
+                feature.append(self.label.ratio(curr["hsi_open_price"], curr["hsi_close_price"]))
+                feature.append(self.label.ratio(curr["hsi_open_price"], curr["hsi_top_price"]))
+                feature.append(self.label.ratio(curr["hsi_open_price"], curr["hsi_bottom_price"]))
 
                 # 与本周期的收盘价比较
                 feature.append(self.label.ratio(curr["close_price"], curr["top_price"]))
@@ -323,7 +325,7 @@ class Data():
                 index -= 1
             except Exception as e:
                 logging.error("Generate feature by transaction list failed! stock_key:%s error:%s",
-                              stock_key, curr["date"], e)
+                              stock_key, e)
                 return None
 
         logging.info("Generate feature by transaction list success. transaction_list:%d feature:%d",

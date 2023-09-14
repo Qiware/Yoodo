@@ -47,7 +47,7 @@ class Trainer():
 
         # 划分训练集和测试集
         x_train, x_test, y_train, y_test = train_test_split(
-                feature, target, test_size=0.05, random_state=1)
+                feature, target, test_size=0.005, random_state=1)
 
         # 训练模型
         x_train_scaled = self.scaler.fit_transform(x_train)

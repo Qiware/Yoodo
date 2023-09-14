@@ -26,7 +26,7 @@ if __name__ == "__main__":
     start_stock_code = int(sys.argv[1])
 
     # 日志初始化
-    log_init("../../../log/index.log")
+    log_init("../../../log/analyzer.log")
 
     # 新建数据分析
     analyzer = Analyzer()
