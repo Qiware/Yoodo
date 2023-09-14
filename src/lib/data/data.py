@@ -3,6 +3,7 @@
 
 import sys
 import time
+import json
 import joblib
 import logging
 
@@ -62,68 +63,30 @@ class Data():
         ''' 生成训练数据的路径 '''
         return "../../../data/train/%s-%ddays.dat" % (str(date), int(days))
 
-    def group_transaction_by_days(self, transaction_list, days):
-        ''' 交易数据间隔days分组
-            @Param transaction_list: 交易列表(倒序)
-            @Param days: 周期
-        '''
+    def fill_transaction_data(self, stock_key, date, transaction_list):
+        ''' 填充交易数据 '''
 
-        transaction_group = list()
-        group_num = int(len(transaction_list) / days)
+        # 查询交易指数
+        index_dict = self.database.get_transaction_index_list(stock_key, date)
+        if index_dict is None:
+            logging.error("Get transaction index failed! stock_key:%s date:%s", stock_key, date)
+            return None
 
-        num = int(0)
-        while (num < group_num):
-            index = num * days
+        # 填充交易数据
+        for item in transaction_list:
+            curr_date = item["date"]
 
-            item = dict()
-
-            item["stock_key"] = transaction_list[index]["stock_key"] # 股票KEY
-            item["open_price"] = transaction_list[index+days-1]["open_price"] # 开盘价(取第一天开盘价)
-            item["close_price"] = transaction_list[index]["close_price"] # 收盘价(取最后一天收盘价)
-
-            item["top_price"] = transaction_list[index]["top_price"] # 最高价
-            item["bottom_price"] = transaction_list[index]["bottom_price"] # 最低价
-            item["volume"] = transaction_list[index]["volume"] # 交易量
-            item["turnover"] = transaction_list[index]["turnover"] # 交易额
-            item["turnover_ratio"] = transaction_list[index]["turnover_ratio"] # 换手率
-
-            # 恒生指数
-            curr_date = transaction_list[index]["date"]
-            last_date = transaction_list[index+days-1]["date"]
-
-            item["hsi_open_price"] = self.hsi_index_list[last_date]["open_price"] # 开盘价(取第一天开盘价)
+            # 填充恒生指数
+            item["hsi_open_price"] = self.hsi_index_list[curr_date]["open_price"] # 开盘价(取第一天开盘价)
             item["hsi_close_price"] = self.hsi_index_list[curr_date]["close_price"] # 收盘价(取最后一天收盘价)
             item["hsi_top_price"] = self.hsi_index_list[curr_date]["top_price"] # 最高价
             item["hsi_bottom_price"] = self.hsi_index_list[curr_date]["bottom_price"] # 最低价
             item["hsi_turnover"] = self.hsi_index_list[curr_date]["turnover"] # 交易额
 
-            index += 1
-            while (index < (num+1)*days):
-                curr_date = transaction_list[index]["date"]
+            # 填充交易指数
+            item["index"] = json.loads(index_dict[curr_date]["data"])
 
-                item["top_price"] = max(item["top_price"], transaction_list[index]["top_price"])
-                item["bottom_price"] = min(item["bottom_price"], transaction_list[index]["bottom_price"])
-
-                item["volume"] += transaction_list[index]["volume"]
-                item["turnover"] += transaction_list[index]["turnover"]
-                item["turnover_ratio"] += transaction_list[index]["turnover_ratio"]
-
-                # 恒生指数
-                item["hsi_top_price"] = max(item["hsi_top_price"], self.hsi_index_list[curr_date]["top_price"])
-                item["hsi_bottom_price"] = min(item["hsi_bottom_price"], self.hsi_index_list[curr_date]["bottom_price"])
-                item["hsi_turnover"] += self.hsi_index_list[curr_date]["turnover"]
-
-                index += 1
-
-            logging.debug("Transaction group. date:%s data:%s", curr_date, item)
-
-            transaction_group.append(item)
-            num += 1
-
-        logging.info("transaction_list:%d transaction_group:%d",
-                     len(transaction_list), len(transaction_group))
-
-        return transaction_group
+        return transaction_list
 
     def gen_train_data_by_days(self, model_type, date, days, num):
         ''' 按days天聚合训练数据
@@ -144,14 +107,14 @@ class Data():
             # 拉取交易数据
             transaction_list = self.database.get_transaction_list(stock_key, date, num)
 
-            # 交易数据聚合分组
-            transaction_group = self.group_transaction_by_days(transaction_list, days)
+            # 填充交易数据
+            transaction_list = self.fill_transaction_data(stock_key, date, transaction_list)
 
             # 生成训练样本
             if model_type == MODEL_REGRESSOR:
-                self.gen_train_data_by_transaction_list(stock_key, transaction_group, fp)
+                self.gen_train_data_by_transaction_list(stock_key, transaction_list, fp)
             elif model_type == MODEL_CLASSIFIER:
-                self.gen_classify_train_data_by_transaction_list(stock_key, transaction_group, fp)
+                self.gen_classify_train_data_by_transaction_list(stock_key, transaction_list, fp)
 
         fp.close()
 
@@ -357,11 +320,11 @@ class Data():
 
         lastest = transaction_list[0]
 
-        # 交易数据聚合分组
-        transaction_group = self.group_transaction_by_days(transaction_list, days)
+        # 填充交易数据
+        transaction_list = self.fill_transaction_data(stock_key, date, transaction_list)
 
         # 生成训练样本
-        item = self.gen_feature_by_transaction_list(transaction_group)
+        item = self.gen_feature_by_transaction_list(transaction_list)
         if item is None:
             logging.error("Generate feature by transaction list failed! stock_key:%s transaction_list:%d",
                           stock_key, len(transaction_list))

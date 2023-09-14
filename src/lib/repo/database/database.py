@@ -614,7 +614,7 @@ class Database():
 
         cursor.close()
 
-        if item is None:
+        if items is None:
             logging.debug("No found. stock_key:%s date:%s", stock_key, date)
             return None
 
@@ -622,7 +622,7 @@ class Database():
         data = dict()
 
         for item in items:
-            date = int(item["date"])
+            date = int(item[1])
 
             data[date] = dict()
 
