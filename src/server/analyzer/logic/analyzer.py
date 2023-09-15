@@ -30,6 +30,7 @@ class Analyzer():
 
         # 待处理队列
         self.wait_queue = list()
+        self.push_count = 0
         self.is_load_finished = False
 
         # 启动一个加载线程
@@ -52,7 +53,8 @@ class Analyzer():
         for stock in stock_list:
             # 加载待处理队列
             self.wait_queue.append(stock["stock_key"])
-            logging.debug("Push stock key:%s success!", stock["stock_key"])
+            self.push_count += 1
+            logging.debug("Push stock_key:%s count:%s", stock["stock_key"], self.push_count)
             while(len(self.wait_queue) >= WAIT_QUEUE_LEN):
                 time.sleep(1)
         self.is_load_finished = True
@@ -64,10 +66,13 @@ class Analyzer():
                 break
             try:
                 stock_key = self.wait_queue.pop()
-                self.analyze(stock_key)
+                logging.debug("Threading[%s] Pop stock_key:%s",
+                              threading.current_thread().ident, stock_key)
             except Exception as e:
-                logging.error("Get stock key failed!")
+                time.sleep(1)
+                logging.error("Wait queue empty! err:%s", e)
                 continue
+            self.analyze(stock_key)
 
     def is_finished(self):
         ''' 是否处理结束 '''
@@ -76,9 +81,10 @@ class Analyzer():
     def wait(self):
         ''' 等待处理结束 '''
         while(not self.is_finished()):
-            print("Analyze is doing...")
+            print("Stock push count:%s. queue wait count:%s",
+                  self.push_count, len(self.wait_queue))
             time.sleep(1)
-        print("Analyzing was done!")
+        print("Analyzing was done! push count:%s", self.push_count)
 
     def analyze(self, stock_key):
         # 获取交易数据(按时间逆序)
@@ -407,7 +413,6 @@ class Analyzer():
 
     def ad(self, stock_index, transaction_list):
         ''' 计算AD指标 '''
-        print("计算AD指标")
 
         # 抽取特征数据
         top_price_list = list()
@@ -443,7 +448,6 @@ class Analyzer():
 
     def adosc(self, stock_index, transaction_list):
         ''' 计算ADOSC指标 '''
-        print("计算ADOSC指标")
 
         # 抽取特征数据
         top_price_list = list()
@@ -480,7 +484,6 @@ class Analyzer():
 
     def sar(self, stock_index, transaction_list):
         ''' 计算SAR指标 '''
-        print("计算SAR指标")
 
         # 抽取特征数据
         top_price_list = list()
@@ -511,7 +514,6 @@ class Analyzer():
 
     def willr(self, stock_index, transaction_list):
         ''' 计算WILLR指标 '''
-        print("计算WILLR指标")
 
         # 抽取特征数据
         top_price_list = list()
@@ -545,7 +547,6 @@ class Analyzer():
 
     def cci(self, stock_index, transaction_list):
         ''' 计算CCI指标 '''
-        print("计算CCI指标")
 
         # 抽取特征数据
         top_price_list = list()
@@ -579,7 +580,6 @@ class Analyzer():
 
     def ema(self, stock_index, transaction_list):
         ''' 计算EMA指标 '''
-        print("计算EMA指标")
 
         # 抽取特征数据
         close_price_list = list()
