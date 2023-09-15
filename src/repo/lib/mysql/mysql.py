@@ -18,8 +18,7 @@ class MySQLPool:
     def open(self):
         ''' 获取连接 '''
         self.conn = self.pool.connection()
-        #self.cursor = self.conn.cursor(cursor=pymysql.cursors.DictCursor)  # 表示读取的数据为字典类型
-        self.cursor = self.conn.cursor()  # 表示读取的数据为字典类型
+        self.cursor = self.conn.cursor(cursor=pymysql.cursors.DictCursor)  # 表示读取的数据为字典类型
         return self.conn, self.cursor
 
     def close(self, conn, cursor):

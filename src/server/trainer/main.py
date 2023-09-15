@@ -10,10 +10,10 @@ from sklearn.model_selection import train_test_split
 
 sys.path.append("../../repo/lib/log")
 from log import *
-sys.path.append("../../server/train/logic")
-from logic.train import Trainer
+sys.path.append("../../server/trainer/logic")
+from logic.trainer import Trainer
 
-from train import *
+from trainer import *
 
 def usage():
     ''' 展示帮助信息 '''
