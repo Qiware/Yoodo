@@ -64,8 +64,6 @@ class Database():
     def _add_stock(self, data):
         ''' 新增股票数据 '''
 
-        logging.debug("Call _add_stock(). data:%s", data)
-
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_stock", data)
 
@@ -81,8 +79,6 @@ class Database():
 
     def _update_stock(self, data):
         ''' 更新股票数据 '''
-
-        logging.debug("Call _update_stock(). data:%s", data)
 
         # 生成SQL语句
         sql = f'UPDATE t_stock SET '
@@ -113,8 +109,6 @@ class Database():
     def _add_transaction(self, data):
         ''' 新增交易数据 '''
 
-        logging.debug("Call _add_transaction(). data:%s", data)
-
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_transaction", data)
 
@@ -130,8 +124,6 @@ class Database():
 
     def _update_transaction(self, data):
         ''' 更新交易数据 '''
-
-        logging.debug("Call _update_transaction(). data:%s", data)
 
         # 生成SQL语句
         sql = f'UPDATE t_transaction SET '
@@ -220,18 +212,20 @@ class Database():
         items = cursor.fetchall()
         self.mysql.close(conn, cursor)
 
-        # 数据整合处理
-        result = list()
+        return items
 
-        for item in items:
-            data = dict()
-            data["stock_key"] = str(item[0]) # 股票KEY
-            data["name"] = str(item[1]) # 企业名称
-            data["total"] = int(item[2]) # 总股本数
-            data["market_cap"] = float(item[3]) # 总市值
-            data["disable"] = int(item[4]) # 是否禁用
-            result.append(data)
-        return result
+    def get_all_index(self):
+        ''' 获取所有指数列表 '''
+
+        # 查询指数列表
+        sql = f'SELECT index_key, name FROM t_index'
+
+        conn, cursor = self.mysql.open()
+        cursor.execute(sql)
+        items = cursor.fetchall()
+        self.mysql.close(conn, cursor)
+
+        return items
 
     def get_good_stock(self):
         ''' 获取优质股票列表
@@ -248,18 +242,7 @@ class Database():
         items = cursor.fetchall()
         self.mysql.close(conn, cursor)
 
-        # 数据整合处理
-        result = list()
-
-        for item in items:
-            data = dict()
-            data["stock_key"] = item[0] # 股票KEY
-            data["name"] = item[1] # 企业名称
-            data["total"] = int(item[2]) # 总股本数
-            data["market_cap"] = float(item[3]) # 总市值
-            data["disable"] = int(item[4]) # 是否禁用
-            result.append(data)
-        return result
+        return items
 
     def get_transaction_list(self, stock_key, date, num):
         ''' 获取指定日期往前的num条交易数据
@@ -281,21 +264,7 @@ class Database():
         self.mysql.close(conn, cursor)
 
         # 数据整合处理
-        result = list()
-
-        for item in items:
-            data = dict()
-            data["stock_key"] = str(item[0])
-            data["date"] = int(item[1])
-            data["open_price"] = float(item[2])
-            data["close_price"] = float(item[3])
-            data["top_price"] = float(item[4])
-            data["bottom_price"] = float(item[5])
-            data["volume"] = int(item[6])
-            data["turnover"] = float(item[7])
-            data["turnover_ratio"] = float(item[8])
-            result.append(data)
-        return result
+        return items
 
     def get_all_transaction_list_by_stock_key(self, stock_key):
         ''' 获取指定日期往前的num条交易数据
@@ -314,28 +283,11 @@ class Database():
         items = cursor.fetchall()
         self.mysql.close(conn, cursor)
 
-        # 数据整合处理
-        result = list()
-
-        for item in items:
-            data = dict()
-            data["stock_key"] = str(item[0])
-            data["date"] = int(item[1])
-            data["open_price"] = float(item[2])
-            data["close_price"] = float(item[3])
-            data["top_price"] = float(item[4])
-            data["bottom_price"] = float(item[5])
-            data["volume"] = int(item[6])
-            data["turnover"] = float(item[7])
-            data["turnover_ratio"] = float(item[8])
-            result.append(data)
-        return result
+        return items
 
 
     def _add_predict(self, data):
         ''' 新增预测数据 '''
-
-        logging.debug("Call _add_predict(). data:%s", data)
 
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_predict", data)
@@ -353,8 +305,6 @@ class Database():
     def _update_predict(self, data):
         ''' 更新预测数据 '''
 
-        logging.debug("Call _update_predict(). data:%s", data)
-
         sql = f'UPDATE t_predict SET base_date=%s, base_price=%s, \
                     pred_price=%s,pred_ratio=%s,update_time=%s \
                 WHERE stock_key=%s AND date=%s AND days=%s'
@@ -369,8 +319,6 @@ class Database():
 
     def update_predict_real(self, data):
         ''' 更新预测数据中的真实数据 '''
-
-        logging.debug("Call _update_predict_real(). data:%s", data)
 
         sql = f'UPDATE t_predict SET real_price=%s, \
                         real_ratio=%s,update_time=%s \
@@ -387,8 +335,6 @@ class Database():
         ''' 设置预测数据
             @Param data: 预测信息
         '''
-
-        logging.debug("Call set_predict(). data:%s", data)
 
         old_data = self.get_predict(data["stock_key"], data["date"], data["days"])
         if old_data is None:
@@ -418,24 +364,12 @@ class Database():
                           stock_key, date, days)
             return None
 
-        # 数据整合处理
-        data = dict()
-
-        data["stock_key"] = str(item[0])
-        data["date"] = int(item[1])
-        data["days"] = float(item[2])
-        data["base_price"] = float(item[3])
-        data["pred_price"] = float(item[4])
-        data["pred_ratio"] = float(item[5])
-
-        return data
+        return item
 
     def set_transaction_index(self, data):
         ''' 设置交易指数
             @Param data: 预测信息
         '''
-
-        logging.debug("Call set_transaction_index(). data:%s", data)
 
         old_data = self.get_transaction_index(data["stock_key"], data["date"])
         if old_data is None:
@@ -444,8 +378,6 @@ class Database():
 
     def _add_transaction_index(self, data):
         ''' 新增交易指数 '''
-
-        logging.debug("Call _add_transaction_index(). data:%s", data)
 
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_transaction_index", data)
@@ -462,8 +394,6 @@ class Database():
 
     def _update_transaction_index(self, data):
         ''' 更新交易指数 '''
-
-        logging.debug("Call _update_transaction_index(). data:%s", data)
 
         # 生成SQL语句
         sql = f'UPDATE t_transaction_index SET '
@@ -513,13 +443,7 @@ class Database():
                           stock_key, date)
             return None
 
-        # 数据整合处理
-        data = dict()
-
-        data["stock_key"] = str(item[0])
-        data["date"] = int(item[1])
-        data["data"] = item[2]
-        return data
+        return item
 
     def get_transaction_index_list(self, stock_key, lastest_date):
         ''' 获取指定交易数据
@@ -541,17 +465,10 @@ class Database():
             logging.debug("No found. stock_key:%s date:%s", stock_key, date)
             return None
 
-        # 数据整合处理
+        # 数据梳理
         data = dict()
-
         for item in items:
-            date = int(item[1])
-
-            data[date] = dict()
-
-            data[date]["stock_key"] = str(item[0])
-            data[date]["date"] = int(item[1])
-            data[date]["data"] = item[2]
+            data[item["date"]] = item
 
         return data
 

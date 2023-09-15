@@ -17,7 +17,7 @@ sys.path.append("../../repo/lib/dtime")
 from dtime import get_current_date
 
 # 默认工作线程数量
-WORKER_NUM = 10
+WORKER_NUM = 5
 # 队列长度
 WAIT_QUEUE_LEN = 1000
 
@@ -32,22 +32,29 @@ class Analyzer():
         # 待处理队列
         self.wait_queue = list()
         self.push_count = 0
+        self.pop_count = 0
         self.is_load_finished = False
 
-        # 启动一个加载线程
-        lt = threading.Thread(target=self.load, args=())
+        # 启动一个线程加载指数列表
+        lt = threading.Thread(target=self.load_index, args=())
+        lt.setDaemon(True)
+        lt.start()
+
+        # 启动一个线程加载股票列表
+        lt = threading.Thread(target=self.load_stock, args=())
         lt.setDaemon(True)
         lt.start()
 
         # 启动多个工程线程
         if worker_num <= 0:
             worker_num = WORKER_NUM
+
         for i in range(worker_num):
             wt = threading.Thread(target=self.handle, args=())
             wt.setDaemon(True)
             wt.start()
 
-    def load(self):
+    def load_stock(self):
         ''' 加载股票列表 '''
         # 获取股票列表
         stock_list = self.data.get_all_stock()
@@ -55,10 +62,35 @@ class Analyzer():
             # 加载待处理队列
             self.wait_queue.append(stock["stock_key"])
             self.push_count += 1
-            logging.debug("Push stock_key:%s count:%s", stock["stock_key"], self.push_count)
+            print("Push stock_key:%s push:%s pop:%s wait:%s" % (
+                stock["stock_key"],
+                self.push_count,
+                self.pop_count,
+                len(self.wait_queue)))
+            logging.debug("Push stock_key:%s push:%s pop:%s wait:%s",
+                          stock["stock_key"],
+                          self.push_count,
+                          self.pop_count,
+                          len(self.wait_queue))
             while(len(self.wait_queue) >= WAIT_QUEUE_LEN):
                 time.sleep(1)
         self.is_load_finished = True
+
+    def load_index(self):
+        ''' 加载指数列表 '''
+        # 获取指数列表
+        index_list = self.data.get_all_index()
+        for index in index_list:
+            # 放入待处理队列
+            self.wait_queue.append(index["index_key"])
+            self.push_count += 1
+            logging.debug("Push index_key:%s push:%s pop:%s wait:%s",
+                          index["index_key"],
+                          self.push_count,
+                          self.pop_count,
+                          len(self.wait_queue))
+            while(len(self.wait_queue) >= WAIT_QUEUE_LEN):
+                time.sleep(1)
 
     def handle(self):
         ''' 构建股票指数 '''
@@ -67,6 +99,7 @@ class Analyzer():
                 break
             try:
                 stock_key = self.wait_queue.pop()
+                self.pop_count += 1
                 logging.debug("Threading[%s] Pop stock_key:%s",
                               threading.current_thread().ident, stock_key)
             except Exception as e:
@@ -82,10 +115,11 @@ class Analyzer():
     def wait(self):
         ''' 等待处理结束 '''
         while(not self.is_finished()):
-            print("Stock push count:%s. queue wait count:%s",
-                  self.push_count, len(self.wait_queue))
-            time.sleep(1)
-        print("Analyzing was done! push count:%s", self.push_count)
+            print("Analyze is doing! push:%s pop:%s wait:%s" % (
+                self.push_count, self.pop_count, len(self.wait_queue)))
+            time.sleep(10)
+        print("Analyze was done! push:%s pop:%s wait:%s" % (
+            self.push_count, self.pop_count, len(self.wait_queue)))
 
     def analyze(self, stock_key):
         # 获取交易数据(按时间逆序)

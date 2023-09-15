@@ -7,7 +7,7 @@ class MySQLPool:
         self.pool = PooledDB(
                 creator=pymysql,  # 使用链接数据库的模块
                 mincached=10,  # 初始化时，链接池中至少创建的链接，0表示不创建
-                maxconnections=200,  # 连接池允许的最大连接数，0和None表示不限制连接数
+                maxconnections=10000,  # 连接池允许的最大连接数，0和None表示不限制连接数
                 blocking=True,  # 连接池中如果没有可用连接后，是否阻塞等待。True，等待；False，不等待然后报错
                 host=host,
                 port=port,
@@ -18,8 +18,7 @@ class MySQLPool:
     def open(self):
         ''' 获取连接 '''
         self.conn = self.pool.connection()
-        #self.cursor = self.conn.cursor(cursor=pymysql.cursors.DictCursor)  # 表示读取的数据为字典类型
-        self.cursor = self.conn.cursor()  # 表示读取的数据为字典类型
+        self.cursor = self.conn.cursor(cursor=pymysql.cursors.DictCursor)  # 表示读取的数据为字典类型
         return self.conn, self.cursor
 
     def close(self, conn, cursor):
