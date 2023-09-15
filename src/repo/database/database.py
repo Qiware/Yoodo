@@ -4,6 +4,10 @@
 
 import logging
 import pymysql
+import sys
+
+sys.path.append("../../repo/lib/mysql")
+from mysql import MySQLPool
 
 # 优质股票市值 >= 100亿
 STOCK_GOOD_MARKET_CAP = 10000000000
@@ -12,7 +16,12 @@ STOCK_GOOD_MARKET_CAP = 10000000000
 class Database():
     def __init__(self):
         ''' 初始化 '''
-        self.mysql = pymysql.connect(host="localhost", port=3306, user="root", password="", db="exchange", charset="utf8")
+        self.mysql = MySQLPool(
+                host="localhost",
+                port=3306,
+                user="root",
+                password="",
+                database="exchange")
 
     def gen_insert_sql(self, table, data):
         ''' 生成SQL INSERT语句 '''
@@ -63,13 +72,10 @@ class Database():
         logging.debug("sql:%s conditions:%s", sql, conditions)
 
         # 执行SQL语句
-        cursor = self.mysql.cursor()
-
+        conn, cursor = self.msyql.open()
         execute = cursor.execute(sql, conditions)
-
-        self.mysql.commit()
-
-        cursor.close()
+        conn.commit()
+        self.mysql.close(conn, cursor)
 
         return None
 
@@ -99,14 +105,10 @@ class Database():
         conditions.append(data["stock_key"])
 
         # 执行SQL语句
-        cursor = self.mysql.cursor()
-
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, tuple(conditions))
-
-        self.mysql.commit()
-
-        cursor.close()
-
+        conn.commit()
+        self.mysql.close(conn, cursor)
 
     def _add_transaction(self, data):
         ''' 新增交易数据 '''
@@ -119,13 +121,10 @@ class Database():
         logging.debug("sql: %s", sql)
 
         # 执行SQL语句
-        cursor = self.mysql.cursor()
-
+        conn, cursor = self.mysql.open()
         execute = cursor.execute(sql, conditions)
-
-        self.mysql.commit()
-
-        cursor.close()
+        conn.commit()
+        self.mysql.close(conn, cursor)
 
         return None
 
@@ -156,13 +155,10 @@ class Database():
         conditions.append(data["date"])
 
         # 执行SQL语句
-        cursor = self.mysql.cursor()
-
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, tuple(conditions))
-
-        self.mysql.commit()
-
-        cursor.close()
+        conn.commit()
+        self.mysql.close(conn, cursor)
 
     def set_transaction(self, data):
         ''' 更新交易数据: 开盘价、最高价、最低价、收盘价、交易量、交易额、换手率等
@@ -180,8 +176,6 @@ class Database():
         '''
 
         # 查询交易数据
-        cursor = self.mysql.cursor()
-
         sql = f'SELECT stock_key, date, \
                     open_price, close_price, \
                     top_price, bottom_price, \
@@ -189,30 +183,12 @@ class Database():
                 FROM t_transaction \
                 WHERE stock_key=%s AND date=%s'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, (stock_key, date))
-
         item = cursor.fetchone()
+        self.mysql.close(conn, cursor)
 
-        cursor.close()
-
-        if item is None:
-            logging.debug("No found. stock_key:%s date:%s", stock_key, date)
-            return None
-
-        # 数据整合处理
-        data = dict()
-
-        data["stock_key"] = str(item[0])
-        data["date"] = int(item[1])
-        data["open_price"] = float(item[2])
-        data["close_price"] = float(item[3])
-        data["top_price"] = float(item[4])
-        data["bottom_price"] = float(item[5])
-        data["volume"] = float(item[6])
-        data["turnover"] = float(item[7])
-        data["turnover_ratio"] = float(item[8])
-
-        return data
+        return item
 
     def get_stock(self, stock_key):
         ''' 获取指定股票信息
@@ -220,47 +196,29 @@ class Database():
         '''
 
         # 查询股票列表
-        cursor = self.mysql.cursor()
-
         sql = f'SELECT stock_key, name, total, market_cap, disable \
                 FROM t_stock \
                 WHERE stock_key=%s'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, (stock_key))
-
         item = cursor.fetchone()
+        self.mysql.close(conn, cursor)
 
-        cursor.close()
-
-        if item is None:
-            logging.error("Get stock data failed! stock_key:%s", stock_key)
-            return None
-
-        # 数据整合处理
-        data = dict()
-        data["stock_key"] = item[0]
-        data["name"] = item[1]
-        data["total"] = int(item[2])
-        data["market_cap"] = float(item[3])
-        data["disable"] = int(item[4])
-
-        return data
+        return item 
 
     def get_all_stock(self):
         ''' 获取所有股票列表 '''
 
         # 查询股票列表
-        cursor = self.mysql.cursor()
-
         sql = f'SELECT stock_key, name, total, market_cap, disable \
                 FROM t_stock \
                 WHERE disable=0'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql)
-
         items = cursor.fetchall()
-
-        cursor.close()
+        self.mysql.close(conn, cursor)
 
         # 数据整合处理
         result = list()
@@ -281,17 +239,14 @@ class Database():
         '''
 
         # 查询股票列表
-        cursor = self.mysql.cursor()
-
         sql = f'SELECT stock_key, name, total, market_cap, disable \
                 FROM t_stock \
                 WHERE market_cap>=%s AND disable=0'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, (STOCK_GOOD_MARKET_CAP))
-
         items = cursor.fetchall()
-
-        cursor.close()
+        self.mysql.close(conn, cursor)
 
         # 数据整合处理
         result = list()
@@ -314,20 +269,16 @@ class Database():
         '''
 
         # 查询交易数据
-        cursor = self.mysql.cursor()
-
         sql = f'SELECT stock_key, date, open_price, \
                         close_price, top_price, bottom_price, \
                         volume, turnover, turnover_ratio \
                     FROM t_transaction \
                     WHERE stock_key=%s AND date<=%s ORDER BY date DESC LIMIT %s'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, (stock_key, date, num))
-
         items = cursor.fetchall()
-
-        cursor.close()
-
+        self.mysql.close(conn, cursor)
 
         # 数据整合处理
         result = list()
@@ -352,20 +303,16 @@ class Database():
         '''
 
         # 查询交易数据
-        cursor = self.mysql.cursor()
-
         sql = f'SELECT stock_key, date, open_price, \
                         close_price, top_price, bottom_price, \
                         volume, turnover, turnover_ratio \
                     FROM t_transaction \
                     WHERE stock_key=%s ORDER BY date DESC'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, (stock_key))
-
         items = cursor.fetchall()
-
-        cursor.close()
-
+        self.mysql.close(conn, cursor)
 
         # 数据整合处理
         result = list()
@@ -396,13 +343,10 @@ class Database():
         logging.debug("sql:%s conditions:%s", sql, conditions)
 
         # 执行SQL语句
-        cursor = self.mysql.cursor()
-
+        conn, cursor = self.mysql.open()
         execute = cursor.execute(sql, conditions)
-
-        self.mysql.commit()
-
-        cursor.close()
+        conn.commit()
+        self.mysql.close(conn, cursor)
 
         return None
 
@@ -411,39 +355,33 @@ class Database():
 
         logging.debug("Call _update_predict(). data:%s", data)
 
-        cursor = self.mysql.cursor()
-
         sql = f'UPDATE t_predict SET base_date=%s, base_price=%s, \
                     pred_price=%s,pred_ratio=%s,update_time=%s \
                 WHERE stock_key=%s AND date=%s AND days=%s'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, (data["base_date"], data["base_price"],
                              data["pred_price"], data["pred_ratio"],
                              data["update_time"], data["stock_key"],
                              data["date"], data["days"]))
-
-        self.mysql.commit()
-
-        cursor.close()
+        conn.commit()
+        self.mysql.close(conn, cursor)
 
     def update_predict_real(self, data):
         ''' 更新预测数据中的真实数据 '''
 
         logging.debug("Call _update_predict_real(). data:%s", data)
 
-        cursor = self.mysql.cursor()
-
         sql = f'UPDATE t_predict SET real_price=%s, \
                         real_ratio=%s,update_time=%s \
                     WHERE stock_key=%s AND base_date=%s AND days=%s'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, (data["real_price"],
                              data["real_ratio"], data["update_time"],
                              data["stock_key"], data["base_date"], data["days"]))
-
-        self.mysql.commit()
-
-        cursor.close()
+        conn.commit()
+        self.mysql.close(conn, cursor)
 
     def set_predict(self, data):
         ''' 设置预测数据
@@ -465,18 +403,15 @@ class Database():
         '''
 
         # 查询交易数据
-        cursor = self.mysql.cursor()
-
         sql = f'SELECT stock_key, date, days, \
                         base_price, pred_price, pred_ratio \
                     FROM t_predict \
                     WHERE stock_key=%s AND date=%s AND days=%s'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, (stock_key, date, days))
-
         item = cursor.fetchone()
-
-        cursor.close()
+        self.mysql.close(conn, cursor)
 
         if item is None:
             logging.debug("Select data from database failed. stock_key:%s date:%s days:%s",
@@ -518,13 +453,10 @@ class Database():
         logging.debug("sql: %s", sql)
 
         # 执行SQL语句
-        cursor = self.mysql.cursor()
-
+        conn, cursor = self.mysql.open()
         execute = cursor.execute(sql, conditions)
-
-        self.mysql.commit()
-
-        cursor.close()
+        conn.commit()
+        self.mysql.close(conn, cursor)
 
         return None
 
@@ -555,13 +487,10 @@ class Database():
         conditions.append(data["date"])
 
         # 执行SQL语句
-        cursor = self.mysql.cursor()
-
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, tuple(conditions))
-
-        self.mysql.commit()
-
-        cursor.close()
+        conn.commit()
+        self.mysql.close(conn, cursor)
 
     def get_transaction_index(self, stock_key, date):
         ''' 获取指定交易数据
@@ -570,17 +499,14 @@ class Database():
         '''
 
         # 查询交易数据
-        cursor = self.mysql.cursor()
-
         sql = f'SELECT stock_key, date, data \
                 FROM t_transaction_index \
                 WHERE stock_key=%s AND date=%s'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, (stock_key, date))
-
         item = cursor.fetchone()
-
-        cursor.close()
+        self.mysql.close(conn, cursor)
 
         if item is None:
             logging.debug("No found. stock_key:%s date:%s",
@@ -602,17 +528,14 @@ class Database():
         '''
 
         # 查询交易数据
-        cursor = self.mysql.cursor()
-
         sql = f'SELECT stock_key, date, data \
                 FROM t_transaction_index \
                 WHERE stock_key=%s AND date<=%s'
 
+        conn, cursor = self.mysql.open()
         cursor.execute(sql, (stock_key, lastest_date))
-
         items = cursor.fetchall()
-
-        cursor.close()
+        self.mysql.close(conn, cursor)
 
         if items is None:
             logging.debug("No found. stock_key:%s date:%s", stock_key, date)
