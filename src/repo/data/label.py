@@ -40,6 +40,22 @@ class Label():
             price_ratio -= 5
         return int(price_ratio/5) * 5
 
+    def ratio_label(self, base_val, val, interval):
+        ''' 波动比率转LABEL
+            @Param base_val: 基准值
+            @Param val: 当前值
+            @Param interval: 间隔空间
+        '''
+        diff = (val - base_val)
+        if diff == 0:
+            return 0
+        if (base_val == 0):
+            return 100
+        ratio = int(diff / base_val * 100)
+        if ratio < 0:
+            return (ratio - 1) / interval
+        return  ratio / interval
+
     def kdj_label(self, kdj):
         ''' KDJ特征LABEL '''
         if int(kdj["K"]) > 90: # 超买: 减仓
@@ -65,11 +81,22 @@ class Label():
         # 处于50时买卖均衡
         return SIGNAL_NONE
 
-    def cci_label(self, cci):
-        ''' CCI特征LABEL '''
-        if cci > 100: # 超买: 减仓
+    def cci_label(self, curr_cci, prev_cci):
+        ''' CCI特征LABEL
+            CCI指标非常敏感, 适合追踪暴涨暴跌行情
+        '''
+        # 情况1: 指标从下往上快速突破100, 是买入时间
+        if curr_cci > 100: # 超买区域
+            if prev_cci < 100:
+                return SIGNAL_ADD_PLUS
+            if curr_cci - prev_cci > 0:
+                return SIGNAL_ADD
             return SIGNAL_SUB
-        elif cci < -100: # 超卖: 加仓
+        if curr_cci < -100: # 超卖区域
+            if prev_cci > -100:
+                return SIGNAL_SUB_PLUS
+            if curr_cci - prev_cci < 0:
+                return SIGNAL_SUB
             return SIGNAL_ADD
         # -100 ~ 100表示整盘区间
         return SIGNAL_NONE
