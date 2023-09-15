@@ -502,7 +502,7 @@ class Database():
 
         logging.debug("Call set_transaction_index(). data:%s", data)
 
-        old_data = self.get_transaction_index(data["stock_key"], data["date"], data["name"])
+        old_data = self.get_transaction_index(data["stock_key"], data["date"])
         if old_data is None:
             return self._add_transaction_index(data)
         return self._update_transaction_index(data)
@@ -583,8 +583,8 @@ class Database():
         cursor.close()
 
         if item is None:
-            logging.debug("No found. stock_key:%s date:%s name:%s",
-                          stock_key, date, name)
+            logging.debug("No found. stock_key:%s date:%s",
+                          stock_key, date)
             return None
 
         # 数据整合处理

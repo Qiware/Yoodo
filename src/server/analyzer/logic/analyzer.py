@@ -8,11 +8,11 @@ import math
 import talib
 import pandas
 
-sys.path.append("../../lib/data")
+sys.path.append("../../repo/data")
 from data import Data
-sys.path.append("../../lib/repo/log")
+sys.path.append("../../repo/lib/log")
 from log import *
-sys.path.append("../../lib/repo/dtime")
+sys.path.append("../../repo/lib/dtime")
 from dtime import *
 
 class Analyzer():
