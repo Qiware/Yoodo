@@ -282,7 +282,7 @@ class Data():
                 prev_index = prev["index"]  # 前一周期交易指数
 
                 # 市值LABEL
-                feature.append(self.label.market_cap_label(curr["total"], curr["open_price"]))
+                feature.append(self.label.market_cap_label(curr["stock_total"], curr["open_price"]))
 
                 # 与前周期的比较
                 feature.append(self.label.ratio_label(prev["close_price"], curr["open_price"], 1))
