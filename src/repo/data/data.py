@@ -346,6 +346,17 @@ class Data():
 
                 feature.append(self.label.adosc_label(curr_index["ADOSC"], prev_index["ADOSC"]))
 
+
+                curr_sar = {
+                        "SAR": curr_index["SAR"],
+                        "close_price": curr["close_price"],
+                        }
+                prev_sar = {
+                        "SAR": prev_index["SAR"],
+                        "close_price": prev["close_price"],
+                        }
+                feature.append(self.label.sar_label(curr_sar, prev_sar))
+
                 index -= 1
             except Exception as e:
                 logging.error("Generate feature by transaction list failed! stock_key:%s error:%s",

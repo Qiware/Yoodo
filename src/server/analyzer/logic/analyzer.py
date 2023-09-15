@@ -17,7 +17,7 @@ sys.path.append("../../repo/lib/dtime")
 from dtime import get_current_date
 
 # 默认工作线程数量
-WORKER_NUM = 10
+WORKER_NUM = 5
 # 队列长度
 WAIT_QUEUE_LEN = 1000
 

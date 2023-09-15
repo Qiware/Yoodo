@@ -212,18 +212,7 @@ class Database():
         items = cursor.fetchall()
         self.mysql.close(conn, cursor)
 
-        # 数据整合处理
-        result = list()
-
-        for item in items:
-            data = dict()
-            data["stock_key"] = str(item[0]) # 股票KEY
-            data["name"] = str(item[1]) # 企业名称
-            data["total"] = int(item[2]) # 总股本数
-            data["market_cap"] = float(item[3]) # 总市值
-            data["disable"] = int(item[4]) # 是否禁用
-            result.append(data)
-        return result
+        return items
 
     def get_good_stock(self):
         ''' 获取优质股票列表
@@ -240,18 +229,7 @@ class Database():
         items = cursor.fetchall()
         self.mysql.close(conn, cursor)
 
-        # 数据整合处理
-        result = list()
-
-        for item in items:
-            data = dict()
-            data["stock_key"] = item[0] # 股票KEY
-            data["name"] = item[1] # 企业名称
-            data["total"] = int(item[2]) # 总股本数
-            data["market_cap"] = float(item[3]) # 总市值
-            data["disable"] = int(item[4]) # 是否禁用
-            result.append(data)
-        return result
+        return items
 
     def get_transaction_list(self, stock_key, date, num):
         ''' 获取指定日期往前的num条交易数据
@@ -273,21 +251,7 @@ class Database():
         self.mysql.close(conn, cursor)
 
         # 数据整合处理
-        result = list()
-
-        for item in items:
-            data = dict()
-            data["stock_key"] = str(item[0])
-            data["date"] = int(item[1])
-            data["open_price"] = float(item[2])
-            data["close_price"] = float(item[3])
-            data["top_price"] = float(item[4])
-            data["bottom_price"] = float(item[5])
-            data["volume"] = int(item[6])
-            data["turnover"] = float(item[7])
-            data["turnover_ratio"] = float(item[8])
-            result.append(data)
-        return result
+        return items
 
     def get_all_transaction_list_by_stock_key(self, stock_key):
         ''' 获取指定日期往前的num条交易数据
@@ -306,22 +270,7 @@ class Database():
         items = cursor.fetchall()
         self.mysql.close(conn, cursor)
 
-        # 数据整合处理
-        result = list()
-
-        for item in items:
-            data = dict()
-            data["stock_key"] = str(item[0])
-            data["date"] = int(item[1])
-            data["open_price"] = float(item[2])
-            data["close_price"] = float(item[3])
-            data["top_price"] = float(item[4])
-            data["bottom_price"] = float(item[5])
-            data["volume"] = int(item[6])
-            data["turnover"] = float(item[7])
-            data["turnover_ratio"] = float(item[8])
-            result.append(data)
-        return result
+        return items
 
 
     def _add_predict(self, data):
@@ -402,17 +351,7 @@ class Database():
                           stock_key, date, days)
             return None
 
-        # 数据整合处理
-        data = dict()
-
-        data["stock_key"] = str(item[0])
-        data["date"] = int(item[1])
-        data["days"] = float(item[2])
-        data["base_price"] = float(item[3])
-        data["pred_price"] = float(item[4])
-        data["pred_ratio"] = float(item[5])
-
-        return data
+        return item
 
     def set_transaction_index(self, data):
         ''' 设置交易指数
@@ -491,13 +430,7 @@ class Database():
                           stock_key, date)
             return None
 
-        # 数据整合处理
-        data = dict()
-
-        data["stock_key"] = str(item[0])
-        data["date"] = int(item[1])
-        data["data"] = item[2]
-        return data
+        return item
 
     def get_transaction_index_list(self, stock_key, lastest_date):
         ''' 获取指定交易数据
@@ -519,17 +452,10 @@ class Database():
             logging.debug("No found. stock_key:%s date:%s", stock_key, date)
             return None
 
-        # 数据整合处理
+        # 数据梳理
         data = dict()
-
         for item in items:
-            date = int(item[1])
-
-            data[date] = dict()
-
-            data[date]["stock_key"] = str(item[0])
-            data[date]["date"] = int(item[1])
-            data[date]["data"] = item[2]
+            data[item["date"]] = item
 
         return data
 
