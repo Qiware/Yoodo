@@ -94,6 +94,22 @@ class Analyzer():
                 time.sleep(1)
         self.is_load_index_finished = True
 
+    def load_index(self):
+        ''' 加载指数列表 '''
+        # 获取指数列表
+        index_list = self.data.get_all_index()
+        for index in index_list:
+            # 放入待处理队列
+            self.wait_queue.append(index["index_key"])
+            self.push_count += 1
+            logging.debug("Push index_key:%s push:%s pop:%s wait:%s",
+                          index["index_key"],
+                          self.push_count,
+                          self.pop_count,
+                          len(self.wait_queue))
+            while(len(self.wait_queue) >= WAIT_QUEUE_LEN):
+                time.sleep(1)
+
     def handle(self):
         ''' 构建股票指数 '''
         while(True):
