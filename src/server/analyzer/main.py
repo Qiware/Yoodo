@@ -23,13 +23,13 @@ if __name__ == "__main__":
         usage() 
         exit(-1)
 
-    start_stock_code = int(sys.argv[1])
+    worker_num = int(sys.argv[1]) # 并发数量
 
     # 日志初始化
     log_init("../../../log/analyzer.log")
 
     # 新建数据分析
-    analyzer = Analyzer()
+    analyzer = Analyzer(worker_num)
 
-    analyzer.rebuild(start_stock_code)
+    analyzer.wait()
 
