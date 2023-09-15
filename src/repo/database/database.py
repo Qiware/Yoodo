@@ -214,6 +214,19 @@ class Database():
 
         return items
 
+    def get_all_index(self):
+        ''' 获取所有指数列表 '''
+
+        # 查询指数列表
+        sql = f'SELECT index_key, name FROM t_index'
+
+        conn, cursor = self.mysql.open()
+        cursor.execute(sql)
+        items = cursor.fetchall()
+        self.mysql.close(conn, cursor)
+
+        return items
+
     def get_good_stock(self):
         ''' 获取优质股票列表
             @Note: 市值超过100亿的股票, 则认为是优质股票.

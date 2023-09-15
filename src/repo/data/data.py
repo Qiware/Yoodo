@@ -404,6 +404,10 @@ class Data():
 
         return lastest["date"], feature
 
+    def get_all_index(self):
+        ''' 获取所有指数  '''
+        return self.database.get_all_index()
+
     def get_all_stock(self):
         ''' 获取所有股票  '''
         return self.database.get_all_stock()
