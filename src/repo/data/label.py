@@ -40,22 +40,6 @@ class Label():
             price_ratio -= 5
         return int(price_ratio/5) * 5
 
-    def ratio_label(self, base_val, val, interval):
-        ''' 波动比率转LABEL
-            @Param base_val: 基准值
-            @Param val: 当前值
-            @Param interval: 间隔空间
-        '''
-        diff = (val - base_val)
-        if diff == 0:
-            return 0
-        if (base_val == 0):
-            return 100
-        ratio = int(diff / base_val * 100)
-        if ratio < 0:
-            return (ratio - 1) / interval
-        return  ratio / interval
-
     def kdj_label(self, kdj):
         ''' KDJ特征LABEL '''
         if int(kdj["K"]) > 90: # 超买: 减仓
@@ -101,13 +85,14 @@ class Label():
         # -100 ~ 100表示整盘区间
         return SIGNAL_NONE
 
-    def ad_label(self, curr_ad, prev_ad, curr_close_price, prev_close_price):
+    def ad_label(self, curr, prev):
         ''' AD特征LABEL '''
         # 底背离: 价格下跌, 但资金在增加(看涨: 买入信号)
-        if ((curr_close_price - prev_close_price) < 0) and ((curr_ad - prev_ad) > 0):
+        if ((curr["close_price"] - prev["close_price"]) < 0) and \
+                ((curr["AD"] - prev["AD"]) > 0):
             return SIGNAL_ADD
         # 顶背离: 价格上涨, 但资金在减少(看跌: 卖出信号)
-        if ((curr_close_price - prev_close_price) > 0) and ((curr_ad - prev_ad) < 0):
+        if ((curr["close_price"] - prev["close_price"]) > 0) and ((curr["AD"] - prev["AD"]) < 0):
             return SIGNAL_SUB
         # 价格和资金量同步
         return SIGNAL_NONE

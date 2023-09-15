@@ -666,4 +666,4 @@ class Analyzer():
             item["stock_key"] = stock_key
             item["date"] = date
             item["data"] = json.dumps(data)
-            self.data.set_transaction_index(item)
+            self.data.set_technical_index(item)
