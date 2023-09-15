@@ -32,6 +32,7 @@ class Analyzer():
         # 待处理队列
         self.wait_queue = list()
         self.push_count = 0
+        self.pop_count = 0
         self.is_load_finished = False
 
         # 启动一个加载线程
@@ -55,7 +56,16 @@ class Analyzer():
             # 加载待处理队列
             self.wait_queue.append(stock["stock_key"])
             self.push_count += 1
-            logging.debug("Push stock_key:%s count:%s", stock["stock_key"], self.push_count)
+            print("Push stock_key:%s push:%s pop:%s wait:%s" % (
+                stock["stock_key"],
+                self.push_count,
+                self.pop_count,
+                len(self.wait_queue)))
+            logging.debug("Push stock_key:%s push:%s pop:%s wait:%s",
+                          stock["stock_key"],
+                          self.push_count,
+                          self.pop_count,
+                          len(self.wait_queue))
             while(len(self.wait_queue) >= WAIT_QUEUE_LEN):
                 time.sleep(1)
         self.is_load_finished = True
@@ -67,6 +77,7 @@ class Analyzer():
                 break
             try:
                 stock_key = self.wait_queue.pop()
+                self.pop_count += 1
                 logging.debug("Threading[%s] Pop stock_key:%s",
                               threading.current_thread().ident, stock_key)
             except Exception as e:
@@ -82,10 +93,11 @@ class Analyzer():
     def wait(self):
         ''' 等待处理结束 '''
         while(not self.is_finished()):
-            print("Stock push count:%s. queue wait count:%s",
-                  self.push_count, len(self.wait_queue))
-            time.sleep(1)
-        print("Analyzing was done! push count:%s", self.push_count)
+            print("Analyze is doing! push:%s pop:%s wait:%s" % (
+                self.push_count, self.pop_count, len(self.wait_queue)))
+            time.sleep(10)
+        print("Analyze was done! push:%s pop:%s wait:%s" % (
+            self.push_count, self.pop_count, len(self.wait_queue)))
 
     def analyze(self, stock_key):
         # 获取交易数据(按时间逆序)

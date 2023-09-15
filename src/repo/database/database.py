@@ -64,8 +64,6 @@ class Database():
     def _add_stock(self, data):
         ''' 新增股票数据 '''
 
-        logging.debug("Call _add_stock(). data:%s", data)
-
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_stock", data)
 
@@ -81,8 +79,6 @@ class Database():
 
     def _update_stock(self, data):
         ''' 更新股票数据 '''
-
-        logging.debug("Call _update_stock(). data:%s", data)
 
         # 生成SQL语句
         sql = f'UPDATE t_stock SET '
@@ -113,8 +109,6 @@ class Database():
     def _add_transaction(self, data):
         ''' 新增交易数据 '''
 
-        logging.debug("Call _add_transaction(). data:%s", data)
-
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_transaction", data)
 
@@ -130,8 +124,6 @@ class Database():
 
     def _update_transaction(self, data):
         ''' 更新交易数据 '''
-
-        logging.debug("Call _update_transaction(). data:%s", data)
 
         # 生成SQL语句
         sql = f'UPDATE t_transaction SET '
@@ -335,8 +327,6 @@ class Database():
     def _add_predict(self, data):
         ''' 新增预测数据 '''
 
-        logging.debug("Call _add_predict(). data:%s", data)
-
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_predict", data)
 
@@ -353,8 +343,6 @@ class Database():
     def _update_predict(self, data):
         ''' 更新预测数据 '''
 
-        logging.debug("Call _update_predict(). data:%s", data)
-
         sql = f'UPDATE t_predict SET base_date=%s, base_price=%s, \
                     pred_price=%s,pred_ratio=%s,update_time=%s \
                 WHERE stock_key=%s AND date=%s AND days=%s'
@@ -369,8 +357,6 @@ class Database():
 
     def update_predict_real(self, data):
         ''' 更新预测数据中的真实数据 '''
-
-        logging.debug("Call _update_predict_real(). data:%s", data)
 
         sql = f'UPDATE t_predict SET real_price=%s, \
                         real_ratio=%s,update_time=%s \
@@ -387,8 +373,6 @@ class Database():
         ''' 设置预测数据
             @Param data: 预测信息
         '''
-
-        logging.debug("Call set_predict(). data:%s", data)
 
         old_data = self.get_predict(data["stock_key"], data["date"], data["days"])
         if old_data is None:
@@ -435,8 +419,6 @@ class Database():
             @Param data: 预测信息
         '''
 
-        logging.debug("Call set_transaction_index(). data:%s", data)
-
         old_data = self.get_transaction_index(data["stock_key"], data["date"])
         if old_data is None:
             return self._add_transaction_index(data)
@@ -444,8 +426,6 @@ class Database():
 
     def _add_transaction_index(self, data):
         ''' 新增交易指数 '''
-
-        logging.debug("Call _add_transaction_index(). data:%s", data)
 
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_transaction_index", data)
@@ -462,8 +442,6 @@ class Database():
 
     def _update_transaction_index(self, data):
         ''' 更新交易指数 '''
-
-        logging.debug("Call _update_transaction_index(). data:%s", data)
 
         # 生成SQL语句
         sql = f'UPDATE t_transaction_index SET '
