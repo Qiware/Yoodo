@@ -53,6 +53,12 @@ class Data():
             logging.error("Get transaction index failed! stock_key:%s date:%s", stock_key, date)
             return None
 
+        # 查询股票信息
+        stock = self.database.get_stock(stock_key)
+        if stock is None:
+            logging.error("Get stock failed! stock_key:%s", stock_key)
+            return None
+
         # 填充交易数据
         for item in transaction_list:
             curr_date = item["date"]
@@ -66,6 +72,9 @@ class Data():
 
                 # 填充交易指数
                 item["index"] = json.loads(index_dict[curr_date]["data"])
+
+                # 股票信息
+                item["stock_total"] = stock["total"]
             except Exception as e:
                 logging.error("Fill transaction data failed! stock_key:%s date:%s error:%s",
                               stock_key, date, e)
@@ -271,6 +280,9 @@ class Data():
 
                 curr_index = curr["index"]  # 当前周期交易指数
                 prev_index = prev["index"]  # 前一周期交易指数
+
+                # 市值LABEL
+                feature.append(self.label.market_cap_label(curr["total"], curr["open_price"]))
 
                 # 与前周期的比较
                 feature.append(self.label.ratio_label(prev["close_price"], curr["open_price"], 1))
