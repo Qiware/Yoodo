@@ -33,7 +33,8 @@ class Analyzer():
         self.wait_queue = list()
         self.push_count = 0
         self.pop_count = 0
-        self.is_load_finished = False
+        self.is_load_stock_finished = False
+        self.is_load_index_finished = False
 
         # 启动一个线程加载指数列表
         lt = threading.Thread(target=self.load_index, args=())
@@ -74,7 +75,24 @@ class Analyzer():
                           len(self.wait_queue))
             while(len(self.wait_queue) >= WAIT_QUEUE_LEN):
                 time.sleep(1)
-        self.is_load_finished = True
+        self.is_load_stock_finished = True
+
+    def load_index(self):
+        ''' 加载指数列表 '''
+        # 获取指数列表
+        index_list = self.data.get_all_index()
+        for index in index_list:
+            # 放入待处理队列
+            self.wait_queue.append(index["index_key"])
+            self.push_count += 1
+            logging.debug("Push index_key:%s push:%s pop:%s wait:%s",
+                          index["index_key"],
+                          self.push_count,
+                          self.pop_count,
+                          len(self.wait_queue))
+            while(len(self.wait_queue) >= WAIT_QUEUE_LEN):
+                time.sleep(1)
+        self.is_load_index_finished = True
 
     def load_index(self):
         ''' 加载指数列表 '''
@@ -110,7 +128,9 @@ class Analyzer():
 
     def is_finished(self):
         ''' 是否处理结束 '''
-        return (self.is_load_finished == True) and (len(self.wait_queue) == 0)
+        return (self.is_load_stock_finished == True) and \
+                (self.is_load_index_finished == True) and \
+                (len(self.wait_queue) == 0)
 
     def wait(self):
         ''' 等待处理结束 '''
@@ -662,4 +682,4 @@ class Analyzer():
             item["stock_key"] = stock_key
             item["date"] = date
             item["data"] = json.dumps(data)
-            self.data.set_transaction_index(item)
+            self.data.set_technical_index(item)

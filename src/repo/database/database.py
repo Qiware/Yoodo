@@ -366,12 +366,12 @@ class Database():
 
         return item
 
-    def set_transaction_index(self, data):
+    def set_technical_index(self, data):
         ''' 设置交易指数
             @Param data: 预测信息
         '''
 
-        old_data = self.get_transaction_index(data["stock_key"], data["date"])
+        old_data = self.get_technical_index(data["stock_key"], data["date"])
         if old_data is None:
             return self._add_transaction_index(data)
         return self._update_transaction_index(data)
@@ -380,7 +380,7 @@ class Database():
         ''' 新增交易指数 '''
 
         # 生成SQL语句
-        sql, conditions = self.gen_insert_sql("t_transaction_index", data)
+        sql, conditions = self.gen_insert_sql("t_technical_index", data)
 
         logging.debug("sql: %s", sql)
 
@@ -396,7 +396,7 @@ class Database():
         ''' 更新交易指数 '''
 
         # 生成SQL语句
-        sql = f'UPDATE t_transaction_index SET '
+        sql = f'UPDATE t_technical_index SET '
 
         index = 0
         conditions = list()
@@ -422,15 +422,15 @@ class Database():
         conn.commit()
         self.mysql.close(conn, cursor)
 
-    def get_transaction_index(self, stock_key, date):
-        ''' 获取指定交易数据
+    def get_technical_index(self, stock_key, date):
+        ''' 获取指定股票技术指标数据
             @Param stock_key: 股票KEY
             @Param date: 交易日期(格式: YYYYMMDD)
         '''
 
         # 查询交易数据
         sql = f'SELECT stock_key, date, data \
-                FROM t_transaction_index \
+                FROM t_technical_index \
                 WHERE stock_key=%s AND date=%s'
 
         conn, cursor = self.mysql.open()
@@ -445,15 +445,15 @@ class Database():
 
         return item
 
-    def get_transaction_index_list(self, stock_key, lastest_date):
-        ''' 获取指定交易数据
+    def get_technical_index_list(self, stock_key, lastest_date):
+        ''' 获取指定股票技术指标数据
             @Param stock_key: 股票KEY
             @Param lastest_date: 最新交易日期(格式: YYYYMMDD)
         '''
 
         # 查询交易数据
         sql = f'SELECT stock_key, date, data \
-                FROM t_transaction_index \
+                FROM t_technical_index \
                 WHERE stock_key=%s AND date<=%s'
 
         conn, cursor = self.mysql.open()
