@@ -12,6 +12,7 @@ import threading
 
 sys.path.append("../../repo/data")
 from data import Data
+
 sys.path.append("../../repo/lib/dtime")
 from dtime import get_current_date
 
