@@ -79,76 +79,86 @@ class Data():
 
         return transaction_list
 
-    def gen_train_data_by_days(self, model_type, date, days, num):
-        ''' 按days天聚合训练数据
+    def gen_train_data(self, model_type, date, days, num):
+        ''' 生成训练数据
             @Param date: 结束日期
-            @Param days: 以days为间隔进行分组
+            @Param days: 预测的间隔天数
             @Param num: 交易数据条目
         '''
 
-        logging.debug("Call gen_train_data_by_days(). date:%s days:%s num:%s", date, days, num)
+        logging.debug("Call gen_train_data(). date:%s days:%s num:%s", date, days, num)
 
         fp = open(self.gen_train_data_fpath(date, days), "w")
 
         # 获取股票列表
         stock_list = self.database.get_good_stock()
         for stock in stock_list:
-            stock_key = stock["stock_key"]
-
-            logging.debug("Generate train data. stock_key:%s date:%s num:%s", stock_key, date, num)
-
-            # 拉取交易数据
-            transaction_list = self.database.get_transaction_list(stock_key, date, num)
-            if transaction_list is None:
-                logging.error("Get transaction list failed. stock_key:%s date:%s num:%s",
-                              stock_key, date, num)
-                continue
-
-            # 填充交易数据
-            transaction_list = self.fill_transaction_data(stock_key, date, transaction_list)
-            if transaction_list is None:
-                logging.error("Fill transaction list failed. stock_key:%s date:%s num:%s",
-                              stock_key, date, num)
-                continue
-
-            # 生成训练样本
-            if model_type == MODEL_REGRESSOR:
-                self.gen_train_data_by_transaction_list(stock_key, transaction_list, fp)
-            elif model_type == MODEL_CLASSIFIER:
-                self.gen_classify_train_data_by_transaction_list(stock_key, transaction_list, fp)
+            # 生成训练数据
+            self._gen_train_data(model_type, stock["stock_key"], date, days, num, fp)
 
         fp.close()
 
         return None
 
-    def gen_train_data_by_transaction_list(self, stock_key, transaction_list, fp):
-        ''' 通过交易列表生成训练数据
+    def _gen_train_data(self, model_type, stock_key, date, days, num, fp):
+        ''' 生成训练数据
+            @Param model_type: 模型类型
+            @Param stock_key: 股票KEY
+            @Param date: 结束日期
+            @Param days: 预测的间隔天数
+            @Param num: 交易数据条目
+            @Param fp: 训练数据输出文件的指针
+        '''
+        # 拉取交易数据
+        transaction_list = self.database.get_transaction_list(stock_key, date, num)
+        if transaction_list is None:
+            logging.error("Get transaction list failed. stock_key:%s date:%s num:%s",
+                          stock_key, date, num)
+            return
+
+        # 填充交易数据
+        transaction_list = self.fill_transaction_data(stock_key, date, transaction_list)
+        if transaction_list is None:
+            logging.error("Fill transaction list failed. stock_key:%s date:%s num:%s",
+                          stock_key, date, num)
+            return
+
+        # 生成训练样本
+        if model_type == MODEL_REGRESSOR:
+            self.gen_reg_train_data(stock_key, transaction_list, days, fp)
+        elif model_type == MODEL_CLASSIFIER:
+            self.gen_cls_train_data(stock_key, transaction_list, days, fp)
+        return
+
+    def gen_reg_train_data(self, stock_key, transaction_list, days, fp):
+        ''' 生成'线性回归'训练数据
             @Param stock_key: 股票KEY
             @Param transaction_list: 交易数据
+            @Param days: 预测间隔天数
             @Param fp: 文件指针
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
         '''
 
-        logging.debug("Call gen_train_data_by_transaction_list(). stock_key:%s", stock_key)
+        logging.debug("Call gen_reg_train_data(). stock_key:%s", stock_key)
 
         train_data_list = list()
 
         # 判断参数合法性
-        if len(transaction_list) < TRAIN_DATA_TRANSACTION_NUM + 1:
+        if len(transaction_list) < TRAIN_DATA_TRANSACTION_NUM + 1*days:
             logging.error("Transaction data not enough! stock_key:%s", stock_key)
-            return None
+            return
 
         # 注意: 收盘价/最高价/最低价不与当前的开盘价比较, 而是与前一天的收盘价比较. 
         #       预留最后一个作为起始基准.
-        offset = len(transaction_list) - (TRAIN_DATA_TRANSACTION_NUM + 1)
+        offset = len(transaction_list) - (TRAIN_DATA_TRANSACTION_NUM + 1*days)
 
         while (offset > 0):
             train_data = ""
 
             # 生成训练数据
-            features = self.gen_feature_by_transaction_list(
+            features = self.gen_feature(
                 stock_key,
-                transaction_list[offset:offset + TRAIN_DATA_TRANSACTION_NUM + 1])
+                transaction_list[offset:offset + TRAIN_DATA_TRANSACTION_NUM + 1*days], days)
             if features is None:
                 offset -= 1
                 continue
@@ -171,21 +181,21 @@ class Data():
 
         return None
 
-    def gen_classify_train_data_by_transaction_list(self, stock_key, transaction_list, fp):
-        ''' 通过交易列表生成训练数据(分类)
+    def gen_cls_train_data(self, stock_key, transaction_list, days, fp):
+        ''' 生成'分类'训练数据
             @Param stock_key: 股票KEY
             @Param transaction_list: 交易数据
+            @Param days: 预测间隔天数
             @Param fp: 文件指针
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
         '''
 
-        logging.debug("Call gen_class_train_data_by_transaction_list(). stock_key:%s",
-                      stock_key)
+        logging.debug("Call gen_cls_train_data(). stock_key:%s", stock_key)
 
         train_data_list = list()
 
         # 判断参数合法性
-        if len(transaction_list) < TRAIN_DATA_TRANSACTION_NUM + 1:
+        if len(transaction_list) < TRAIN_DATA_TRANSACTION_NUM + 1*days:
             logging.error("Transaction data not enough! stock_key:%s", stock_key)
             return None
 
@@ -197,9 +207,9 @@ class Data():
             train_data = ""
 
             # 生成训练数据
-            features = self.gen_feature_by_transaction_list(
+            features = self.gen_feature(
                 stock_key,
-                transaction_list[offset:offset + TRAIN_DATA_TRANSACTION_NUM + 1])
+                transaction_list[offset:offset + TRAIN_DATA_TRANSACTION_NUM + 1*days], days)
             if features is None:
                 logging.error("Generate feature by transactionn list failed! stock_key:%s offset:%s",
                               stock_key, offset)
@@ -254,14 +264,15 @@ class Data():
 
         return feature_list, target_list
 
-    def gen_feature_by_transaction_list(self, stock_key, transaction_list):
+    def gen_feature(self, stock_key, transaction_list, days):
         ''' 通过交易列表生成特征数据. 返回格式: [x1, x2, x3, ...]
+            @Param stock_key: 股票KEY
             @Param transaction_list: 交易数据
-            @Param fname: 训练数据输出文件
+            @Param days: 预测间隔天数
             @Return: 特征数据列表
         '''
         # 判断参数合法性
-        if len(transaction_list) < (TRAIN_DATA_TRANSACTION_NUM + 1):
+        if len(transaction_list) < (TRAIN_DATA_TRANSACTION_NUM + 1*days):
             logging.error("Transaction data not enough! stock_key:%s", stock_key)
             return None
 
@@ -270,17 +281,17 @@ class Data():
 
         # 生成特征数据(注意: 最后一个作为起始基准)
         index = TRAIN_DATA_TRANSACTION_NUM - 1
-        while (index >= 0):
+        while (index >= (days-1)):
+            curr = transaction_list[index]
+            prev = transaction_list[index + 1]
+
+            curr_hsi_index = curr["hsi_index"]  # 当前周期恒生指数
+            prev_hsi_index = prev["hsi_index"]  # 前一周期恒生指数
+
+            curr_tech_index = curr["tech_index"]  # 当前周期技术指数
+            prev_tech_index = prev["tech_index"]  # 前一周期技术指数
+
             try:
-                curr = transaction_list[index]
-                prev = transaction_list[index + 1]
-
-                curr_hsi_index = curr["hsi_index"]  # 当前周期恒生指数
-                prev_hsi_index = prev["hsi_index"]  # 前一周期恒生指数
-
-                curr_tech_index = curr["tech_index"]  # 当前周期技术指数
-                prev_tech_index = prev["tech_index"]  # 前一周期技术指数
-
                 # 市值LABEL
                 feature.append(self.label.market_cap_label(curr["stock_total"], curr["open_price"]))
 
@@ -365,17 +376,6 @@ class Data():
                 prev_sar = {"SAR": prev_tech_index["SAR"], "close_price": prev["close_price"]}
                 feature.append(self.label.sar_label(curr_sar, prev_sar))
 
-
-                curr_sar = {
-                        "SAR": curr_index["SAR"],
-                        "close_price": curr["close_price"],
-                        }
-                prev_sar = {
-                        "SAR": prev_index["SAR"],
-                        "close_price": prev["close_price"],
-                        }
-                feature.append(self.label.sar_label(curr_sar, prev_sar))
-
                 index -= 1
             except Exception as e:
                 logging.error("Generate feature by transaction list failed! stock_key:%s error:%s",
@@ -397,7 +397,7 @@ class Data():
 
         # 查询所需数据
         transaction_list = self.database.get_transaction_list(
-            stock_key, date, TRAIN_DATA_TRANSACTION_NUM * (days + 1))
+            stock_key, date, TRAIN_DATA_TRANSACTION_NUM + 1*days)
         if (transaction_list is None) or (len(transaction_list) == 0):
             logging.error("Get transaction list failed! stock_key:%s date:%s days:%s",
                           stock_key, date, days)
@@ -413,7 +413,7 @@ class Data():
             return date, None
 
         # 生成训练样本
-        item = self.gen_feature_by_transaction_list(stock_key, transaction_list)
+        item = self.gen_feature(stock_key, transaction_list, days)
         if item is None:
             logging.error("Generate feature by transaction list failed! stock_key:%s date:%s",
                           stock_key, date)
