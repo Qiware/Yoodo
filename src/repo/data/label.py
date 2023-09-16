@@ -36,9 +36,10 @@ class Label():
         ''' 生成分类
             @Param price_ratio: 涨价幅度
         '''
+        val = 2
         if price_ratio < 0:
-            price_ratio -= 5
-        return int(price_ratio/5) * 5
+            price_ratio -= val
+        return int(price_ratio/val) * val
 
     def kdj_label(self, kdj):
         ''' KDJ特征LABEL '''
@@ -136,31 +137,6 @@ class Label():
                 return -1 # 意味着股价短期内下跌调整开始，投资者应减仓
             return -2 # 表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓
         return 0
-
-    def market_cap_label(self, total, price):
-        ''' 股票市值LABEL
-            @Param total: 股票数量
-            @Param price: 股票价格
-        '''
-        b = 1000000000
-        market_cap = total * price
-        if market_cap < 5 * b:
-            return 0
-        if market_cap < 100 * b:
-            return 1
-        if market_cap < 200 * b:
-            return 2
-        if market_cap < 500 * b:
-            return 3
-        if market_cap < 1000 * b:
-            return 4
-        if market_cap < 2000 * b:
-            return 5
-        if market_cap < 5000 * b:
-            return 5
-        if market_cap < 10000 * b:
-            return 6
-        return 7
 
     def sar_label(self, curr, prev):
         ''' SAR指标LABEL

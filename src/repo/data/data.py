@@ -292,8 +292,12 @@ class Data():
             prev_tech_index = prev["tech_index"]  # 前一周期技术指数
 
             try:
-                # 市值LABEL
-                feature.append(self.label.market_cap_label(curr["stock_total"], curr["open_price"]))
+                # 公司股票市值(用开盘价计算)
+                market_cap = curr["stock_total"] * curr["open_price"]
+                feature.append(market_cap)
+
+                # 交易额与市值比较
+                feature.append(self.label.ratio(curr["turnover"], market_cap))
 
                 # 与前周期的比较
                 feature.append(self.label.ratio(prev["close_price"], curr["open_price"]))
@@ -310,7 +314,6 @@ class Data():
                 feature.append(self.label.ratio(prev_hsi_index["close_price"], curr_hsi_index["top_price"]))
                 feature.append(self.label.ratio(prev_hsi_index["close_price"], curr_hsi_index["bottom_price"]))
 
-                feature.append(self.label.ratio(prev_hsi_index["volume"], curr_hsi_index["volume"]))
                 feature.append(self.label.ratio(prev_hsi_index["turnover"], curr_hsi_index["turnover"]))
 
                 # 与本周期的开盘价比较
@@ -333,11 +336,11 @@ class Data():
                 feature.append(curr["turnover_ratio"])
 
                 # 与本周期的恒生指数比较
-                feature.append(self.label.ratio(curr["volume"], curr_hsi_index["volume"])) # 交易量占整个大盘比例
+                feature.append(self.label.ratio(curr["turnover"], curr_hsi_index["turnover"])) # 交易额占整个大盘比例
 
-                curr_volume_ratio = self.label.ratio(curr["volume"], prev["volume"])
-                hsi_index_volume_ratio = self.label.ratio(curr_hsi_index["volume"], prev_hsi_index["volume"])
-                feature.append(self.label.ratio(curr_volume_ratio, hsi_index_volume_ratio)) # 交易量涨幅与大盘比较
+                curr_turnover_ratio = self.label.ratio(curr["turnover"], prev["turnover"])
+                hsi_index_turnover_ratio = self.label.ratio(curr_hsi_index["turnover"], prev_hsi_index["turnover"])
+                feature.append(self.label.ratio(curr_turnover_ratio, hsi_index_turnover_ratio)) # 交易额涨幅与大盘比较
 
                 curr_ratio = self.label.ratio(curr["close_price"], prev["close_price"])
                 hsi_index_ratio = self.label.ratio(curr_hsi_index["close_price"], prev_hsi_index["close_price"])
@@ -356,7 +359,7 @@ class Data():
                 feature.append(self.label.ratio(curr["volume"], curr_tech_index["MA10VOL"]))
                 feature.append(self.label.ratio(curr["volume"], curr_tech_index["MA20VOL"]))
 
-                # 交易指数
+                # 技术指标
                 feature.append(self.label.kdj_label(curr_tech_index["KDJ"]))
                 feature.append(self.label.rsi_label(curr_tech_index["RSI"]))
 
