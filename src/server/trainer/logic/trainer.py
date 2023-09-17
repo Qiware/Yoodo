@@ -77,7 +77,7 @@ class Trainer():
                 stock_key = stock["stock_key"]
 
                 # 加载特征数据
-                base_date, feature = self.data.load_feature(stock_key, date, days)
+                base_date, feature = self.data.load_feature(stock, date, days)
                 if feature is None:
                     logging.error("Load feature failed! stock_key:%s date:%s days:%d",
                                  stock_key, date, days)

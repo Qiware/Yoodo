@@ -63,12 +63,12 @@ class Analyzer():
             # 加载待处理队列
             self.wait_queue.append(stock["stock_key"])
             self.push_count += 1
-            print("Push stock_key:%s push:%s pop:%s wait:%s" % (
+            print("Push [%s]. push:%s pop:%s wait:%s" % (
                 stock["stock_key"],
                 self.push_count,
                 self.pop_count,
                 len(self.wait_queue)))
-            logging.debug("Push stock_key:%s push:%s pop:%s wait:%s",
+            logging.debug("Push [%s]. push:%s pop:%s wait:%s",
                           stock["stock_key"],
                           self.push_count,
                           self.pop_count,

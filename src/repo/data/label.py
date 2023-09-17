@@ -6,6 +6,7 @@ import time
 import json
 import joblib
 import logging
+import xxhash
 
 SIGNAL_ADD_PLUS = 3  # 信号: 强烈加仓
 SIGNAL_ADD = 2  # 信号: 加仓
@@ -40,6 +41,10 @@ class Label():
         if price_ratio < 0:
             price_ratio -= val
         return int(price_ratio/val) * val
+
+    def str_label(self, s):
+        ''' 将字符串转为数字LABEL '''
+        return xxhash.xxh32(s, seed=0).intdigest()
 
     def kdj_label(self, kdj):
         ''' KDJ特征LABEL '''
@@ -168,3 +173,9 @@ class Label():
             return SIGNAL_NONE
         return SIGNAL_NONE
 
+
+if __name__ == "__main__":
+    label = Label()
+
+    name = "qifeng"
+    print(label.str_label(name))
