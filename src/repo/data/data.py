@@ -326,61 +326,61 @@ class Data():
                 feature.append(self.label.ratio(prev_hsi_index["turnover"], curr_hsi_index["turnover"]))
 
                 # 与本周期的开盘价比较
-                feature.append(self.label.ratio(curr["open_price"], curr["close_price"]))
-                feature.append(self.label.ratio(curr["open_price"], curr["top_price"]))
-                feature.append(self.label.ratio(curr["open_price"], curr["bottom_price"]))
+                #feature.append(self.label.ratio(curr["open_price"], curr["close_price"]))
+                #feature.append(self.label.ratio(curr["open_price"], curr["top_price"]))
+                #feature.append(self.label.ratio(curr["open_price"], curr["bottom_price"]))
 
-                feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["close_price"]))
-                feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["top_price"]))
-                feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["bottom_price"]))
+                #feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["close_price"]))
+                #feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["top_price"]))
+                #feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["bottom_price"]))
 
                 # 与本周期的收盘价比较
-                feature.append(self.label.ratio(curr["close_price"], curr["top_price"]))
-                feature.append(self.label.ratio(curr["close_price"], curr["bottom_price"]))
+                #feature.append(self.label.ratio(curr["close_price"], curr["top_price"]))
+                #feature.append(self.label.ratio(curr["close_price"], curr["bottom_price"]))
 
-                feature.append(self.label.ratio(curr_hsi_index["close_price"], curr_hsi_index["top_price"]))
-                feature.append(self.label.ratio(curr_hsi_index["close_price"], curr_hsi_index["bottom_price"]))
+                #feature.append(self.label.ratio(curr_hsi_index["close_price"], curr_hsi_index["top_price"]))
+                #feature.append(self.label.ratio(curr_hsi_index["close_price"], curr_hsi_index["bottom_price"]))
 
                 # 换手率
                 feature.append(curr["turnover_ratio"])
 
                 # 与本周期的恒生指数比较
-                feature.append(self.label.ratio(curr["turnover"], curr_hsi_index["turnover"])) # 交易额占整个大盘比例
+                feature.append(self.label.ratio(curr_hsi_index["turnover"], curr["turnover"])) # 交易额占整个大盘比例
 
-                curr_turnover_ratio = self.label.ratio(curr["turnover"], prev["turnover"])
-                hsi_index_turnover_ratio = self.label.ratio(curr_hsi_index["turnover"], prev_hsi_index["turnover"])
-                feature.append(self.label.ratio(curr_turnover_ratio, hsi_index_turnover_ratio)) # 交易额涨幅与大盘比较
+                curr_turnover_ratio = self.label.ratio(prev["turnover"], curr["turnover"])
+                hsi_index_turnover_ratio = self.label.ratio(prev_hsi_index["turnover"], curr_hsi_index["turnover"])
+                feature.append(self.label.ratio(hsi_index_turnover_ratio, curr_turnover_ratio)) # 交易额涨幅与大盘比较
 
-                curr_ratio = self.label.ratio(curr["close_price"], prev["close_price"])
-                hsi_index_ratio = self.label.ratio(curr_hsi_index["close_price"], prev_hsi_index["close_price"])
-                feature.append(self.label.ratio(curr_ratio, hsi_index_ratio)) # 涨幅与大盘比较
+                curr_ratio = self.label.ratio(prev["close_price"], curr["close_price"])
+                hsi_index_ratio = self.label.ratio(prev_hsi_index["close_price"], curr_hsi_index["close_price"])
+                feature.append(self.label.ratio(hsi_index_ratio, curr_ratio)) # 涨幅与大盘比较
 
                 # 与本周期的技术指数比较
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["MA5PRC"]))
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["MA10PRC"]))
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["MA20PRC"]))
+                feature.append(self.label.ratio(curr_tech_index["MA5PRC"], curr["close_price"]))
+                feature.append(self.label.ratio(curr_tech_index["MA10PRC"], curr["close_price"]))
+                feature.append(self.label.ratio(curr_tech_index["MA20PRC"], curr["close_price"]))
 
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["BOLL"]["UPPER"]))
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["BOLL"]["MIDDLE"]))
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["BOLL"]["LOWER"]))
+                feature.append(self.label.ratio(curr_tech_index["BOLL"]["UPPER"], curr["close_price"]))
+                feature.append(self.label.ratio(curr_tech_index["BOLL"]["MIDDLE"], curr["close_price"]))
+                feature.append(self.label.ratio(curr_tech_index["BOLL"]["LOWER"], curr["close_price"]))
 
-                feature.append(self.label.ratio(curr["volume"], curr_tech_index["MA5VOL"]))
-                feature.append(self.label.ratio(curr["volume"], curr_tech_index["MA10VOL"]))
-                feature.append(self.label.ratio(curr["volume"], curr_tech_index["MA20VOL"]))
+                feature.append(self.label.ratio(curr_tech_index["MA5VOL"], curr["volume"]))
+                feature.append(self.label.ratio(curr_tech_index["MA10VOL"], curr["volume"]))
+                feature.append(self.label.ratio(curr_tech_index["MA20VOL"], curr["volume"]))
 
                 # 技术指标
                 feature.append(self.label.kdj_label(curr_tech_index["KDJ"]))
                 feature.append(self.label.rsi_label(curr_tech_index["RSI"]))
 
                 feature.append(self.label.cci_label(curr_tech_index["CCI"], prev_tech_index["CCI"]))
-                feature.append(self.label.ratio(curr_tech_index["CCI"], prev_tech_index["CCI"]))
+                feature.append(self.label.ratio(prev_tech_index["CCI"], curr_tech_index["CCI"]))
 
                 feature.append(self.label.macd_label(curr_tech_index["MACD"], prev_tech_index["MACD"]))
 
                 curr_ad = {"AD": curr_tech_index["AD"], "close_price": curr["close_price"]}
                 prev_ad = {"AD": prev_tech_index["AD"], "close_price": prev["close_price"]}
                 feature.append(self.label.ad_label(curr_ad, prev_ad))
-                feature.append(self.label.ratio(curr_tech_index["AD"], prev_tech_index["AD"]))
+                feature.append(self.label.ratio(prev_tech_index["AD"], curr_tech_index["AD"]))
 
                 feature.append(self.label.adosc_label(curr_tech_index["ADOSC"], prev_tech_index["ADOSC"]))
 
