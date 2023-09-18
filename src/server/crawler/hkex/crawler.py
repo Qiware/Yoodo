@@ -184,11 +184,13 @@ class Crawler():
 
         return transaction
 
-    def _crawl_transaction(self, stock_code, stock_data, start_date):
+    def _crawl_transaction(self, stock_code, stock_data, lastest_day):
         ''' 爬取指定股票交易信息 '''
 
+        print("Crawl transaction. stock_code:%s" % (stock_code))
+
         # 爬取交易数据
-        data_list = self.hkex.get_kline_from_hkex(stock_code, start_date)
+        data_list = self.hkex.get_kline_from_hkex(stock_code, lastest_day)
         if data_list is None:
             logging.error("Get hkex kline failed! stock_code:%s start_date:%s",
                           stock_code, start_date)
@@ -207,10 +209,10 @@ class Crawler():
 
         return None
 
-    def crawl_transaction(self, begin_stock_code, start_date):
+    def crawl_transaction(self, begin_stock_code, lastest_day):
         ''' 爬取交易信息
             @Param stock_code: 股票代码
-            @Param start_date: 开始日期. 格式: YYYY-MM-DD
+            @Param lastest_day: 开始日期. 格式: 1month, 6month, 1year, 2year
         '''
 
         # 获取股票列表
@@ -231,7 +233,7 @@ class Crawler():
             logging.info("Crawl transaction data. stock_key:%s", stock_key)
 
             # 获取交易数据
-            self._crawl_transaction(stock_code, stock, start_date)
+            self._crawl_transaction(stock_code, stock, lastest_day)
 
     def crawl_hsi_index(self):
         ''' 获取'恒生指数'数据 '''

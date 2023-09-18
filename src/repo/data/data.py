@@ -48,8 +48,10 @@ class Data():
     def fill_transaction_data(self, stock, date, transaction_list):
         ''' 填充交易数据 '''
 
+        stock_key = stock["stock_key"]
+
         # 查询交易指数
-        tech_index = self.database.get_technical_index_list(stock["stock_key"], date)
+        tech_index = self.database.get_technical_index_list(stock_key, date)
         if tech_index is None:
             logging.error("Get transaction index failed! stock_key:%s date:%s", stock_key, date)
             return None
@@ -394,8 +396,8 @@ class Data():
                               stock_key, e)
                 return None
 
-        logging.info("Generate feature by transaction list success. transaction_list:%d feature:%d",
-                     len(transaction_list), len(feature))
+        logging.info("Generate feature by transaction list success. stock_key:%s transaction_list:%d feature:%d",
+                     stock_key, len(transaction_list), len(feature))
 
         return feature
 

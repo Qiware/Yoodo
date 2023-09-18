@@ -20,7 +20,7 @@ sys.path.append("../../repo/lib/log")
 from log import *
 
 # 拉取训练交易数据条目
-GET_TRANSACTION_MAX_NUM = 1000
+GET_TRANSACTION_MAX_NUM = 120
 
 # 股票预测
 class Trainer():
@@ -71,7 +71,7 @@ class Trainer():
 
         # 预测结果
         # 获取股票列表
-        for date in range(20230901, 20230915):
+        for date in range(20230901, 20230918):
             stock_list = self.data.get_good_stock()
             for stock in stock_list:
                 stock_key = stock["stock_key"]

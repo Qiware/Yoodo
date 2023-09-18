@@ -37,7 +37,7 @@ class Label():
         ''' 生成分类
             @Param price_ratio: 涨价幅度
         '''
-        val = 2
+        val = 1
         if price_ratio < 0:
             price_ratio -= val
         return int(price_ratio/val) * val
