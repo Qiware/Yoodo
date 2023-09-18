@@ -154,6 +154,19 @@ class HKEX():
         '''
         return self.baidu.get_hsi_kline()
 
+    def get_lastest_interval(self, lastest_day):
+        if lastest_day == "1month":
+            return HKEX_LASTEST_1MONTH
+        if lastest_day == "3month":
+            return HKEX_LASTEST_3MONTH
+        if lastest_day == "6month":
+            return HKEX_LASTEST_6MONTH
+        if lastest_day == "1year":
+            return HKEX_LASTEST_1YEAR
+        if lastest_day == "2year":
+            return HKEX_LASTEST_2YEAR
+        return HKEX_LASTEST_1MONTH
+
     def get_hz2083_kline(self):
         ''' 获取'恒生科技指数'K线数据: 开盘价、最高价、最低价、收盘价等
             @Param code: 股票代码
@@ -161,13 +174,13 @@ class HKEX():
         '''
         return self.baidu.get_hz2083_kline()
 
-    def get_kline_from_hkex(self, stock_code, start_time):
+    def get_kline_from_hkex(self, stock_code, lastest_day):
         ''' 获取交易K线数据: 开盘价、最高价、最低价、收盘价、交易量、交易额等
             @Param code: 股票代码
             @Param num: K线数量
         '''
 
-        days = HKEX_LASTEST_2YEAR
+        interval = self.get_lastest_interval(lastest_day)
 
         # 准备请求参数
         headers = {'Content-Type': 'application/json'}
@@ -175,7 +188,9 @@ class HKEX():
         timestamp = int(time.time() * 1000)
 
         url = HKEX_GET_CHART_DATA2_URL % (
-        HKEX_SPAN_DAY, days, int(stock_code), self.token, timestamp, timestamp, timestamp)
+                HKEX_SPAN_DAY, interval,
+                int(stock_code), self.token,
+                timestamp, timestamp, timestamp)
 
         # 发起拉取请求
         rsp = requests.get(url=url, headers=headers)

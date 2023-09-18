@@ -19,6 +19,25 @@ def usage():
     print("     - transaction: 爬取交易数据")
     print("     - help: 展示帮助信息")
 
+def crawl_stock(start_code):
+    ''' 爬取股票信息 '''
+
+    crawler = Crawler()
+
+    crawl.crawl_stock(start_code)
+
+def crawl_transaction(start_stock_code, lastest_day):
+    ''' 爬取交易信息 '''
+
+    crawler = Crawler()
+
+    # 爬取恒生指数
+    crawler.crawl_hsi_index() # 恒生指数
+    crawler.crawl_hz2083_index() # 恒生科技指数
+
+    # 爬取交易数据
+    crawler.crawl_transaction(start_stock_code, lastest_day)
+
 if __name__ == "__main__":
     # 校验参数
     if len(sys.argv) < 2:
@@ -28,30 +47,24 @@ if __name__ == "__main__":
     # 日志初始化
     log_init("../../../log/crawler.log")
 
-    # 新建爬虫对象
-    crawler = Crawler()
-
     func = sys.argv[1]
     if func == "stock":
         # 爬取股票信息
-        crawler.crawl_stock(sys.argv[2])
+        start_code = sys.argv[2]
+
+        crawl_stock(start_code)
     elif func == "transaction":
         # 爬取交易信息
         if len(sys.argv) != 4:
             print("Parameter is invalid!")
-            print("python3 main.py transaction 00001 20100101")
+            print("python3 main.py transaction [start_stock_code] [start_date]")
             exit(-1)
 
         stock_code = sys.argv[2] # 股票代码
-        start_date = sys.argv[3] # 起始日期. 格式:YYYY-MM-DD
+        latest_day = sys.argv[3] # 起始日期. 格式:1month, 3month, 6month, 1year, 2year
 
-        crawler.crawl_transaction(stock_code, start_date)
+        crawl_transaction(stock_code, latest_day)
 
-        crawler.crawl_hsi_index() # 恒生指数
-    elif func == "index":
-        # 爬取指数数据
-        crawler.crawl_hsi_index() # 恒生指数
-        crawler.crawl_hz2083_index() # 恒生科技指数
     else:
         usage()
 

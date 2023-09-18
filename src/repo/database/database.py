@@ -188,7 +188,8 @@ class Database():
         '''
 
         # 查询股票列表
-        sql = f'SELECT stock_key, name, total, market_cap, disable \
+        sql = f'SELECT stock_key, name, total, market_cap, \
+                first_classification, second_classification, disable \
                 FROM t_stock \
                 WHERE stock_key=%s'
 
@@ -233,7 +234,8 @@ class Database():
         '''
 
         # 查询股票列表
-        sql = f'SELECT stock_key, name, total, market_cap, disable \
+        sql = f'SELECT stock_key, name, total, market_cap, \
+                first_classification, second_classification, disable \
                 FROM t_stock \
                 WHERE market_cap>=%s AND disable=0'
 

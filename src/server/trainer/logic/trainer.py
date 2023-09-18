@@ -20,7 +20,7 @@ sys.path.append("../../repo/lib/log")
 from log import *
 
 # 拉取训练交易数据条目
-GET_TRANSACTION_MAX_NUM = 1000
+GET_TRANSACTION_MAX_NUM = 120
 
 # 股票预测
 class Trainer():
@@ -71,13 +71,13 @@ class Trainer():
 
         # 预测结果
         # 获取股票列表
-        for date in range(20230901, 20230915):
+        for date in range(20230901, 20230918):
             stock_list = self.data.get_good_stock()
             for stock in stock_list:
                 stock_key = stock["stock_key"]
 
                 # 加载特征数据
-                base_date, feature = self.data.load_feature(stock_key, date, days)
+                base_date, feature = self.data.load_feature(stock, date, days)
                 if feature is None:
                     logging.error("Load feature failed! stock_key:%s date:%s days:%d",
                                  stock_key, date, days)

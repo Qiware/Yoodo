@@ -59,7 +59,7 @@ class Baidu():
             logging.error("Get transaction failed!")
             return dict()
 
-        logging.debug("Get transaction:%s", rsp.text)
+        #logging.debug("Get transaction:%s", rsp.text)
 
         # 结果解析
         data = json.loads(rsp.text)
