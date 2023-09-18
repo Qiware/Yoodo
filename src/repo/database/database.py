@@ -206,7 +206,7 @@ class Database():
         # 查询股票列表
         sql = f'SELECT stock_key, name, total, market_cap, disable \
                 FROM t_stock \
-                WHERE disable=0'
+                WHERE disable=0 ORDER BY stock_key'
 
         conn, cursor = self.mysql.open()
         cursor.execute(sql)
