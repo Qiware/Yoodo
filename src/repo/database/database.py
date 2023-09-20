@@ -54,7 +54,7 @@ class Database():
             @Param data: 股票基础信息(dict类型)
         '''
 
-        logging.debug("Set stock. data:%s", data)
+        #logging.debug("Set stock. data:%s", data)
 
         old_data = self.get_stock(data["stock_key"])
         if old_data is None:
@@ -67,7 +67,7 @@ class Database():
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_stock", data)
 
-        logging.debug("sql:%s conditions:%s", sql, conditions)
+        #logging.debug("sql:%s conditions:%s", sql, conditions)
 
         # 执行SQL语句
         conn, cursor = self.msyql.open()
@@ -96,7 +96,7 @@ class Database():
             index += 1
         sql += " WHERE stock_key=%s"
 
-        logging.debug("sql: %s", sql)
+        #logging.debug("sql: %s", sql)
 
         conditions.append(data["stock_key"])
 
@@ -112,7 +112,7 @@ class Database():
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_transaction", data)
 
-        logging.debug("sql: %s", sql)
+        #logging.debug("sql: %s", sql)
 
         # 执行SQL语句
         conn, cursor = self.mysql.open()
@@ -141,7 +141,7 @@ class Database():
             index += 1
         sql += " WHERE stock_key=%s AND date=%s"
 
-        logging.debug("sql: %s", sql)
+        #logging.debug("sql: %s", sql)
 
         conditions.append(data["stock_key"])
         conditions.append(data["date"])
@@ -237,7 +237,7 @@ class Database():
         sql = f'SELECT stock_key, name, total, market_cap, \
                 first_classification, second_classification, disable \
                 FROM t_stock \
-                WHERE market_cap>=%s AND disable=0'
+                WHERE market_cap>=%s AND disable=0 ORDER BY stock_key'
 
         conn, cursor = self.mysql.open()
         cursor.execute(sql, (STOCK_GOOD_MARKET_CAP))
@@ -294,7 +294,7 @@ class Database():
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_predict", data)
 
-        logging.debug("sql:%s conditions:%s", sql, conditions)
+        #logging.debug("sql:%s conditions:%s", sql, conditions)
 
         # 执行SQL语句
         conn, cursor = self.mysql.open()
@@ -384,7 +384,7 @@ class Database():
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_technical_index", data)
 
-        logging.debug("sql: %s", sql)
+        #logging.debug("sql: %s", sql)
 
         # 执行SQL语句
         conn, cursor = self.mysql.open()
@@ -413,7 +413,7 @@ class Database():
             index += 1
         sql += " WHERE stock_key=%s AND date=%s"
 
-        logging.debug("sql: %s", sql)
+        #logging.debug("sql: %s", sql)
 
         conditions.append(data["stock_key"])
         conditions.append(data["date"])

@@ -100,7 +100,7 @@ class Analyzer():
             if self.is_finished():
                 break
             try:
-                stock_key = self.wait_queue.pop()
+                stock_key = self.wait_queue.pop(0)
                 self.pop_count += 1
                 logging.debug("Threading[%s] Pop stock_key:%s",
                               threading.current_thread().ident, stock_key)
