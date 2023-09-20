@@ -23,9 +23,9 @@ WAIT_QUEUE_LEN = 1000
 
 class Analyzer():
     def __init__(self, worker_num=10):
-        ''' 初始化
+        """ 初始化
             @Param worker_num: 工作线程数量
-        '''
+        """
         # 数据模块
         self.data = Data()
 
@@ -56,7 +56,7 @@ class Analyzer():
             wt.start()
 
     def load_stock(self):
-        ''' 加载股票列表 '''
+        """ 加载股票列表 """
         # 获取股票列表
         stock_list = self.data.get_all_stock()
         for stock in stock_list:
@@ -78,7 +78,7 @@ class Analyzer():
         self.is_load_stock_finished = True
 
     def load_index(self):
-        ''' 加载指数列表 '''
+        """ 加载指数列表 """
         # 获取指数列表
         index_list = self.data.get_all_index()
         for index in index_list:
@@ -95,7 +95,7 @@ class Analyzer():
         self.is_load_index_finished = True
 
     def handle(self):
-        ''' 构建股票指数 '''
+        """ 构建股票指数 """
         while(True):
             if self.is_finished():
                 break
@@ -111,13 +111,13 @@ class Analyzer():
             self.analyze(stock_key)
 
     def is_finished(self):
-        ''' 是否处理结束 '''
+        """ 是否处理结束 """
         return (self.is_load_stock_finished == True) and \
                 (self.is_load_index_finished == True) and \
                 (len(self.wait_queue) == 0)
 
     def wait(self):
-        ''' 等待处理结束 '''
+        """ 等待处理结束 """
         while(not self.is_finished()):
             print("Analyze is doing! push:%s pop:%s wait:%s" % (
                 self.push_count, self.pop_count, len(self.wait_queue)))
@@ -143,7 +143,7 @@ class Analyzer():
         self.update(stock_key, stock_index)
 
     def compute(self, transaction_list):
-        ''' 计算交易指标 '''
+        """ 计算交易指标 """
         stock_index = dict()
         transaction_list = self.sort_by_date(transaction_list)
 
@@ -203,7 +203,7 @@ class Analyzer():
         return stock_index
 
     def ma_price(self, stock_index, transaction_list, close_price_list, days):
-        ''' 计算收盘价移动平均线
+        """ 计算收盘价移动平均线
             matype的取值类型:
                 * 0: SMA(默认)
                 * 1: EMA
@@ -214,7 +214,7 @@ class Analyzer():
                 * 6: KAMA
                 * 7: MAMA
                 * 8: T3
-        '''
+        """
 
         index_name = "MA%dPRC" % (days)
 
@@ -234,7 +234,7 @@ class Analyzer():
         return 
 
     def ma_volume(self, stock_index, transaction_list, volume_list, days):
-        ''' 计算交易量移动平均线
+        """ 计算交易量移动平均线
             matype的取值类型:
                 * 0: SMA(默认)
                 * 1: EMA
@@ -245,7 +245,7 @@ class Analyzer():
                 * 6: KAMA
                 * 7: MAMA
                 * 8: T3
-        '''
+        """
 
         index_name = "MA%dVOL" % (days)
 
@@ -265,7 +265,7 @@ class Analyzer():
         return 
 
     def dema(self, stock_index, transaction_list):
-        ''' 计算DEMA指标 '''
+        """ 计算DEMA指标 """
 
         # 抽取交易量列表
         close_price_list = list()
@@ -288,7 +288,7 @@ class Analyzer():
         return
 
     def macd(self, stock_index, transaction_list, close_price_list):
-        ''' 计算MACD指标 '''
+        """ 计算MACD指标 """
 
         diff, dea, macd = talib.MACD(
                 pandas.Series(close_price_list),
@@ -316,7 +316,7 @@ class Analyzer():
         return
 
     def kdj(self, stock_index, transaction_list, top_price_list, bottom_price_list, close_price_list):
-        ''' 计算KDJ指标 '''
+        """ 计算KDJ指标 """
 
         k, d = talib.STOCH(
                 pandas.Series(top_price_list),
@@ -349,7 +349,7 @@ class Analyzer():
         return
 
     def rsi(self, stock_index, transaction_list, close_price_list):
-        ''' 计算RSI指标 '''
+        """ 计算RSI指标 """
 
         rsi = talib.RSI(pandas.Series(close_price_list), timeperiod=14)
 
@@ -369,7 +369,7 @@ class Analyzer():
         return
 
     def obv(self, stock_index, transaction_list, close_price_list, volume_list):
-        ''' 计算OBV指标 '''
+        """ 计算OBV指标 """
 
         obv = talib.OBV(pandas.Series(close_price_list), pandas.Series(volume_list),)
 
@@ -389,7 +389,7 @@ class Analyzer():
         return
 
     def boll(self, stock_index, transaction_list, close_price_list):
-        ''' 计算BOLL指标 '''
+        """ 计算BOLL指标 """
 
         upper, middle, lower = talib.BBANDS(
                 pandas.Series(close_price_list),
@@ -420,7 +420,7 @@ class Analyzer():
         return
 
     def ad(self, stock_index, transaction_list, top_price_list, bottom_price_list, close_price_list, volume_list):
-        ''' 计算AD指标 '''
+        """ 计算AD指标 """
 
         ad = talib.AD(
                 pandas.Series(top_price_list),
@@ -445,7 +445,7 @@ class Analyzer():
 
     def adosc(self, stock_index, transaction_list,
               top_price_list, bottom_price_list, close_price_list, volume_list):
-        ''' 计算ADOSC指标 '''
+        """ 计算ADOSC指标 """
 
         adosc = talib.ADOSC(
                 pandas.Series(top_price_list),
@@ -470,7 +470,7 @@ class Analyzer():
         return
 
     def sar(self, stock_index, transaction_list, top_price_list, bottom_price_list):
-        ''' 计算SAR指标 '''
+        """ 计算SAR指标 """
 
         sar = talib.SAR(
                 pandas.Series(top_price_list),
@@ -493,7 +493,7 @@ class Analyzer():
         return
 
     def willr(self, stock_index, transaction_list, top_price_list, bottom_price_list, close_price_list):
-        ''' 计算WILLR指标 '''
+        """ 计算WILLR指标 """
 
         willr = talib.WILLR(
                 pandas.Series(top_price_list),
@@ -518,7 +518,7 @@ class Analyzer():
 
     def cci(self, stock_index, transaction_list,
             top_price_list, bottom_price_list, close_price_list):
-        ''' 计算CCI指标 '''
+        """ 计算CCI指标 """
 
         cci = talib.CCI(
                 pandas.Series(top_price_list),
@@ -542,7 +542,7 @@ class Analyzer():
         return
 
     def ema(self, stock_index, transaction_list, close_price_list):
-        ''' 计算EMA指标 '''
+        """ 计算EMA指标 """
 
         ema = talib.EMA(
                 pandas.Series(close_price_list),
@@ -565,7 +565,7 @@ class Analyzer():
 
 
     def sort_by_date(self, transaction_list):
-        ''' 交易列表重排序: 按时间有序 '''
+        """ 交易列表重排序: 按时间有序 """
 
         sort_list = list()
 
@@ -579,7 +579,7 @@ class Analyzer():
         return sort_list
 
     def update(self, stock_key, stock_index):
-        ''' 更新股票交易指数 '''
+        """ 更新股票交易指数 """
         for date, data in stock_index.items():
             item = dict()
             item["stock_key"] = stock_key

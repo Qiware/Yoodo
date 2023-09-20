@@ -18,37 +18,37 @@ from database import *
 HKEX_EXCHAGE_KEY = "hkex"
 
 # 爬取交易数据返回字段序列
-HKEX_TRANSACTION_TIMESTAMP = 0 # 交易时间戳
-HKEX_TRANSACTION_OPEN_PRICE = 1 # 开盘价
-HKEX_TRANSACTION_TOP_PRICE = 2 # 最高价
-HKEX_TRANSACTION_BOTTOM_PRICE = 3 # 最低价
-HKEX_TRANSACTION_CLOSE_PRICE = 4 # 收盘价
-HKEX_TRANSACTION_VOLUME = 5 # 交易量
-HKEX_TRANSACTION_TURNOVER = 6 # 交易额
+HKEX_TRANSACTION_TIMESTAMP = 0  # 交易时间戳
+HKEX_TRANSACTION_OPEN_PRICE = 1  # 开盘价
+HKEX_TRANSACTION_TOP_PRICE = 2  # 最高价
+HKEX_TRANSACTION_BOTTOM_PRICE = 3  # 最低价
+HKEX_TRANSACTION_CLOSE_PRICE = 4  # 收盘价
+HKEX_TRANSACTION_VOLUME = 5  # 交易量
+HKEX_TRANSACTION_TURNOVER = 6  # 交易额
+
 
 # 爬虫服务
-class Crawler():
+class Crawler:
     def __init__(self):
-        ''' 初始化处理 '''
+        """ 初始化处理 """
         self.hkex = HKEX()
         self.database = Database()
 
     def gen_date(self, year, month, mday):
-        ''' 生成日期: YYYYMMDD '''
+        """ 生成日期: YYYYMMDD """
 
         return "%04d%02d%02d" % (year, month, mday)
 
     def gen_stock_key(self, exchange_code, stock_code):
-        ''' 生成股票KEY '''
+        """ 生成股票KEY """
         return "%s:%05d" % (exchange_code, int(stock_code))
 
     def gen_index_key(self, exchange_code, index_code):
-        ''' 生成指数KEY '''
+        """ 生成指数KEY """
         return "%s:%s" % (exchange_code, index_code)
 
-
     def crawl_stock_by_stock_code(self, stock_code):
-        ''' 爬取指定股票信息 '''
+        """ 爬取指定股票信息 """
 
         # 爬取股票数据
         data = self.hkex.get_stock(stock_code)
@@ -58,11 +58,11 @@ class Crawler():
 
         # 提取有效信息
         stock = dict()
-        stock["stock_key"] = self.gen_stock_key(HKEX_EXCHAGE_KEY, data["stock_code"]) # 股票KEY
-        stock["name"] = str(data["name"]) # 股票名称
-        stock["total"] = int(data["total"]) # 总股本数量
-        stock["market_cap"] = float(data["market_cap"]) # 总市值
-        stock["product_type"] = data["product_type"] # 产品类型
+        stock["stock_key"] = self.gen_stock_key(HKEX_EXCHAGE_KEY, data["stock_code"])  # 股票KEY
+        stock["name"] = str(data["name"])  # 股票名称
+        stock["total"] = int(data["total"])  # 总股本数量
+        stock["market_cap"] = float(data["market_cap"])  # 总市值
+        stock["product_type"] = data["product_type"]  # 产品类型
         if "first_classification" in data.keys():
             stock["first_classification"] = data["first_classification"]  # 一级分类
         if "second_classification" in data.keys():
@@ -78,7 +78,7 @@ class Crawler():
         return self.database.set_stock(stock)
 
     def crawl_stock(self, start=HKEX_STOCK_CODE_MIN, end=HKEX_STOCK_CODE_MAX):
-        ''' 爬取全部股票信息 '''
+        """ 爬取全部股票信息 """
         stock_code = int(start)
         while (stock_code <= int(end)):
             print("Crawl stock data. stock_code:%s" % (stock_code))
@@ -88,11 +88,11 @@ class Crawler():
             stock_code += 1
 
     def gen_transaction(self, stock_code, stock_data, data):
-        ''' 生成交易数据
+        """ 生成交易数据
             @Param stock_code: 股票代码
             @Param stock_data: 股票信息
             @Param data: 交易数据
-        '''
+        """
         transaction = dict()
 
         # 股票KEY
@@ -103,9 +103,9 @@ class Crawler():
         transaction_date = time.localtime(transaction_timestamp)
 
         transaction["date"] = self.gen_date(
-                transaction_date.tm_year,
-                transaction_date.tm_mon,
-                transaction_date.tm_mday)
+            transaction_date.tm_year,
+            transaction_date.tm_mon,
+            transaction_date.tm_mday)
 
         # 开盘价
         if data["open_price"] is None:
@@ -185,7 +185,7 @@ class Crawler():
         return transaction
 
     def _crawl_transaction(self, stock_code, stock_data, lastest_day):
-        ''' 爬取指定股票交易信息 '''
+        """ 爬取指定股票交易信息 """
 
         print("Crawl transaction. stock_code:%s" % (stock_code))
 
@@ -210,10 +210,10 @@ class Crawler():
         return None
 
     def crawl_transaction(self, begin_stock_code, lastest_day):
-        ''' 爬取交易信息
+        """ 爬取交易信息
             @Param stock_code: 股票代码
             @Param lastest_day: 开始日期. 格式: 1month, 6month, 1year, 2year
-        '''
+        """
 
         # 获取股票列表
         stock_list = self.database.get_all_stock()
@@ -236,7 +236,7 @@ class Crawler():
             self._crawl_transaction(stock_code, stock, lastest_day)
 
     def crawl_hsi_index(self):
-        ''' 获取'恒生指数'数据 '''
+        """ 获取'恒生指数'数据 """
         klines = self.hkex.get_hsi_kline()
         for kline in klines:
             # 生成指数数据
@@ -246,7 +246,7 @@ class Crawler():
             self.database.set_transaction(transaction)
 
     def crawl_hz2083_index(self):
-        ''' 获取'恒生科技指数'数据 '''
+        """ 获取'恒生科技指数'数据 """
         klines = self.hkex.get_hz2083_kline()
         for kline in klines:
             # 生成指数数据
@@ -256,10 +256,10 @@ class Crawler():
             self.database.set_transaction(transaction)
 
     def gen_index_transaction(self, index_code, data):
-        ''' 生成指数数据
+        """ 生成指数数据
             @Param index_code: 股票代码
             @Param data: 交易数据
-        '''
+        """
         transaction = dict()
 
         # 股票KEY
@@ -270,9 +270,9 @@ class Crawler():
         transaction_date = time.localtime(transaction_timestamp)
 
         transaction["date"] = self.gen_date(
-                transaction_date.tm_year,
-                transaction_date.tm_mon,
-                transaction_date.tm_mday)
+            transaction_date.tm_year,
+            transaction_date.tm_mon,
+            transaction_date.tm_mday)
 
         # 开盘价
         if data["open_price"] is None:
@@ -308,13 +308,13 @@ class Crawler():
 
         # 交易量
         transaction["volume"] = 0
-        #if data["volume"] is None:
+        # if data["volume"] is None:
         #    logging.error("Volume is none! date:%s stock_code:%s volume:%d",
         #                  transaction["date"], stock_code, transaction["volume"])
         #    return None
 
-        #transaction["volume"] = int(data["volume"])
-        #if transaction["volume"] <= 0:
+        # transaction["volume"] = int(data["volume"])
+        # if transaction["volume"] <= 0:
         #    logging.error("Volume is none! date:%s stock_code:%s volume:%d",
         #                  transaction["date"], stock_code, transaction["volume"])
         #    return None

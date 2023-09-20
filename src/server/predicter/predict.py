@@ -19,7 +19,6 @@ from model import *
 from regressor import Regressor
 from classifier import Classifier
 
-
 sys.path.append("../../repo/lib/dtime")
 from dtime import *
 
@@ -29,23 +28,24 @@ GET_TRANSACTION_NUM = 1000
 # 单条训练样本拥有的交易数据条目
 TRAIN_DATA_TRANSACTION_NUM = 30
 
+
 # 股票预测
 class Predicter():
     def __init__(self):
-        ''' 初始化 '''
+        """ 初始化 """
         # 数据处理
         self.data = Data()
 
     def get_potential_stock(self, date):
-        ''' 获取潜力股 '''
+        """ 获取潜力股 """
         return self.data.get_potential_stock(date)
 
     def predict(self, model_type, date, days):
-        ''' 数据预测
+        """ 数据预测
             @Param model_type: 预测模型(r:线性模型 c:分类模型)
             @Param date: 预测日期
             @Param days: 预测周期
-        '''
+        """
 
         # 加载模型
         scaler = StandardScaler()
@@ -64,7 +64,7 @@ class Predicter():
             base_date, feature = self.data.load_feature(stock_key, date, days)
             if feature is None:
                 logging.error("Load feature failed! stock_key:%s date:%s days:%d",
-                             stock_key, date, days)
+                              stock_key, date, days)
                 continue
 
             # 进行结果预测
@@ -82,14 +82,14 @@ class Predicter():
 
             # 更新预测结果
             self.data.update_predict(stock_key, date, days, base_date, float(ratio[0]))
-        
+
         return None
 
     def evaluate(self, date, days):
-        ''' 评估预测结果
+        """ 评估预测结果
             @Param date: 被预测日期
             @Param days: 预测周期
-        '''
+        """
 
         if days == 0:
             logging.error("Parameter 'days' invalid! days:%d", days)
@@ -100,31 +100,31 @@ class Predicter():
         for stock in stock_list:
             stock_key = stock["stock_key"]
 
-            print("Evaluate predict. stock_key:%s date:%s days:%s" %(stock_key, date, days))
+            print("Evaluate predict. stock_key:%s date:%s days:%s" % (stock_key, date, days))
 
             # 获取股票最近的(days + 1)条记录
             transaction_list = self.data.get_transaction_list(
-                    stock_key, date, days+1)
+                stock_key, date, days + 1)
             if (transaction_list is None):
                 logging.error("Get transaction list failed! stock_key:%s date:%s days:%d",
                               stock_key, date, days)
                 continue
-            elif len(transaction_list) < (days+1):
+            elif len(transaction_list) < (days + 1):
                 logging.error("Get transaction list not enough! stock_key:%s date:%s days:%d",
                               stock_key, date, days)
                 continue
 
             # 计算实际涨幅数据
-            base = transaction_list[days] # 基准交易
-            lastest = transaction_list[0] # 被预测日期最后一条交易
+            base = transaction_list[days]  # 基准交易
+            lastest = transaction_list[0]  # 被预测日期最后一条交易
 
             real_price = lastest["close_price"]
             real_ratio = (lastest["close_price"] - base["close_price"]) / base["close_price"] * 100
 
-            print("Evaluate predict. stock_key:%s date:%s days:%s base_date:%s" %(stock_key, date, days, base["date"]))
+            print("Evaluate predict. stock_key:%s date:%s days:%s base_date:%s" % (stock_key, date, days, base["date"]))
 
             # 更新数据库
             self.data.update_predict_real(
-                    stock_key, base["date"], days, real_price, real_ratio)
+                stock_key, base["date"], days, real_price, real_ratio)
 
         return None
