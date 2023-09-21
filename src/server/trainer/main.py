@@ -2,15 +2,13 @@
 # 君子爱财 取之YOODO!
 
 import sys
-import joblib
-import logging
-
-import numpy as np
-from sklearn.model_selection import train_test_split
 
 sys.path.append("../../repo/lib/log")
 from log import *
+
+sys.path.append("../../server/trainer/logic")
 from logic.trainer import Trainer
+
 
 
 def usage():

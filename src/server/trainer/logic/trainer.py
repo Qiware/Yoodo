@@ -74,14 +74,13 @@ class Trainer(object):
 
         # 预测结果
         # 获取股票列表
-        for date in range(20230901, 20230915):
+        for date in range(20230901, 20230918):
             stock_list = self.data.get_good_stock()
             for stock in stock_list:
                 stock_key = stock["stock_key"]
 
                 # 加载特征数据
-                base_date, feature = self.data.load_feature(stock_key, date,
-                                                            days)
+                base_date, feature = self.data.load_feature(stock, date, days)
                 if feature is None:
                     logging.error(
                         "Load feature failed! stock_key:%s date:%s days:%d",
@@ -93,24 +92,20 @@ class Trainer(object):
 
                 ratio = self.model.predict(feature_scaled)
 
-                print("predict: %s %s %s %s %s" % (
-                stock_key, date, days, ratio[0], stock["name"]))
-                logging.info("predict: %s %s %s %s %s", stock_key, date, days,
-                             ratio[0], stock["name"])
+                print("predict: %s %s %s %s %s" % (stock_key, date, days, ratio[0], stock["name"]))
+                logging.info("predict: %s %s %s %s %s", stock_key, date, days, ratio[0], stock["name"])
 
                 # 更新预测结果
-                self.data.update_predict(stock_key, date, days, base_date,
-                                         float(ratio[0]))
+                self.data.update_predict(stock_key, date, days, base_date, float(ratio[0]))
 
         print('R2值为：', r2)
         print('MSE值为：', mse)
 
-        '''结果可视化'''
+        """结果可视化"""
         xy = range(0, len(y_test))
         plt.figure(figsize=(4, 3))
         plt.scatter(xy, y_test, color="red", label="Sample Point", linewidth=3)
-        plt.plot(xy, y_predict, color="orange", label="Predict line",
-                 linewidth=2)
+        plt.plot(xy, y_predict, color="orange", label="Predict line", linewidth=2)
         plt.legend()
         plt.show()
 
@@ -120,8 +115,7 @@ class Trainer(object):
         """ 构建训练模型 """
 
         # 生成训练数据
-        self.data.gen_train_data(self.model_type, date, days,
-                                 GET_TRANSACTION_MAX_NUM)
+        self.data.gen_train_data(self.model_type, date, days, GET_TRANSACTION_MAX_NUM)
 
         # 进行模型训练
         self.train(date, days, True)

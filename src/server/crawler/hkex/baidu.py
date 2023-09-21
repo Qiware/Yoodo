@@ -7,16 +7,16 @@ import json
 import logging
 import time
 import urllib
-import requests	# pip3 install requests
+import requests  # pip3 install requests
 
 from const import *
 
 # 时间维度
-KLINE_KTYPE_DAY = 1 # 按天维度
-KLINE_KTYPE_WEEK = 2 # 按周维度
+KLINE_KTYPE_DAY = 1  # 按天维度
+KLINE_KTYPE_WEEK = 2  # 按周维度
 
 # 交易所数据
-KLINE_GROUP_HKEX = "quotation_kline_hk" # 港交所数据
+KLINE_GROUP_HKEX = "quotation_kline_hk"  # 港交所数据
 
 # 获取交易K线数据(交易时间、开盘价、最高价、最低价、收盘价、交易量、交易额)
 # @Param all: 是否全部交易数据(注：取值固定为1)
@@ -29,29 +29,29 @@ KLINE_URL = "https://finance.pae.baidu.com/selfselect/getstockquotation?all=1&co
 # 获取'恒生指数'交易K线数据(交易时间、开盘价、最高价、最低价、收盘价、交易量、交易额)
 HSI_KLINE_URL = "https://finance.pae.baidu.com/vapi/v1/getquotation?srcid=5353&all=1&pointType=string&group=quotation_index_kline&query=HSI&code=HSI&market_type=hk&newFormat=1&name=%E6%81%92%E7%94%9F%E6%8C%87%E6%95%B0&is_kc=0&ktype=day&finClientType=pc"
 
-
 # 获取'恒生科技指数'交易K线数据(交易时间、开盘价、最高价、最低价、收盘价、交易量、交易额)
 HZ2083_KLINE_URL = "https://finance.pae.baidu.com/vapi/v1/getquotation?srcid=5353&all=1&pointType=string&group=quotation_index_kline&query=HZ2083&code=HZ2083&market_type=hk&newFormat=1&name=%E6%81%92%E7%94%9F%E7%A7%91%E6%8A%80%E6%8C%87%E6%95%B0&is_kc=0&ktype=day&end_time=2021-05-10&count=75&finClientType=pc"
 
+
 # 从百度获取港交所数据
-class Baidu():
+class Baidu:
     def __init__(self):
-        ''' 初始化 '''
+        """ 初始化 """
         pass
 
     def get_hsi_kline(self):
-        ''' 获取'恒生指数'交易数据: 开盘价、最高价、最低价、收盘价 '''
+        """ 获取'恒生指数'交易数据: 开盘价、最高价、最低价、收盘价 """
         return self.get_kline(HSI_KLINE_URL)
 
     def get_hz2083_kline(self):
-        ''' 获取'恒生科技指数'交易数据: 开盘价、最高价、最低价、收盘价 '''
+        """ 获取'恒生科技指数'交易数据: 开盘价、最高价、最低价、收盘价 """
         return self.get_kline(HZ2083_KLINE_URL)
 
     def get_kline(self, url):
-        ''' 获取K线数据: 开盘价、最高价、最低价、收盘价 '''
+        """ 获取K线数据: 开盘价、最高价、最低价、收盘价 """
 
         # 准备请求参数
-        headers = { 'Content-Type' : 'application/json' }
+        headers = {'Content-Type': 'application/json'}
 
         # 发起拉取请求
         rsp = requests.get(url=url, headers=headers)
@@ -59,7 +59,7 @@ class Baidu():
             logging.error("Get transaction failed!")
             return dict()
 
-        logging.debug("Get transaction:%s", rsp.text)
+        # logging.debug("Get transaction:%s", rsp.text)
 
         # 结果解析
         data = json.loads(rsp.text)
@@ -77,11 +77,10 @@ class Baidu():
 
         return self.parse_kline_resp(data["Result"]["newMarketData"])
 
-
     def parse_kline_resp(self, data):
-        ''' 解析'恒生指数'交易K线数据: 开盘价、最高价、最低价、收盘价、交易量、交易额、换手率等
+        """ 解析'恒生指数'交易K线数据: 开盘价、最高价、最低价、收盘价、交易量、交易额、换手率等
             @Param data: 应答数据. 类型: dict.
-        '''
+        """
 
         # 数据校验
         if 'keys' not in data.keys():
@@ -93,7 +92,7 @@ class Baidu():
             return dict()
 
         # 解析应答结果
-        index_timestamp = 0 # 时间戳
+        index_timestamp = 0  # 时间戳
         index_date = 1  # 日期(格式: 2004-06-16)
         index_open_price = 2  # 开盘价
         index_close_price = 3  # 收盘价
@@ -136,14 +135,14 @@ class Baidu():
             try:
                 transaction = dict()
 
-                transaction["timestamp"] = int(values[index_timestamp]) # 时间戳
-                transaction["open_price"] = float(values[index_open_price]) # 开盘价
-                transaction["close_price"] = float(values[index_close_price]) # 收盘价
-                #transaction["volume"] = int(values[index_volume]) # 交易量
-                transaction["top_price"] = float(values[index_top_price]) # 最高价
-                transaction["bottom_price"] = float(values[index_bottom_price]) # 最低价
-                transaction["turnover"] = float(values[index_turnover]) # 交易额
-                #transaction["turnover_ratio"] = float(values[index_turnover_ratio]) # 换手率
+                transaction["timestamp"] = int(values[index_timestamp])  # 时间戳
+                transaction["open_price"] = float(values[index_open_price])  # 开盘价
+                transaction["close_price"] = float(values[index_close_price])  # 收盘价
+                # transaction["volume"] = int(values[index_volume]) # 交易量
+                transaction["top_price"] = float(values[index_top_price])  # 最高价
+                transaction["bottom_price"] = float(values[index_bottom_price])  # 最低价
+                transaction["turnover"] = float(values[index_turnover])  # 交易额
+                # transaction["turnover_ratio"] = float(values[index_turnover_ratio]) # 换手率
 
                 transaction_list.append(transaction)
             except Exception as e:

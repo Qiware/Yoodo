@@ -5,6 +5,7 @@ import sys
 import time
 import json
 import logging
+import xxhash
 
 sys.path.append("../../repo/database")
 from database import Database
@@ -44,19 +45,15 @@ class Data():
         ''' 生成训练数据的路径 '''
         return "../../../data/train/%s-%ddays.dat" % (str(date), int(days))
 
-    def fill_transaction_data(self, stock_key, date, transaction_list):
+    def fill_transaction_data(self, stock, date, transaction_list):
         ''' 填充交易数据 '''
+
+        stock_key = stock["stock_key"]
 
         # 查询交易指数
         tech_index = self.database.get_technical_index_list(stock_key, date)
         if tech_index is None:
             logging.error("Get transaction index failed! stock_key:%s date:%s", stock_key, date)
-            return None
-
-        # 查询股票信息
-        stock = self.database.get_stock(stock_key)
-        if stock is None:
-            logging.error("Get stock failed! stock_key:%s", stock_key)
             return None
 
         # 填充交易数据
@@ -94,30 +91,30 @@ class Data():
         stock_list = self.database.get_good_stock()
         for stock in stock_list:
             # 生成训练数据
-            self._gen_train_data(model_type, stock["stock_key"], date, days, num, fp)
+            self._gen_train_data(model_type, stock, date, days, num, fp)
 
         fp.close()
 
         return None
 
-    def _gen_train_data(self, model_type, stock_key, date, days, num, fp):
+    def _gen_train_data(self, model_type, stock, date, days, num, fp):
         ''' 生成训练数据
             @Param model_type: 模型类型
-            @Param stock_key: 股票KEY
+            @Param stock: 股票信息
             @Param date: 结束日期
             @Param days: 预测的间隔天数
             @Param num: 交易数据条目
             @Param fp: 训练数据输出文件的指针
         '''
         # 拉取交易数据
-        transaction_list = self.database.get_transaction_list(stock_key, date, num)
+        transaction_list = self.database.get_transaction_list(stock["stock_key"], date, num)
         if transaction_list is None:
             logging.error("Get transaction list failed. stock_key:%s date:%s num:%s",
                           stock_key, date, num)
             return
 
         # 填充交易数据
-        transaction_list = self.fill_transaction_data(stock_key, date, transaction_list)
+        transaction_list = self.fill_transaction_data(stock, date, transaction_list)
         if transaction_list is None:
             logging.error("Fill transaction list failed. stock_key:%s date:%s num:%s",
                           stock_key, date, num)
@@ -125,19 +122,21 @@ class Data():
 
         # 生成训练样本
         if model_type == MODEL_REGRESSOR:
-            self.gen_reg_train_data(stock_key, transaction_list, days, fp)
+            self.gen_reg_train_data(stock, transaction_list, days, fp)
         elif model_type == MODEL_CLASSIFIER:
-            self.gen_cls_train_data(stock_key, transaction_list, days, fp)
+            self.gen_cls_train_data(stock, transaction_list, days, fp)
         return
 
-    def gen_reg_train_data(self, stock_key, transaction_list, days, fp):
+    def gen_reg_train_data(self, stock, transaction_list, days, fp):
         ''' 生成'线性回归'训练数据
-            @Param stock_key: 股票KEY
+            @Param stock_key: 股票信息
             @Param transaction_list: 交易数据
             @Param days: 预测间隔天数
             @Param fp: 文件指针
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
         '''
+
+        stock_key = stock["stock_key"]
 
         logging.debug("Call gen_reg_train_data(). stock_key:%s", stock_key)
 
@@ -157,7 +156,7 @@ class Data():
 
             # 生成训练数据
             features = self.gen_feature(
-                stock_key,
+                stock,
                 transaction_list[offset:offset + TRAIN_DATA_TRANSACTION_NUM + 1*days], days)
             if features is None:
                 offset -= 1
@@ -181,14 +180,16 @@ class Data():
 
         return None
 
-    def gen_cls_train_data(self, stock_key, transaction_list, days, fp):
+    def gen_cls_train_data(self, stock, transaction_list, days, fp):
         ''' 生成'分类'训练数据
-            @Param stock_key: 股票KEY
+            @Param stock: 股票信息
             @Param transaction_list: 交易数据
             @Param days: 预测间隔天数
             @Param fp: 文件指针
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
         '''
+
+        stock_key = stock["stock_key"]
 
         logging.debug("Call gen_cls_train_data(). stock_key:%s", stock_key)
 
@@ -208,7 +209,7 @@ class Data():
 
             # 生成训练数据
             features = self.gen_feature(
-                stock_key,
+                stock,
                 transaction_list[offset:offset + TRAIN_DATA_TRANSACTION_NUM + 1*days], days)
             if features is None:
                 logging.error("Generate feature by transactionn list failed! stock_key:%s offset:%s",
@@ -216,7 +217,7 @@ class Data():
                 offset -= 1
                 continue
             for feature in features:
-                train_data += "%f," % (feature)
+                train_data += "%s," % (feature)
 
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
             price_ratio = self.label.ratio(
@@ -257,20 +258,23 @@ class Data():
 
             idx = 0
             while (idx < len(data) - 1):
-                feature.append(float(data[idx]))
+                feature.append(data[idx])
                 idx += 1
             feature_list.append(feature)
             target_list.append(target)
 
         return feature_list, target_list
 
-    def gen_feature(self, stock_key, transaction_list, days):
+    def gen_feature(self, stock, transaction_list, days):
         ''' 通过交易列表生成特征数据. 返回格式: [x1, x2, x3, ...]
             @Param stock_key: 股票KEY
             @Param transaction_list: 交易数据
             @Param days: 预测间隔天数
             @Return: 特征数据列表
         '''
+
+        stock_key = stock["stock_key"]
+
         # 判断参数合法性
         if len(transaction_list) < (TRAIN_DATA_TRANSACTION_NUM + 1*days):
             logging.error("Transaction data not enough! stock_key:%s", stock_key)
@@ -278,6 +282,13 @@ class Data():
 
         feature = list()
         label = Label()
+
+        # 股票KEY
+        feature.append(self.label.str_label(stock_key))
+
+        # 分类信息
+        feature.append(self.label.str_label(stock["first_classification"]))
+        feature.append(self.label.str_label(stock["second_classification"]))
 
         # 生成特征数据(注意: 最后一个作为起始基准)
         index = TRAIN_DATA_TRANSACTION_NUM - 1
@@ -317,61 +328,61 @@ class Data():
                 feature.append(self.label.ratio(prev_hsi_index["turnover"], curr_hsi_index["turnover"]))
 
                 # 与本周期的开盘价比较
-                feature.append(self.label.ratio(curr["open_price"], curr["close_price"]))
-                feature.append(self.label.ratio(curr["open_price"], curr["top_price"]))
-                feature.append(self.label.ratio(curr["open_price"], curr["bottom_price"]))
+                #feature.append(self.label.ratio(curr["open_price"], curr["close_price"]))
+                #feature.append(self.label.ratio(curr["open_price"], curr["top_price"]))
+                #feature.append(self.label.ratio(curr["open_price"], curr["bottom_price"]))
 
-                feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["close_price"]))
-                feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["top_price"]))
-                feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["bottom_price"]))
+                #feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["close_price"]))
+                #feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["top_price"]))
+                #feature.append(self.label.ratio(curr_hsi_index["open_price"], curr_hsi_index["bottom_price"]))
 
                 # 与本周期的收盘价比较
-                feature.append(self.label.ratio(curr["close_price"], curr["top_price"]))
-                feature.append(self.label.ratio(curr["close_price"], curr["bottom_price"]))
+                #feature.append(self.label.ratio(curr["close_price"], curr["top_price"]))
+                #feature.append(self.label.ratio(curr["close_price"], curr["bottom_price"]))
 
-                feature.append(self.label.ratio(curr_hsi_index["close_price"], curr_hsi_index["top_price"]))
-                feature.append(self.label.ratio(curr_hsi_index["close_price"], curr_hsi_index["bottom_price"]))
+                #feature.append(self.label.ratio(curr_hsi_index["close_price"], curr_hsi_index["top_price"]))
+                #feature.append(self.label.ratio(curr_hsi_index["close_price"], curr_hsi_index["bottom_price"]))
 
                 # 换手率
                 feature.append(curr["turnover_ratio"])
 
                 # 与本周期的恒生指数比较
-                feature.append(self.label.ratio(curr["turnover"], curr_hsi_index["turnover"])) # 交易额占整个大盘比例
+                feature.append(self.label.ratio(curr_hsi_index["turnover"], curr["turnover"])) # 交易额占整个大盘比例
 
-                curr_turnover_ratio = self.label.ratio(curr["turnover"], prev["turnover"])
-                hsi_index_turnover_ratio = self.label.ratio(curr_hsi_index["turnover"], prev_hsi_index["turnover"])
-                feature.append(self.label.ratio(curr_turnover_ratio, hsi_index_turnover_ratio)) # 交易额涨幅与大盘比较
+                curr_turnover_ratio = self.label.ratio(prev["turnover"], curr["turnover"])
+                hsi_index_turnover_ratio = self.label.ratio(prev_hsi_index["turnover"], curr_hsi_index["turnover"])
+                feature.append(self.label.ratio(hsi_index_turnover_ratio, curr_turnover_ratio)) # 交易额涨幅与大盘比较
 
-                curr_ratio = self.label.ratio(curr["close_price"], prev["close_price"])
-                hsi_index_ratio = self.label.ratio(curr_hsi_index["close_price"], prev_hsi_index["close_price"])
-                feature.append(self.label.ratio(curr_ratio, hsi_index_ratio)) # 涨幅与大盘比较
+                curr_ratio = self.label.ratio(prev["close_price"], curr["close_price"])
+                hsi_index_ratio = self.label.ratio(prev_hsi_index["close_price"], curr_hsi_index["close_price"])
+                feature.append(self.label.ratio(hsi_index_ratio, curr_ratio)) # 涨幅与大盘比较
 
                 # 与本周期的技术指数比较
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["MA5PRC"]))
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["MA10PRC"]))
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["MA20PRC"]))
+                feature.append(self.label.ratio(curr_tech_index["MA5PRC"], curr["close_price"]))
+                feature.append(self.label.ratio(curr_tech_index["MA10PRC"], curr["close_price"]))
+                feature.append(self.label.ratio(curr_tech_index["MA20PRC"], curr["close_price"]))
 
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["BOLL"]["UPPER"]))
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["BOLL"]["MIDDLE"]))
-                feature.append(self.label.ratio(curr["close_price"], curr_tech_index["BOLL"]["LOWER"]))
+                feature.append(self.label.ratio(curr_tech_index["BOLL"]["UPPER"], curr["close_price"]))
+                feature.append(self.label.ratio(curr_tech_index["BOLL"]["MIDDLE"], curr["close_price"]))
+                feature.append(self.label.ratio(curr_tech_index["BOLL"]["LOWER"], curr["close_price"]))
 
-                feature.append(self.label.ratio(curr["volume"], curr_tech_index["MA5VOL"]))
-                feature.append(self.label.ratio(curr["volume"], curr_tech_index["MA10VOL"]))
-                feature.append(self.label.ratio(curr["volume"], curr_tech_index["MA20VOL"]))
+                feature.append(self.label.ratio(curr_tech_index["MA5VOL"], curr["volume"]))
+                feature.append(self.label.ratio(curr_tech_index["MA10VOL"], curr["volume"]))
+                feature.append(self.label.ratio(curr_tech_index["MA20VOL"], curr["volume"]))
 
                 # 技术指标
                 feature.append(self.label.kdj_label(curr_tech_index["KDJ"]))
                 feature.append(self.label.rsi_label(curr_tech_index["RSI"]))
 
                 feature.append(self.label.cci_label(curr_tech_index["CCI"], prev_tech_index["CCI"]))
-                feature.append(self.label.ratio(curr_tech_index["CCI"], prev_tech_index["CCI"]))
+                feature.append(self.label.ratio(prev_tech_index["CCI"], curr_tech_index["CCI"]))
 
                 feature.append(self.label.macd_label(curr_tech_index["MACD"], prev_tech_index["MACD"]))
 
                 curr_ad = {"AD": curr_tech_index["AD"], "close_price": curr["close_price"]}
                 prev_ad = {"AD": prev_tech_index["AD"], "close_price": prev["close_price"]}
                 feature.append(self.label.ad_label(curr_ad, prev_ad))
-                feature.append(self.label.ratio(curr_tech_index["AD"], prev_tech_index["AD"]))
+                feature.append(self.label.ratio(prev_tech_index["AD"], curr_tech_index["AD"]))
 
                 feature.append(self.label.adosc_label(curr_tech_index["ADOSC"], prev_tech_index["ADOSC"]))
 
@@ -385,8 +396,8 @@ class Data():
                               stock_key, e)
                 return None
 
-        logging.info("Generate feature by transaction list success. transaction_list:%d feature:%d",
-                     len(transaction_list), len(feature))
+        logging.info("Generate feature by transaction list success. stock_key:%s transaction_list:%d feature:%d",
+                     stock_key, len(transaction_list), len(feature))
 
         return feature
 
@@ -394,9 +405,11 @@ class Data():
         ''' 获取交易列表 '''
         return self.database.get_transaction_list(stock_key, date, num)
 
-    def load_feature(self, stock_key, date, days):
+    def load_feature(self, stock, date, days):
         ''' 加载特征数据 '''
         feature = list()
+
+        stock_key = stock["stock_key"]
 
         # 查询所需数据
         transaction_list = self.database.get_transaction_list(
@@ -409,14 +422,14 @@ class Data():
         lastest = transaction_list[0]
 
         # 填充交易数据
-        transaction_list = self.fill_transaction_data(stock_key, date, transaction_list)
+        transaction_list = self.fill_transaction_data(stock, date, transaction_list)
         if transaction_list is None:
             logging.error("Fill transaction data failed! stock_key:%s date:%s",
                           stock_key, date)
             return date, None
 
         # 生成训练样本
-        item = self.gen_feature(stock_key, transaction_list, days)
+        item = self.gen_feature(stock, transaction_list, days)
         if item is None:
             logging.error("Generate feature by transaction list failed! stock_key:%s date:%s",
                           stock_key, date)
