@@ -22,12 +22,14 @@ WORKER_NUM = 5
 WAIT_QUEUE_LEN = 1000
 
 class Analyzer():
-    def __init__(self, worker_num=10):
+    def __init__(self, start_code=1, worker_num=10):
         """ 初始化
             @Param worker_num: 工作线程数量
         """
         # 数据模块
         self.data = Data()
+
+        self.start_code = start_code
 
         # 待处理队列
         self.wait_queue = list()
@@ -60,14 +62,13 @@ class Analyzer():
         # 获取股票列表
         stock_list = self.data.get_all_stock()
         for stock in stock_list:
+            fields = stock["stock_key"].split(":")
+            stock_code = int(fields[1])
+            if stock_code < self.start_code:
+                continue
             # 加载待处理队列
             self.wait_queue.append(stock["stock_key"])
             self.push_count += 1
-            print("Push [%s]. push:%s pop:%s wait:%s" % (
-                stock["stock_key"],
-                self.push_count,
-                self.pop_count,
-                len(self.wait_queue)))
             logging.debug("Push [%s]. push:%s pop:%s wait:%s",
                           stock["stock_key"],
                           self.push_count,
@@ -102,6 +103,8 @@ class Analyzer():
             try:
                 stock_key = self.wait_queue.pop(0)
                 self.pop_count += 1
+                print("Threading[%s] Pop stock_key:%s" %
+                              (threading.current_thread().ident, stock_key))
                 logging.debug("Threading[%s] Pop stock_key:%s",
                               threading.current_thread().ident, stock_key)
             except Exception as e:
@@ -129,7 +132,7 @@ class Analyzer():
         # 获取交易数据(按时间逆序)
         transaction_list = self.data.get_transaction_list(
                 stock_key, get_current_date(), 100000)
-        if transaction_list is None:
+        if (transaction_list is None) or (len(transaction_list) == 0):
             logging.error("Get transaction list failed! stock_key:%s", stock_key)
             return
 
