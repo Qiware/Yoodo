@@ -16,20 +16,22 @@ from classifier import Classifier
 
 sys.path.append("../../repo/data")
 from data import Data
+
 sys.path.append("../../repo/lib/log")
 from log import *
 
 # 拉取训练交易数据条目
 GET_TRANSACTION_MAX_NUM = 120
 
+
 # 股票预测
 class Trainer():
     def __init__(self, model_type, days, is_build=False):
-        ''' 初始化
+        """ 初始化
             @Param model_type: 训练模型(r:回归模型; c:分类模型)
             @Param days: 预测周期
             @Param is_build: 是否重建
-        '''
+        """
         # 指定数据源
         self.data = Data()
         self.scaler = StandardScaler()
@@ -40,20 +42,20 @@ class Trainer():
             self.model = Classifier(days, is_build)
 
     def train(self, date, days, is_build=False):
-        ''' 模型训练 '''
+        """ 模型训练 """
         # 加载训练数据
         feature, target = self.data.load_train_data(date, days)
 
         # 划分训练集和测试集
         x_train, x_test, y_train, y_test = train_test_split(
-                feature, target, test_size=0.001, random_state=1)
+            feature, target, test_size=0.001, random_state=1)
 
         # 训练模型
         x_train_scaled = self.scaler.fit_transform(x_train)
 
-        self.model.fit(x_train_scaled, y_train) # 训练
+        self.model.fit(x_train_scaled, y_train)  # 训练
 
-        self.model.dump() # 固化模型
+        self.model.dump()  # 固化模型
 
         # 模型评估
         x_test_scaled = self.scaler.transform(x_test)
@@ -80,7 +82,7 @@ class Trainer():
                 base_date, feature = self.data.load_feature(stock, date, days)
                 if feature is None:
                     logging.error("Load feature failed! stock_key:%s date:%s days:%d",
-                                 stock_key, date, days)
+                                  stock_key, date, days)
                     continue
 
                 # 进行结果预测
@@ -97,18 +99,18 @@ class Trainer():
         print('R2值为：', r2)
         print('MSE值为：', mse)
 
-        '''结果可视化'''
+        """结果可视化"""
         xy = range(0, len(y_test))
         plt.figure(figsize=(4, 3))
-        plt.scatter(xy, y_test,color="red",label="Sample Point",linewidth=3)
-        plt.plot(xy, y_predict,color="orange",label="Predict line",linewidth=2)
+        plt.scatter(xy, y_test, color="red", label="Sample Point", linewidth=3)
+        plt.plot(xy, y_predict, color="orange", label="Predict line", linewidth=2)
         plt.legend()
         plt.show()
 
         return None
 
     def build(self, date, days):
-        ''' 构建训练模型 '''
+        """ 构建训练模型 """
 
         # 生成训练数据
         self.data.gen_train_data(self.model_type, date, days, GET_TRANSACTION_MAX_NUM)

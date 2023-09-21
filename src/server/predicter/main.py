@@ -13,15 +13,17 @@ from dtime import *
 
 from predict import *
 
+
 def usage():
-    ''' 展示帮助信息 '''
+    """ 展示帮助信息 """
     print("python3 ./main.py [model] [date] [days]")
     print("     - model: 模型类型(r:线性模型; c:分类模型)")
     print("     - date: 预测时间")
     print("     - days: 预测周期")
 
+
 def date_is_valid(date):
-    ''' 判断DATE是否合法 '''
+    """ 判断DATE是否合法 """
     timestamp = date_to_timestamp(date)
     if timestamp == 0:
         logging.error("Date is invalid! date:%s", date)
@@ -33,6 +35,7 @@ def date_is_valid(date):
         return False
 
     return True
+
 
 if __name__ == "__main__":
     # 校验参数个数
