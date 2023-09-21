@@ -1,0 +1,14 @@
+# -i https://pypi.tuna.tsinghua.edu.cn/simple
+# --extra-index-url https://pypi.org/simple
+scikit-learn
+joblib
+pymysql
+requests
+matplotlib
+dbutils
+TA-Lib
+akshare
+#paddlepaddle==2.3.2 -i https://pypi.tuna.tsinghua.edu.cn/simple
+#paddlets==1.1.0 -i https://pypi.tuna.tsinghua.edu.cn/simple
+ray==1.13.0
+optuna>=2.10.1
