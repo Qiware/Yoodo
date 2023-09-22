@@ -7,19 +7,19 @@ AMOUNT_UNIT_M = 1000000
 AMOUNT_UNIT_B = 1000000000
 
 def str_to_digit(s):
-    ''' 将字符串转为数字
+    """ 将字符串转为数字
         @Param s: 数值串(如: 3,111.63)
-    '''
+    """
     s = s.replace(",", "")
     if len(s) == 0:
         return float(0)
     return float(s)
 
 def str_with_unit_to_digit(s, unit):
-    ''' 将金额转为数字
+    """ 将金额转为数字
         @Param val: 数值(如: 3,111.63)
         @Param unit: 单位(M:百万; B:十亿)
-    '''
+    """
 
     digit = str_to_digit(s)
 
@@ -33,10 +33,10 @@ def str_with_unit_to_digit(s, unit):
 
 
 def digit(d, unit):
-    ''' 将金额转为数字
+    """ 将金额转为数字
         @Param val: 数值
         @Param unit: 单位(M:百万; B:十亿)
-    '''
+    """
 
     digit = float(val.replace(",", ""))
 

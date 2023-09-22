@@ -9,10 +9,10 @@ from model import *
 
 class Classifier(Model):
     def __init__(self, days, is_build=False):
-        ''' 初始化
+        """ 初始化
             @Param days: 预测days的模型
             @Param is_build: 是否新建模型
-        '''
+        """
         self.days = days
         if is_build:
             self.model = self._new()
@@ -20,7 +20,7 @@ class Classifier(Model):
             self.model = self._load()
 
     def _new(self):
-        ''' 新建模型 '''
+        """ 新建模型 """
         return MLPClassifier(
                 activation='tanh', # tanh, relu, logistic
                 alpha=1e-4,
@@ -32,5 +32,5 @@ class Classifier(Model):
                 learning_rate_init=0.0001)
 
     def _gen_model_fpath(self, days):
-        ''' 生成分类预测模型的路径 '''
+        """ 生成分类预测模型的路径 """
         return "../../../model/c-%ddays.mod" % (int(days))

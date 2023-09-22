@@ -20,10 +20,10 @@ MODEL_CLASSIFIER = "c" # 分类模型
 
 class Model():
     def __init__(self, days, is_rebuild=False):
-        ''' 初始化
+        """ 初始化
             @Param days: 预测days的模型
             @Param is_rebuild: 是否重建模型
-        '''
+        """
         self.days = days
         if is_rebuild:
             self.model = self._new()
@@ -31,7 +31,7 @@ class Model():
             self.model = self._load()
 
     def _new(self):
-        ''' 新建模型 '''
+        """ 新建模型 """
         return MLPRegressor(
                 hidden_layer_sizes=(500, 400, 300, 200, 200, 200),
                 activation='tanh',
@@ -40,18 +40,18 @@ class Model():
                 learning_rate_init=0.0001)
 
     def ratio(self, start_val, end_val):
-        ''' 波动比率
+        """ 波动比率
             @Param start_val: 开始值
             @Param end_val: 结束值
-        '''
+        """
         return (end_val - start_val) / start_val * 100
 
     def _gen_model_fpath(self, days):
-        ''' 生成预测模型的路径 '''
+        """ 生成预测模型的路径 """
         return "../../../model/%ddays.mod" % (int(days))
 
     def _load(self):
-        ''' 加载预测模型 '''
+        """ 加载预测模型 """
 
         fpath = self._gen_model_fpath(self.days)
         if not os.path.isfile(fpath):
@@ -62,13 +62,13 @@ class Model():
         return joblib.load(fpath)
 
     def predict(self, feature):
-        ''' 预测结果 '''
+        """ 预测结果 """
         return self.model.predict(feature)
 
     def dump(self):
-        ''' DUMP模型 '''
+        """ DUMP模型 """
         joblib.dump(self.model, self._gen_model_fpath(self.days))
 
     def fit(self, feature, target):
-        ''' 模型训练 '''
+        """ 模型训练 """
         return self.model.fit(feature, target)

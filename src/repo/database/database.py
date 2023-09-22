@@ -15,7 +15,7 @@ STOCK_GOOD_MARKET_CAP = 10000000000
 # 数据库操作
 class Database():
     def __init__(self):
-        ''' 初始化 '''
+        """ 初始化 """
         self.mysql = MySQLPool(
                 host="localhost",
                 port=3306,
@@ -24,7 +24,7 @@ class Database():
                 database="exchange")
 
     def gen_insert_sql(self, table, data):
-        ''' 生成SQL INSERT语句 '''
+        """ 生成SQL INSERT语句 """
 
         sql = "INSERT INTO " + table + "("
 
@@ -50,9 +50,9 @@ class Database():
         return sql, tuple(conditions)
 
     def set_stock(self, data):
-        ''' 更新股票基础信息: 股票代码、企业名称等
+        """ 更新股票基础信息: 股票代码、企业名称等
             @Param data: 股票基础信息(dict类型)
-        '''
+        """
 
         #logging.debug("Set stock. data:%s", data)
 
@@ -62,7 +62,7 @@ class Database():
         return self._update_stock(data)
 
     def _add_stock(self, data):
-        ''' 新增股票数据 '''
+        """ 新增股票数据 """
 
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_stock", data)
@@ -78,7 +78,7 @@ class Database():
         return None
 
     def _update_stock(self, data):
-        ''' 更新股票数据 '''
+        """ 更新股票数据 """
 
         # 生成SQL语句
         sql = f'UPDATE t_stock SET '
@@ -107,7 +107,7 @@ class Database():
         self.mysql.close(conn, cursor)
 
     def _add_transaction(self, data):
-        ''' 新增交易数据 '''
+        """ 新增交易数据 """
 
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_transaction", data)
@@ -123,7 +123,7 @@ class Database():
         return None
 
     def _update_transaction(self, data):
-        ''' 更新交易数据 '''
+        """ 更新交易数据 """
 
         # 生成SQL语句
         sql = f'UPDATE t_transaction SET '
@@ -153,19 +153,19 @@ class Database():
         self.mysql.close(conn, cursor)
 
     def set_transaction(self, data):
-        ''' 更新交易数据: 开盘价、最高价、最低价、收盘价、交易量、交易额、换手率等
+        """ 更新交易数据: 开盘价、最高价、最低价、收盘价、交易量、交易额、换手率等
             @Param data: 股票交易信息(dict类型)
-        '''
+        """
         old_data = self.get_transaction(data["stock_key"], data["date"])
         if old_data is None:
             return self._add_transaction(data)
         return self._update_transaction(data)
 
     def get_transaction(self, stock_key, date):
-        ''' 获取指定交易数据
+        """ 获取指定交易数据
             @Param stock_key: 股票KEY
             @Param date: 交易日期(格式: YYYYMMDD)
-        '''
+        """
 
         # 查询交易数据
         sql = f'SELECT stock_key, date, \
@@ -183,9 +183,9 @@ class Database():
         return item
 
     def get_stock(self, stock_key):
-        ''' 获取指定股票信息
+        """ 获取指定股票信息
             @Param stock_key: 股票KEY
-        '''
+        """
 
         # 查询股票列表
         sql = f'SELECT stock_key, name, total, market_cap, \
@@ -201,7 +201,7 @@ class Database():
         return item 
 
     def get_all_stock(self):
-        ''' 获取所有股票列表 '''
+        """ 获取所有股票列表 """
 
         # 查询股票列表
         sql = f'SELECT stock_key, name, total, market_cap, disable \
@@ -216,7 +216,7 @@ class Database():
         return items
 
     def get_all_index(self):
-        ''' 获取所有指数列表 '''
+        """ 获取所有指数列表 """
 
         # 查询指数列表
         sql = f'SELECT index_key, name FROM t_index'
@@ -229,9 +229,9 @@ class Database():
         return items
 
     def get_good_stock(self):
-        ''' 获取优质股票列表
+        """ 获取优质股票列表
             @Note: 市值超过100亿的股票, 则认为是优质股票.
-        '''
+        """
 
         # 查询股票列表
         sql = f'SELECT stock_key, name, total, market_cap, \
@@ -247,11 +247,11 @@ class Database():
         return items
 
     def get_transaction_list(self, stock_key, date, num):
-        ''' 获取指定日期往前的num条交易数据
+        """ 获取指定日期往前的num条交易数据
             @Param stock_key: 股票KEY
             @Param date: 交易日期(格式: YYYYMMDD)
             @Param num: 交易条数
-        '''
+        """
 
         # 查询交易数据
         sql = f'SELECT stock_key, date, open_price, \
@@ -269,9 +269,9 @@ class Database():
         return items
 
     def get_all_transaction_list_by_stock_key(self, stock_key):
-        ''' 获取指定日期往前的num条交易数据
+        """ 获取指定日期往前的num条交易数据
             @Param stock_key: 股票KEY
-        '''
+        """
 
         # 查询交易数据
         sql = f'SELECT stock_key, date, open_price, \
@@ -289,7 +289,7 @@ class Database():
 
 
     def _add_predict(self, data):
-        ''' 新增预测数据 '''
+        """ 新增预测数据 """
 
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_predict", data)
@@ -305,7 +305,7 @@ class Database():
         return None
 
     def _update_predict(self, data):
-        ''' 更新预测数据 '''
+        """ 更新预测数据 """
 
         sql = f'UPDATE t_predict SET base_date=%s, base_price=%s, \
                     pred_price=%s,pred_ratio=%s,update_time=%s \
@@ -320,7 +320,7 @@ class Database():
         self.mysql.close(conn, cursor)
 
     def update_predict_real(self, data):
-        ''' 更新预测数据中的真实数据 '''
+        """ 更新预测数据中的真实数据 """
 
         sql = f'UPDATE t_predict SET real_price=%s, \
                         real_ratio=%s,update_time=%s \
@@ -334,9 +334,9 @@ class Database():
         self.mysql.close(conn, cursor)
 
     def set_predict(self, data):
-        ''' 设置预测数据
+        """ 设置预测数据
             @Param data: 预测信息
-        '''
+        """
 
         old_data = self.get_predict(data["stock_key"], data["date"], data["days"])
         if old_data is None:
@@ -344,11 +344,11 @@ class Database():
         return self._update_predict(data)
 
     def get_predict(self, stock_key, date, days):
-        ''' 获取指定日期指定周期的预测结果
+        """ 获取指定日期指定周期的预测结果
             @Param stock_key: 股票KEY
             @Param date: 交易日期(格式: YYYYMMDD)
             @Param days: 预测周期(天数)
-        '''
+        """
 
         # 查询交易数据
         sql = f'SELECT stock_key, date, days, \
@@ -369,9 +369,9 @@ class Database():
         return item
 
     def set_technical_index(self, data):
-        ''' 设置交易指数
+        """ 设置交易指数
             @Param data: 预测信息
-        '''
+        """
 
         old_data = self.get_technical_index(data["stock_key"], data["date"])
         if old_data is None:
@@ -379,7 +379,7 @@ class Database():
         return self._update_transaction_index(data)
 
     def _add_transaction_index(self, data):
-        ''' 新增交易指数 '''
+        """ 新增交易指数 """
 
         # 生成SQL语句
         sql, conditions = self.gen_insert_sql("t_technical_index", data)
@@ -395,7 +395,7 @@ class Database():
         return None
 
     def _update_transaction_index(self, data):
-        ''' 更新交易指数 '''
+        """ 更新交易指数 """
 
         # 生成SQL语句
         sql = f'UPDATE t_technical_index SET '
@@ -425,10 +425,10 @@ class Database():
         self.mysql.close(conn, cursor)
 
     def get_technical_index(self, stock_key, date):
-        ''' 获取指定股票技术指标数据
+        """ 获取指定股票技术指标数据
             @Param stock_key: 股票KEY
             @Param date: 交易日期(格式: YYYYMMDD)
-        '''
+        """
 
         # 查询交易数据
         sql = f'SELECT stock_key, date, data \
@@ -447,11 +447,11 @@ class Database():
 
         return item
 
-    def get_technical_index_list(self, stock_key, lastest_date):
-        ''' 获取指定股票技术指标数据
+    def get_technical_index_dict(self, stock_key, lastest_date):
+        """ 获取指定股票技术指标数据(字典)
             @Param stock_key: 股票KEY
             @Param lastest_date: 最新交易日期(格式: YYYYMMDD)
-        '''
+        """
 
         # 查询交易数据
         sql = f'SELECT stock_key, date, data \
@@ -474,6 +474,23 @@ class Database():
 
         return data
 
+    def get_technical_index_list(self, stock_key, lastest_date):
+        """ 获取指定股票技术指标数据(列表)
+            @Param stock_key: 股票KEY
+            @Param lastest_date: 最新交易日期(格式: YYYYMMDD)
+        """
+
+        # 查询交易数据
+        sql = f'SELECT stock_key, date, data \
+                FROM t_technical_index \
+                WHERE stock_key=%s AND date<=%s ORDER BY date'
+
+        conn, cursor = self.mysql.open()
+        cursor.execute(sql, (stock_key, lastest_date))
+        items = cursor.fetchall()
+        self.mysql.close(conn, cursor)
+
+        return items
 
 
 if __name__ == "__main__":

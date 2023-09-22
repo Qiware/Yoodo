@@ -42,18 +42,18 @@ class Data():
         self.hz2083_index_list = self.get_hz2083_index()  # 恒生科技指数
 
     def gen_train_data_fpath(self, date, days):
-        ''' 生成训练数据的路径 '''
+        """ 生成训练数据的路径 """
         return "../../../data/train/%s-%ddays.dat" % (str(date), int(days))
 
     def fill_transaction_data(self, stock, date, transaction_list):
-        ''' 填充交易数据 '''
+        """ 填充交易数据 """
 
         stock_key = stock["stock_key"]
 
         # 查询交易指数
-        tech_index = self.database.get_technical_index_list(stock_key, date)
+        tech_index = self.database.get_technical_index_dict(stock_key, date)
         if tech_index is None:
-            logging.error("Get transaction index failed! stock_key:%s date:%s", stock_key, date)
+            logging.error("Get technical index failed! stock_key:%s date:%s", stock_key, date)
             return None
 
         # 填充交易数据
@@ -77,11 +77,11 @@ class Data():
         return transaction_list
 
     def gen_train_data(self, model_type, date, days, num):
-        ''' 生成训练数据
+        """ 生成训练数据
             @Param date: 结束日期
             @Param days: 预测的间隔天数
             @Param num: 交易数据条目
-        '''
+        """
 
         logging.debug("Call gen_train_data(). date:%s days:%s num:%s", date, days, num)
 
@@ -98,14 +98,14 @@ class Data():
         return None
 
     def _gen_train_data(self, model_type, stock, date, days, num, fp):
-        ''' 生成训练数据
+        """ 生成训练数据
             @Param model_type: 模型类型
             @Param stock: 股票信息
             @Param date: 结束日期
             @Param days: 预测的间隔天数
             @Param num: 交易数据条目
             @Param fp: 训练数据输出文件的指针
-        '''
+        """
         # 拉取交易数据
         transaction_list = self.database.get_transaction_list(stock["stock_key"], date, num)
         if transaction_list is None:
@@ -128,13 +128,13 @@ class Data():
         return
 
     def gen_reg_train_data(self, stock, transaction_list, days, fp):
-        ''' 生成'线性回归'训练数据
+        """ 生成'线性回归'训练数据
             @Param stock_key: 股票信息
             @Param transaction_list: 交易数据
             @Param days: 预测间隔天数
             @Param fp: 文件指针
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
-        '''
+        """
 
         stock_key = stock["stock_key"]
 
@@ -181,13 +181,13 @@ class Data():
         return None
 
     def gen_cls_train_data(self, stock, transaction_list, days, fp):
-        ''' 生成'分类'训练数据
+        """ 生成'分类'训练数据
             @Param stock: 股票信息
             @Param transaction_list: 交易数据
             @Param days: 预测间隔天数
             @Param fp: 文件指针
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
-        '''
+        """
 
         stock_key = stock["stock_key"]
 
@@ -236,7 +236,7 @@ class Data():
         return None
 
     def load_train_data(self, date, days):
-        ''' 加载训练数据, 并返回特征数据和目标数据 '''
+        """ 加载训练数据, 并返回特征数据和目标数据 """
         # 加载训练数据
         fp = open(self.gen_train_data_fpath(date, days))
         lines = fp.readlines()
@@ -266,12 +266,12 @@ class Data():
         return feature_list, target_list
 
     def gen_feature(self, stock, transaction_list, days):
-        ''' 通过交易列表生成特征数据. 返回格式: [x1, x2, x3, ...]
+        """ 通过交易列表生成特征数据. 返回格式: [x1, x2, x3, ...]
             @Param stock_key: 股票KEY
             @Param transaction_list: 交易数据
             @Param days: 预测间隔天数
             @Return: 特征数据列表
-        '''
+        """
 
         stock_key = stock["stock_key"]
 
@@ -284,11 +284,11 @@ class Data():
         label = Label()
 
         # 股票KEY
-        feature.append(self.label.str_label(stock_key))
+        feature.append(self.label.str2label(stock_key))
 
         # 分类信息
-        feature.append(self.label.str_label(stock["first_classification"]))
-        feature.append(self.label.str_label(stock["second_classification"]))
+        feature.append(self.label.str2label(stock["first_classification"]))
+        feature.append(self.label.str2label(stock["second_classification"]))
 
         # 生成特征数据(注意: 最后一个作为起始基准)
         index = TRAIN_DATA_TRANSACTION_NUM - 1
@@ -371,24 +371,24 @@ class Data():
                 feature.append(self.label.ratio(curr_tech_index["MA20VOL"], curr["volume"]))
 
                 # 技术指标
-                feature.append(self.label.kdj_label(curr_tech_index["KDJ"]))
-                feature.append(self.label.rsi_label(curr_tech_index["RSI"]))
+                feature.append(self.label.kdj2label(curr_tech_index["KDJ"]))
+                feature.append(self.label.rsi2label(curr_tech_index["RSI"]))
 
-                feature.append(self.label.cci_label(curr_tech_index["CCI"], prev_tech_index["CCI"]))
+                feature.append(self.label.cci2label(curr_tech_index["CCI"], prev_tech_index["CCI"]))
                 feature.append(self.label.ratio(prev_tech_index["CCI"], curr_tech_index["CCI"]))
 
-                feature.append(self.label.macd_label(curr_tech_index["MACD"], prev_tech_index["MACD"]))
+                feature.append(self.label.macd2label(curr_tech_index["MACD"], prev_tech_index["MACD"]))
 
                 curr_ad = {"AD": curr_tech_index["AD"], "close_price": curr["close_price"]}
                 prev_ad = {"AD": prev_tech_index["AD"], "close_price": prev["close_price"]}
-                feature.append(self.label.ad_label(curr_ad, prev_ad))
+                feature.append(self.label.ad2label(curr_ad, prev_ad))
                 feature.append(self.label.ratio(prev_tech_index["AD"], curr_tech_index["AD"]))
 
-                feature.append(self.label.adosc_label(curr_tech_index["ADOSC"], prev_tech_index["ADOSC"]))
+                feature.append(self.label.adosc2label(curr_tech_index["ADOSC"], prev_tech_index["ADOSC"]))
 
                 curr_sar = {"SAR": curr_tech_index["SAR"], "close_price": curr["close_price"]}
                 prev_sar = {"SAR": prev_tech_index["SAR"], "close_price": prev["close_price"]}
-                feature.append(self.label.sar_label(curr_sar, prev_sar))
+                feature.append(self.label.sar2label(curr_sar, prev_sar))
 
                 index -= 1
             except Exception as e:
@@ -402,11 +402,11 @@ class Data():
         return feature
 
     def get_transaction_list(self, stock_key, date, num):
-        ''' 获取交易列表 '''
+        """ 获取交易列表 """
         return self.database.get_transaction_list(stock_key, date, num)
 
     def load_feature(self, stock, date, days):
-        ''' 加载特征数据 '''
+        """ 加载特征数据 """
         feature = list()
 
         stock_key = stock["stock_key"]
@@ -440,24 +440,24 @@ class Data():
         return lastest["date"], feature
 
     def get_all_index(self):
-        ''' 获取所有指数  '''
+        """ 获取所有指数  """
         return self.database.get_all_index()
 
     def get_all_stock(self):
-        ''' 获取所有股票  '''
+        """ 获取所有股票  """
         return self.database.get_all_stock()
 
     def get_good_stock(self):
-        ''' 获取优质股票  '''
+        """ 获取优质股票  """
         return self.database.get_good_stock()
 
     def update_predict(self, stock_key, date, days, base_date, ratio):
-        ''' 更新预测数据
+        """ 更新预测数据
             @Param date: 评估时间
             @Param days: 评估周期
             @Param base_date: 基于哪天的数据
             @Param ratio: 预估涨幅
-        '''
+        """
 
         # 获取基准价格
         transaction_list = self.database.get_transaction_list(stock_key, date, 1)
@@ -490,7 +490,7 @@ class Data():
         self.database.set_predict(data)
 
     def update_predict_real(self, stock_key, base_date, days, real_price, real_ratio):
-        ''' 更新预测数据中的真实数据 '''
+        """ 更新预测数据中的真实数据 """
 
         # 准备数据
         data = dict()
@@ -507,7 +507,7 @@ class Data():
         self.database.update_predict_real(data)
 
     def get_potential_stock(self, date):
-        ''' 获取潜力股(隔夜持股法)
+        """ 获取潜力股(隔夜持股法)
             @Desc: 1.涨幅在3%~5%之间
                    2.量比排名: 剔除量比小于1的股票
                    3.换手率排名: 剔除换手率>10%和<5%的股票
@@ -516,7 +516,7 @@ class Data():
                    6.K线形态: 高位票或没有支撑的删掉
                    7.看分时图: 全天运行的分时均价上方必须强于大盘
                    8.两点半左右创出当日的新高, 回踩均线不跌破, 就是买点.
-        '''
+        """
         # 拉取所有股票当天交易数据
         potential_stock_list = list()  # 潜力股列表
 
@@ -542,7 +542,7 @@ class Data():
         return potential_stock_list
 
     def is_potential_stock(self, stock, transaction_list):
-        ''' 是否是潜力股
+        """ 是否是潜力股
             @Desc: 1.涨幅在3%~5%之间
                    2.量比排名: 剔除量比小于1的股票
                    3.换手率排名: 剔除换手率>10%和<5%的股票
@@ -551,7 +551,7 @@ class Data():
                    6.K线形态: 高位票或没有支撑的删掉
                    7.看分时图: 全天运行的分时均价上方必须强于大盘
                    8.两点半左右创出当日的新高, 回踩均线不跌破, 就是买点.
-        '''
+        """
         curr = transaction_list[0]  # 今天交易数据
 
         # 1.当天涨幅在2% ~ 5%之间
@@ -599,7 +599,7 @@ class Data():
         return True
 
     def get_hsi_index(self):
-        ''' 获取恒生指数数据 '''
+        """ 获取恒生指数数据 """
         transaction_list = self.database.get_all_transaction_list_by_stock_key(STOCK_KEY_HSI)
         if (transaction_list is None) or (len(transaction_list) == 0):
             logging.error("Get hsi index transaction list failed! stock_key:%s",
@@ -614,7 +614,7 @@ class Data():
         return hsi_index_list
 
     def get_hz2083_index(self):
-        ''' 获取'恒生科技指数'数据 '''
+        """ 获取'恒生科技指数'数据 """
         transaction_list = self.database.get_all_transaction_list_by_stock_key(STOCK_KEY_HZ2083)
         if (transaction_list is None) or (len(transaction_list) == 0):
             logging.error("Get hz2083 index transaction list failed! stock_key:%s",
@@ -629,7 +629,7 @@ class Data():
         return hz2083_index_list
 
     def set_technical_index(self, data):
-        ''' 更新股票技术指标数据 '''
+        """ 更新股票技术指标数据 """
 
         curr_timestamp = int(time.time())
         data["create_time"] = time.localtime(curr_timestamp)
