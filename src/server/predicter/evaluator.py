@@ -5,7 +5,7 @@
 
 import sys
 
-sys.path.append("../../repo/lib/log")
+sys.path.append("../../lib/utils/log")
 from log import log_init
 
 from predict import *

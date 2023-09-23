@@ -10,10 +10,10 @@ import talib
 import time
 import threading
 
-sys.path.append("../../repo/data")
+sys.path.append("../../lib/data")
 from data import Data
 
-sys.path.append("../../repo/lib/dtime")
+sys.path.append("../../lib/utils/dtime")
 from dtime import get_current_date
 
 # 默认工作线程数量

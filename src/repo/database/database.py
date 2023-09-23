@@ -6,7 +6,7 @@ import logging
 import pymysql
 import sys
 
-sys.path.append("../../repo/lib/mysql")
+sys.path.append("../../lib/utils/mysql")
 from mysql import MySQLPool
 
 # 优质股票市值 >= 100亿

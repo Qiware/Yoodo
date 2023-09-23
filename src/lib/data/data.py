@@ -10,7 +10,7 @@ import xxhash
 sys.path.append("../../repo/database")
 from database import Database
 
-sys.path.append("../../repo/model")
+sys.path.append("../../lib/model")
 from model import MODEL_REGRESSOR, MODEL_CLASSIFIER
 
 from label import Label

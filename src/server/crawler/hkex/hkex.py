@@ -13,7 +13,7 @@ import requests  # pip3 install requests
 from const import *
 from baidu import *
 
-sys.path.append("../../repo/lib/digit")
+sys.path.append("../../lib/utils/digit")
 from digit import *
 
 # 获取多久的数据

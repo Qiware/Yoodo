@@ -6,9 +6,9 @@
 import sys
 
 sys.path.append("./logic")
-from analyzer import *
+from analyzer import Analyzer
 
-sys.path.append("../../repo/lib/log")
+sys.path.append("../../lib/utils/log")
 from log import *
 
 

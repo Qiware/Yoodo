@@ -8,18 +8,18 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
-sys.path.append("../../repo/lib/log")
+sys.path.append("../../lib/utils/log")
 from log import *
 
-sys.path.append("../../repo/data")
+sys.path.append("../../lib/data")
 from data import Data
 
-sys.path.append("../../repo/model")
+sys.path.append("../../lib/model")
 from model import *
 from regressor import Regressor
 from classifier import Classifier
 
-sys.path.append("../../repo/lib/dtime")
+sys.path.append("../../lib/utils/dtime")
 from dtime import *
 
 # 拉取训练交易数据条目
@@ -35,10 +35,6 @@ class Predicter():
         """ 初始化 """
         # 数据处理
         self.data = Data()
-
-    def get_potential_stock(self, date):
-        """ 获取潜力股 """
-        return self.data.get_potential_stock(date)
 
     def predict(self, model_type, date, days):
         """ 数据预测

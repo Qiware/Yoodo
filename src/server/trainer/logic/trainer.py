@@ -9,15 +9,15 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_squared_error
 
-sys.path.append("../../repo/model")
+sys.path.append("../../lib/model")
 from model import *
 from regressor import Regressor
 from classifier import Classifier
 
-sys.path.append("../../repo/data")
+sys.path.append("../../lib/data")
 from data import Data
 
-sys.path.append("../../repo/lib/log")
+sys.path.append("../../lib/utils/log")
 from log import *
 
 # 拉取训练交易数据条目
