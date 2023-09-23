@@ -2,18 +2,19 @@ import pymysql
 
 from dbutils.pooled_db import PooledDB
 
+
 class MySQLPool:
     def __init__(self, host, port, user, password, database):
         self.pool = PooledDB(
-                creator=pymysql,  # 使用链接数据库的模块
-                mincached=10,  # 初始化时，链接池中至少创建的链接，0表示不创建
-                maxconnections=10000,  # 连接池允许的最大连接数，0和None表示不限制连接数
-                blocking=True,  # 连接池中如果没有可用连接后，是否阻塞等待。True，等待；False，不等待然后报错
-                host=host,
-                port=port,
-                user=user,
-                password=password,
-                database=database)
+            creator=pymysql,  # 使用链接数据库的模块
+            mincached=10,  # 初始化时，链接池中至少创建的链接，0表示不创建
+            maxconnections=10000,  # 连接池允许的最大连接数，0和None表示不限制连接数
+            blocking=True,  # 连接池中如果没有可用连接后，是否阻塞等待。True，等待；False，不等待然后报错
+            host=host,
+            port=port,
+            user=user,
+            password=password,
+            database=database)
 
     def open(self):
         """ 获取连接 """

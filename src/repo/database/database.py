@@ -3,7 +3,6 @@
 # 数据库的查询和更新操作
 
 import logging
-import pymysql
 import sys
 
 sys.path.append("../../repo/mysql")
@@ -12,49 +11,51 @@ from mysql import MySQLPool
 # 优质股票市值 >= 100亿
 STOCK_GOOD_MARKET_CAP = 10000000000
 
+
 # 数据库操作
-class Database():
+def gen_insert_sql(table, data):
+    """ 生成SQL INSERT语句 """
+
+    sql = "INSERT INTO " + table + "("
+
+    conditions = list()
+
+    index = 0
+    for key in data.keys():
+        if index != 0:
+            sql += ","
+        sql += key
+        conditions.append(data[key])
+        index += 1
+    sql += ") VALUES("
+
+    index = 0
+    for key in data.keys():
+        if index != 0:
+            sql += ","
+        sql += "%s"
+        index += 1
+    sql += ")"
+
+    return sql, tuple(conditions)
+
+
+class Database:
     def __init__(self):
         """ 初始化 """
         self.mysql = MySQLPool(
-                host="localhost",
-                port=3306,
-                user="root",
-                password="",
-                database="exchange")
-
-    def gen_insert_sql(self, table, data):
-        """ 生成SQL INSERT语句 """
-
-        sql = "INSERT INTO " + table + "("
-
-        conditions = list()
-
-        index = 0
-        for key in data.keys():
-            if index != 0:
-                sql += ","
-            sql += key
-            conditions.append(data[key])
-            index += 1
-        sql += ") VALUES("
-
-        index = 0
-        for key in data.keys():
-            if index != 0:
-                sql += ","
-            sql += "%s"
-            index += 1
-        sql += ")"
-
-        return sql, tuple(conditions)
+            host="localhost",
+            port=3306,
+            user="root",
+            password="",
+            database="exchange")
 
     def set_stock(self, data):
         """ 更新股票基础信息: 股票代码、企业名称等
             @Param data: 股票基础信息(dict类型)
         """
 
-        #logging.debug("Set stock. data:%s", data)
+        # logging.debug("Set stock. data:%s", data)
 
         old_data = self.get_stock(data["stock_key"])
         if old_data is None:
@@ -65,9 +66,9 @@ class Database():
         """ 新增股票数据 """
 
         # 生成SQL语句
-        sql, conditions = self.gen_insert_sql("t_stock", data)
+        sql, conditions = gen_insert_sql("t_stock", data)
 
-        #logging.debug("sql:%s conditions:%s", sql, conditions)
+        # logging.debug("sql:%s conditions:%s", sql, conditions)
 
         # 执行SQL语句
         conn, cursor = self.msyql.open()
@@ -91,12 +92,12 @@ class Database():
                 continue
             if index != 0:
                 sql += ","
-            sql += key+"=%s"
+            sql += key + "=%s"
             conditions.append(data[key])
             index += 1
         sql += " WHERE stock_key=%s"
 
-        #logging.debug("sql: %s", sql)
+        # logging.debug("sql: %s", sql)
 
         conditions.append(data["stock_key"])
 
@@ -110,9 +111,9 @@ class Database():
         """ 新增交易数据 """
 
         # 生成SQL语句
-        sql, conditions = self.gen_insert_sql("t_transaction", data)
+        sql, conditions = gen_insert_sql("t_transaction", data)
 
-        #logging.debug("sql: %s", sql)
+        # logging.debug("sql: %s", sql)
 
         # 执行SQL语句
         conn, cursor = self.mysql.open()
@@ -136,12 +137,12 @@ class Database():
                 continue
             if index != 0:
                 sql += ","
-            sql += key+"=%s"
+            sql += key + "=%s"
             conditions.append(data[key])
             index += 1
         sql += " WHERE stock_key=%s AND date=%s"
 
-        #logging.debug("sql: %s", sql)
+        # logging.debug("sql: %s", sql)
 
         conditions.append(data["stock_key"])
         conditions.append(data["date"])
@@ -198,7 +199,7 @@ class Database():
         item = cursor.fetchone()
         self.mysql.close(conn, cursor)
 
-        return item 
+        return item
 
     def get_all_stock(self):
         """ 获取所有股票列表 """
@@ -287,14 +288,13 @@ class Database():
 
         return items
 
-
     def _add_predict(self, data):
         """ 新增预测数据 """
 
         # 生成SQL语句
-        sql, conditions = self.gen_insert_sql("t_predict", data)
+        sql, conditions = gen_insert_sql("t_predict", data)
 
-        #logging.debug("sql:%s conditions:%s", sql, conditions)
+        # logging.debug("sql:%s conditions:%s", sql, conditions)
 
         # 执行SQL语句
         conn, cursor = self.mysql.open()
@@ -382,9 +382,9 @@ class Database():
         """ 新增交易指数 """
 
         # 生成SQL语句
-        sql, conditions = self.gen_insert_sql("t_technical_index", data)
+        sql, conditions = gen_insert_sql("t_technical_index", data)
 
-        #logging.debug("sql: %s", sql)
+        # logging.debug("sql: %s", sql)
 
         # 执行SQL语句
         conn, cursor = self.mysql.open()
@@ -408,12 +408,12 @@ class Database():
                 continue
             if index != 0:
                 sql += ","
-            sql += key+"=%s"
+            sql += key + "=%s"
             conditions.append(data[key])
             index += 1
         sql += " WHERE stock_key=%s AND date=%s"
 
-        #logging.debug("sql: %s", sql)
+        # logging.debug("sql: %s", sql)
 
         conditions.append(data["stock_key"])
         conditions.append(data["date"])
