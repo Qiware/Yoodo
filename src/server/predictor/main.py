@@ -5,13 +5,13 @@ import sys
 import time
 import logging
 
-sys.path.append("../../repo/lib/log")
+sys.path.append("../../lib/utils/log")
 from log import *
 
-sys.path.append("../../repo/lib/dtime")
+sys.path.append("../../lib/utils/dtime")
 from dtime import *
 
-from predict import *
+from predictor import *
 
 
 def usage():
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         print("Date is invalid! date:", date)
         exit(-1)
 
-    log_init("../../../log/predicter.log")
+    log_init("../../../log/predictor.log")
 
     # 新建对象
     pred = Predicter()

@@ -6,9 +6,9 @@
 import sys
 
 sys.path.append("./hkex")
-from crawler import *
+from crawler import Crawler
 
-sys.path.append("../../repo/lib/log")
+sys.path.append("../../lib/utils/log")
 from log import *
 
 
@@ -21,11 +21,11 @@ def usage():
 
 
 def crawl_stock(start_code):
-    ''' 爬取股票信息 '''
+    """ 爬取股票信息 """
 
     crawler = Crawler()
 
-    crawl.crawl_stock(start_code)
+    crawler.crawl_stock(start_code)
 
 
 def crawl_transaction(start_stock_code, lastest_day):

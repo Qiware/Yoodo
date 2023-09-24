@@ -9,23 +9,20 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_squared_error
 
-sys.path.append("../../repo/model")
+sys.path.append("../../lib/model")
 from model import *
 from regressor import Regressor
 from classifier import Classifier
 
-sys.path.append("../../repo/data")
+sys.path.append("../../lib/data")
 from data import Data
-
-sys.path.append("../../repo/lib/log")
-from log import *
 
 # 拉取训练交易数据条目
 GET_TRANSACTION_MAX_NUM = 120
 
 
 # 股票预测
-class Trainer():
+class Trainer:
     def __init__(self, model_type, days, is_build=False):
         """ 初始化
             @Param model_type: 训练模型(r:回归模型; c:分类模型)
@@ -73,7 +70,7 @@ class Trainer():
 
         # 预测结果
         # 获取股票列表
-        for date in range(20230901, 20230918):
+        for date in range(20230901, 20230925):
             stock_list = self.data.get_good_stock()
             for stock in stock_list:
                 stock_key = stock["stock_key"]

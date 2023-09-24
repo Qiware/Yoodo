@@ -1,11 +1,6 @@
 # -*- coding:utf-8 -*-
 # 君子爱财 取之YOODO!
 
-import sys
-import time
-import json
-import joblib
-import logging
 import xxhash
 
 SIGNAL_ADD_PLUS = 3  # 信号: 强烈加仓
@@ -16,73 +11,94 @@ SIGNAL_NEGATIVE = -1  # 信号: 负向(弱势)
 SIGNAL_SUB = -2  # 信号: 减仓
 SIGNAL_SUB_PLUS = -3  # 信号: 强烈减仓
 
+
 # LABEL转换
 class Label():
     def __init__(self):
         pass
 
     def ratio(self, base_val, val):
-        ''' 波动比率
+        """ 波动比率
             @Param base_val: 基准值
             @Param val: 当前值
-        '''
+        """
         diff = (val - base_val)
         if diff == 0:
             return 0
         if (base_val == 0):
             return 100
-        return  diff / base_val * 100
+        return diff / base_val * 100
 
     def gen_classify(self, price_ratio):
-        ''' 生成分类
+        """ 生成分类
             @Param price_ratio: 涨价幅度
-        '''
+        """
         val = 1
         if price_ratio < 0:
             price_ratio -= val
-        return int(price_ratio/val) * val
+        return int(price_ratio / val) * val
 
-    def str_label(self, s):
-        ''' 将字符串转为数字LABEL '''
+    def str2label(self, s):
+        """ 将字符串转为数字LABEL """
         return xxhash.xxh32(s, seed=0).intdigest()
 
-    def kdj_label(self, kdj):
-        ''' KDJ特征LABEL '''
-        if int(kdj["K"]) > 90: # 超买: 减仓
-            return SIGNAL_SUB
-        elif int(kdj["K"]) < 10: # 超卖: 加仓
+    def kdj2label(self, kdj):
+        """ KDJ特征LABEL
+            1.K与D值永远介于0到100之间。D大于80时，行情呈现超买现象。D小于20时，
+              行情呈现超卖现象。
+            2.上涨趋势中，K值大于D值，K线向上突破D线时，为买进信号。下跌趋势中，
+              K值小于D值，K线向下跌破D线时，为卖出信号。
+            3.KD指标不仅能反映出市场的超买超卖程度，还能通过交叉突破发出买卖信号。
+            4.KD指标不适于发行量小、交易不活跃的股票，但是KD指标对大盘和热门大盘股有极高准确性。
+            5.当随机指标与股价出现背离时，一般为转势的信号。
+            6.K值和D值上升或者下跌的速度减弱，倾斜度趋于平缓是短期转势的预警信号。
+        """
+
+        # 1.K与D值永远介于0到100之间。D大于80时，行情呈现超买现象。D小于20时，
+        #   行情呈现超卖现象。
+        if int(kdj["D"]) > 80:  # 超买: 减仓
+            return SIGNAL_SUB_PLUS
+        elif int(kdj["D"]) < 20:  # 超卖: 加仓
+            return SIGNAL_ADD_PLUS
+
+        # 2.上涨趋势中，K值大于D值，K线向上突破D线时，为买进信号。下跌趋势中，
+        #   K值小于D值，K线向下跌破D线时，为卖出信号。
+        if int(kdj["K"]) > int(kdj["D"]):
             return SIGNAL_ADD
+        elif int(kdj["K"]) < int(kdj["D"]):
+            return SIGNAL_SUB
+
         return SIGNAL_NONE
 
-    def rsi_label(self, rsi):
-        ''' RSI特征LABEL '''
-        if rsi > 90: # 严重超买: 强烈减仓
+    def rsi2label(self, rsi):
+        """ RSI特征LABEL """
+        if rsi > 90:  # 严重超买: 强烈减仓
             return SIGNAL_SUB_PLUS
-        elif rsi > 80: # 超买: 减仓
+        elif rsi > 80:  # 超买: 减仓
             return SIGNAL_SUB
-        elif rsi > 50: # 多头涨势
+        elif rsi > 50:  # 多头涨势
             return SIGNAL_POSITIVE
-        elif rsi < 10: # 严重超卖: 强烈加仓
+        elif rsi < 10:  # 严重超卖: 强烈加仓
             return SIGNAL_ADD_PLUS
-        elif rsi < 20: # 超卖: 加仓
+        elif rsi < 20:  # 超卖: 加仓
             return SIGNAL_ADD
-        elif rsi < 50: # 空头跌势
+        elif rsi < 50:  # 空头跌势
             return SIGNAL_NEGATIVE
         # 处于50时买卖均衡
         return SIGNAL_NONE
 
-    def cci_label(self, curr_cci, prev_cci):
-        ''' CCI特征LABEL
+    def cci2label(self, curr_cci, prev_cci):
+        """ CCI特征LABEL
             CCI指标非常敏感, 适合追踪暴涨暴跌行情
-        '''
+        """
         # 情况1: 指标从下往上快速突破100, 是买入时间
-        if curr_cci > 100: # 超买区域
+        if curr_cci > 100:  # 超买区域
             if prev_cci < 100:
                 return SIGNAL_ADD_PLUS
             if curr_cci - prev_cci > 0:
                 return SIGNAL_ADD
             return SIGNAL_SUB
-        if curr_cci < -100: # 超卖区域
+        if curr_cci < -100:  # 超卖区域
             if prev_cci > -100:
                 return SIGNAL_SUB_PLUS
             if curr_cci - prev_cci < 0:
@@ -91,8 +107,8 @@ class Label():
         # -100 ~ 100表示整盘区间
         return SIGNAL_NONE
 
-    def ad_label(self, curr, prev):
-        ''' AD特征LABEL '''
+    def ad2label(self, curr, prev):
+        """ AD特征LABEL """
         # 底背离: 价格下跌, 但资金在增加(看涨: 买入信号)
         if ((curr["close_price"] - prev["close_price"]) < 0) and \
                 ((curr["AD"] - prev["AD"]) > 0):
@@ -103,14 +119,14 @@ class Label():
         # 价格和资金量同步
         return SIGNAL_NONE
 
-    def adosc_label(self, curr_ad, prev_ad):
-        ''' ADOSC特征LABEL
+    def adosc2label(self, curr_ad, prev_ad):
+        """ ADOSC特征LABEL
             1.osc指标实际上是专门以0值为中线，若osc在零线之上，于是市场处于强势状态；
               若是osc的位置在零线之下，于是市场处于弱势状态。
             2.假如osc穿过零线上升，那此时就是市场走强，可视为购买信号。
               反之亦然，假设osc跌破零线继续下行，那么市场变弱，能够视做卖出信号。
             3.若是osc离零线不近，换言之就是价格远离平均线，这时应注意价格很可能向平均线回归。
-        '''
+        """
         if curr_ad > 0:
             if prev_ad <= 0:
                 return SIGNAL_ADD
@@ -121,8 +137,8 @@ class Label():
             return SIGNAL_NEGATIVE
         return SIGNAL_NONE
 
-    def macd_label(self, curr, prev):
-        ''' MACD特征转为LABEL
+    def macd2label(self, curr, prev):
+        """ MACD特征转为LABEL
             1.DIF线(快线)由下往上穿越DEA线(慢线)，这种形态叫MACD金叉。金叉会出现
             在零轴之上，也会出现在零轴之下。在零轴下出现，表示股价止跌回涨，可短
             线买入；而金叉在零轴上出现时，则表明股价即将开始有较大幅度的反弹，适
@@ -130,24 +146,28 @@ class Label():
             2.类似的，当DIF线由上往下穿越DEA线，形成MACD死叉。如果死叉在零轴之上
             出现，意味着股价短期内下跌调整开始，投资者应减仓；若死叉出现在零轴下，
             则表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓。
-        '''
+        """
         # 判断是否MACD金叉
-        if (curr["DIFF"] > curr["DEA"]) and (prev["DIFF"] < prev["DEA"]):
-            if curr["MACD"] > 0:
-                return 2 # 将有大幅度的反弹, 适合长线投资
-            return 1 # 股票止跌回涨, 可断线买入
+        if curr["DIFF"] > curr["DEA"]:
+            if prev["DIFF"] < prev["DEA"]:
+                return SIGNAL_ADD_PLUS  # 将有大幅度的反弹, 适合长线投资
+            if curr["MACD"] < prev["MACD"]:
+                return SIGNAL_SUB  # 顶背离
+            return SIGNAL_POSITIVE  # 继续看涨
         # 判断是否死叉
-        if (curr["DIFF"] < curr["DEA"]) and (prev["DIFF"] > prev["DEA"]):
-            if curr["MACD"] > 0:
-                return -1 # 意味着股价短期内下跌调整开始，投资者应减仓
-            return -2 # 表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓
-        return 0
+        if curr["DIFF"] < curr["DEA"]:
+            if prev["DIFF"] > prev["DEA"]:
+                return SIGNAL_SUB_PLUS  # 意味着股价短期内下跌调整开始，投资者应减仓
+            if curr["MACD"] > prev["MACD"]:
+                return SIGNAL_ADD  # 底背离
+            return SIGNAL_NEGATIVE  # 继续看跌
+        return SIGNAL_NONE
 
-    def sar_label(self, curr, prev):
-        ''' SAR指标LABEL
+    def sar2label(self, curr, prev):
+        """ SAR指标LABEL
             @Param sar: SAR指标
             @Param close_price: 收盘价
-        '''
+        """
         if curr["SAR"] < curr["close_price"]:
             # 1、当股票股价从SAR曲线下方开始向上突破SAR曲线时，为买入信号，预示着股
             #    价一轮上升行情可能展开，投资者应迅速及时地买进股票。
@@ -178,4 +198,4 @@ if __name__ == "__main__":
     label = Label()
 
     name = "qifeng"
-    print(label.str_label(name))
+    print(label.str2label(name))

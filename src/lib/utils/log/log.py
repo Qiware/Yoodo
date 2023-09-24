@@ -4,7 +4,7 @@
 import logging
 
 def log_init(fname):
-    ''' 初始化日志 '''
+    """ 初始化日志 """
 
     logging.basicConfig(
             level = logging.DEBUG,

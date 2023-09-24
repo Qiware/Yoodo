@@ -10,10 +10,10 @@ import talib
 import time
 import threading
 
-sys.path.append("../../repo/data")
+sys.path.append("../../lib/data")
 from data import Data
 
-sys.path.append("../../repo/lib/dtime")
+sys.path.append("../../lib/utils/dtime")
 from dtime import get_current_date
 
 # 默认工作线程数量
@@ -101,7 +101,7 @@ class Analyzer():
             if self.is_finished():
                 break
             try:
-                stock_key = self.wait_queue.pop(0)
+                stock_key = self.wait_queue.pop()
                 self.pop_count += 1
                 print("Threading[%s] Pop stock_key:%s" %
                               (threading.current_thread().ident, stock_key))
