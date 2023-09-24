@@ -8,10 +8,9 @@ import sys
 sys.path.append("../../lib/utils/log")
 from log import log_init
 
-from predict import *
+from predictor import *
 
 if __name__ == "__main__":
-
     date = sys.argv[1]
     days = int(sys.argv[2])
 

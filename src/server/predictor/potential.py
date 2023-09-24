@@ -21,6 +21,7 @@ from database import Database
 sys.path.append("../../lib/utils/dtime")
 from dtime import *
 
+
 class Potential:
     def __init__(self):
         # 数据处理
@@ -96,6 +97,7 @@ class Potential:
                 print(labels)
                 idx += 1
 
+
 if __name__ == "__main__":
 
     date = int(sys.argv[1])
@@ -117,5 +119,5 @@ if __name__ == "__main__":
     pot = Potential()
 
     # 获取潜力股
-    #pot.get_potential_stock(date)
+    # pot.get_potential_stock(date)
     pot.analyze(date)

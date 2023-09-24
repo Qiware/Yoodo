@@ -30,7 +30,7 @@ TRAIN_DATA_TRANSACTION_NUM = 30
 
 
 # 股票预测
-class Predicter():
+class Predictor:
     def __init__(self):
         """ 初始化 """
         # 数据处理

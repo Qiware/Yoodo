@@ -17,15 +17,12 @@ from classifier import Classifier
 sys.path.append("../../lib/data")
 from data import Data
 
-sys.path.append("../../lib/utils/log")
-from log import *
-
 # 拉取训练交易数据条目
 GET_TRANSACTION_MAX_NUM = 120
 
 
 # 股票预测
-class Trainer():
+class Trainer:
     def __init__(self, model_type, days, is_build=False):
         """ 初始化
             @Param model_type: 训练模型(r:回归模型; c:分类模型)
