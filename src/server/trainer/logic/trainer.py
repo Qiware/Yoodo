@@ -70,7 +70,7 @@ class Trainer:
 
         # 预测结果
         # 获取股票列表
-        for date in range(20230901, 20230918):
+        for date in range(20230901, 20230925):
             stock_list = self.data.get_good_stock()
             for stock in stock_list:
                 stock_key = stock["stock_key"]

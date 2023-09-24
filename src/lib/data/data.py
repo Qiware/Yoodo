@@ -106,6 +106,9 @@ class Data():
             @Param num: 交易数据条目
             @Param fp: 训练数据输出文件的指针
         """
+
+        stock_key = stock["stock_key"]
+
         # 拉取交易数据
         transaction_list = self.database.get_transaction_list(stock["stock_key"], date, num)
         if transaction_list is None:
