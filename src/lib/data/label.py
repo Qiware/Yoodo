@@ -11,6 +11,7 @@ SIGNAL_NEGATIVE = -1  # 信号: 负向(弱势)
 SIGNAL_SUB = -2  # 信号: 减仓
 SIGNAL_SUB_PLUS = -3  # 信号: 强烈减仓
 
+
 # LABEL转换
 class Label():
     def __init__(self):
@@ -26,7 +27,7 @@ class Label():
             return 0
         if (base_val == 0):
             return 100
-        return  diff / base_val * 100
+        return diff / base_val * 100
 
     def gen_classify(self, price_ratio):
         """ 生成分类
@@ -35,7 +36,7 @@ class Label():
         val = 1
         if price_ratio < 0:
             price_ratio -= val
-        return int(price_ratio/val) * val
+        return int(price_ratio / val) * val
 
     def str2label(self, s):
         """ 将字符串转为数字LABEL """
@@ -55,9 +56,9 @@ class Label():
 
         # 1.K与D值永远介于0到100之间。D大于80时，行情呈现超买现象。D小于20时，
         #   行情呈现超卖现象。
-        if int(kdj["D"]) > 80: # 超买: 减仓
+        if int(kdj["D"]) > 80:  # 超买: 减仓
             return SIGNAL_SUB_PLUS
-        elif int(kdj["D"]) < 20: # 超卖: 加仓
+        elif int(kdj["D"]) < 20:  # 超卖: 加仓
             return SIGNAL_ADD_PLUS
 
         # 2.上涨趋势中，K值大于D值，K线向上突破D线时，为买进信号。下跌趋势中，
@@ -71,17 +72,17 @@ class Label():
 
     def rsi2label(self, rsi):
         """ RSI特征LABEL """
-        if rsi > 90: # 严重超买: 强烈减仓
+        if rsi > 90:  # 严重超买: 强烈减仓
             return SIGNAL_SUB_PLUS
-        elif rsi > 80: # 超买: 减仓
+        elif rsi > 80:  # 超买: 减仓
             return SIGNAL_SUB
-        elif rsi > 50: # 多头涨势
+        elif rsi > 50:  # 多头涨势
             return SIGNAL_POSITIVE
-        elif rsi < 10: # 严重超卖: 强烈加仓
+        elif rsi < 10:  # 严重超卖: 强烈加仓
             return SIGNAL_ADD_PLUS
-        elif rsi < 20: # 超卖: 加仓
+        elif rsi < 20:  # 超卖: 加仓
             return SIGNAL_ADD
-        elif rsi < 50: # 空头跌势
+        elif rsi < 50:  # 空头跌势
             return SIGNAL_NEGATIVE
         # 处于50时买卖均衡
         return SIGNAL_NONE
@@ -91,13 +92,13 @@ class Label():
             CCI指标非常敏感, 适合追踪暴涨暴跌行情
         """
         # 情况1: 指标从下往上快速突破100, 是买入时间
-        if curr_cci > 100: # 超买区域
+        if curr_cci > 100:  # 超买区域
             if prev_cci < 100:
                 return SIGNAL_ADD_PLUS
             if curr_cci - prev_cci > 0:
                 return SIGNAL_ADD
             return SIGNAL_SUB
-        if curr_cci < -100: # 超卖区域
+        if curr_cci < -100:  # 超卖区域
             if prev_cci > -100:
                 return SIGNAL_SUB_PLUS
             if curr_cci - prev_cci < 0:
@@ -147,16 +148,20 @@ class Label():
             则表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓。
         """
         # 判断是否MACD金叉
-        if (curr["DIFF"] > curr["DEA"]) and (prev["DIFF"] < prev["DEA"]):
-            if curr["MACD"] > 0:
-                return 2 # 将有大幅度的反弹, 适合长线投资
-            return 1 # 股票止跌回涨, 可断线买入
+        if curr["DIFF"] > curr["DEA"]:
+            if prev["DIFF"] < prev["DEA"]:
+                return SIGNAL_ADD_PLUS  # 将有大幅度的反弹, 适合长线投资
+            if curr["MACD"] < prev["MACD"]:
+                return SIGNAL_SUB  # 顶背离
+            return SIGNAL_POSITIVE  # 继续看涨
         # 判断是否死叉
-        if (curr["DIFF"] < curr["DEA"]) and (prev["DIFF"] > prev["DEA"]):
-            if curr["MACD"] > 0:
-                return -1 # 意味着股价短期内下跌调整开始，投资者应减仓
-            return -2 # 表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓
-        return 0
+        if curr["DIFF"] < curr["DEA"]:
+            if prev["DIFF"] > prev["DEA"]:
+                return SIGNAL_SUB_PLUS  # 意味着股价短期内下跌调整开始，投资者应减仓
+            if curr["MACD"] > prev["MACD"]:
+                return SIGNAL_ADD  # 底背离
+            return SIGNAL_NEGATIVE  # 继续看跌
+        return SIGNAL_NONE
 
     def sar2label(self, curr, prev):
         """ SAR指标LABEL

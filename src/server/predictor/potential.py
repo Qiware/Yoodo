@@ -34,6 +34,19 @@ class Potential:
         """ 获取潜力股 """
         return self.data.get_potential_stock(date)
 
+    def get_transaction_dict(self, stock_key, date):
+        """ 获取交易字典 """
+
+        transaction_list = self.database.get_transaction_list(stock_key, date, 10000)
+        if transaction_list is None:
+            return None
+
+        transaction_dict = dict()
+        for item in transaction_list:
+            transaction_dict[item["date"]] = item
+
+        return transaction_dict
+
     def analyze(self, date):
         """ 通过分析技术指标找出潜力股 """
 
@@ -47,7 +60,12 @@ class Potential:
             tech_index = self.database.get_technical_index_list(stock_key, date)
             if tech_index is None:
                 logging.error("Get technical index failed! stock_key:%s date:%s", stock_key, date)
-                return None
+                continue
+
+            transaction_dict = self.get_transaction_dict(stock_key, date)
+            if transaction_dict is None:
+                logging.error("Get transaction dict failed! stock_key:%s date:%s", stock_key, date)
+                continue
 
             idx = 0
             for item in tech_index:
@@ -55,14 +73,31 @@ class Potential:
                 curr_tech_data = json.loads(item["data"])
                 if idx > 0:
                     prev_tech_data = json.loads(tech_index[idx]["data"])
+                if prev_tech_data is None:
+                    idx += 1
+                    print("Prev tech data is none!")
+                    continue
+
+                curr_transaction_data = transaction_dict[item["date"]]
+                prev_transaction_data = transaction_dict[tech_index[idx]["date"]]
 
                 labels = dict()
 
                 labels["stock_key"] = stock_key
                 labels["date"] = item["date"]
-                labels["none"] = 0
-                labels["positive"] = 0
-                labels["negative"] = 0
+                labels["none"] = 0  # 无效指标数量
+                labels["positive"] = 0  # 正向指标数量
+                labels["negative"] = 0  # 负向指标数量
+
+                if ("MACD" in curr_tech_data.keys()) and ("MACD" in prev_tech_data.keys()):
+                    macd = self.label.macd2label(curr_tech_data["MACD"], prev_tech_data["MACD"])
+                    labels["macd"] = macd
+                    if macd == 0:
+                        labels["none"] += 1
+                    elif macd > 0:
+                        labels["positive"] += 1
+                    elif macd < 0:
+                        labels["negative"] += 1
 
                 if "KDJ" in curr_tech_data.keys():
                     kdj = self.label.kdj2label(curr_tech_data["KDJ"])
@@ -92,6 +127,18 @@ class Potential:
                     elif cci > 0:
                         labels["positive"] += 1
                     elif cci < 0:
+                        labels["negative"] += 1
+
+                if ("AD" in curr_tech_data.keys()) and ("AD" in prev_tech_data.keys()):
+                    curr_ad = {"AD": curr_tech_data["AD"], "close_price": curr_transaction_data["close_price"]}
+                    prev_ad = {"AD": prev_tech_data["AD"], "close_price": prev_transaction_data["close_price"]}
+                    ad = self.label.ad2label(curr_ad, prev_ad)
+                    labels["ad"] = ad
+                    if ad == 0:
+                        labels["none"] += 1
+                    elif ad > 0:
+                        labels["positive"] += 1
+                    elif ad < 0:
                         labels["negative"] += 1
 
                 print(labels)
