@@ -17,7 +17,7 @@ if __name__ == "__main__":
     log_init("../../../log/evalutor.log")
 
     # 新建对象
-    pred = Predicter()
+    pred = Predictor()
 
     # 结果预测
     pred.evaluate(date, days)

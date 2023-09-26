@@ -59,20 +59,14 @@ class Data():
         # 填充交易数据
         for item in transaction_list:
             curr_date = item["date"]
-            try:
-                # 股票信息
-                item["stock_total"] = stock["total"]
+            # 股票信息
+            item["stock_total"] = stock["total"]
 
-                # 恒生指数
-                item["hsi_index"] = self.hsi_index_list[curr_date]
+            # 恒生指数
+            item["hsi_index"] = self.hsi_index_list[curr_date]
 
-                # 交易指数
-                item["tech_index"] = json.loads(tech_index[curr_date]["data"])
-
-            except Exception as e:
-                logging.error("Fill transaction data failed! stock_key:%s date:%s error:%s",
-                              stock_key, date, e)
-                return None
+            # 交易指数
+            item["tech_index"] = json.loads(tech_index[curr_date]["data"])
 
         return transaction_list
 
@@ -207,7 +201,7 @@ class Data():
         #       预留最后一个作为起始基准.
         offset = len(transaction_list) - (TRAIN_DATA_TRANSACTION_NUM + 1)
 
-        while (offset > 0):
+        while offset > 0:
             train_data = ""
 
             # 生成训练数据
@@ -220,7 +214,7 @@ class Data():
                 offset -= 1
                 continue
             for feature in features:
-                train_data += "%s," % (feature)
+                train_data += "%s," % feature
 
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
             price_ratio = self.label.ratio(
