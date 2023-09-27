@@ -17,6 +17,9 @@ from classifier import Classifier
 sys.path.append("../../lib/data")
 from data import Data
 
+sys.path.append("../../lib/utils/dtime")
+from dtime import get_current_date
+
 # 拉取训练交易数据条目
 GET_TRANSACTION_MAX_NUM = 120
 
@@ -45,7 +48,7 @@ class Trainer:
 
         # 划分训练集和测试集
         x_train, x_test, y_train, y_test = train_test_split(
-            feature, target, test_size=0.001, random_state=1)
+            feature, target, test_size=0.01, random_state=1)
 
         # 训练模型
         x_train_scaled = self.scaler.fit_transform(x_train)
@@ -70,7 +73,8 @@ class Trainer:
 
         # 预测结果
         # 获取股票列表
-        for date in range(20230901, 20230925):
+        latest_date = int(get_current_date())
+        for date in range(20230901, latest_date+1):
             stock_list = self.data.get_good_stock()
             for stock in stock_list:
                 stock_key = stock["stock_key"]

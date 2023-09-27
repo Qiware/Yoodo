@@ -9,7 +9,7 @@ sys.path.append("../../repo/mysql")
 from mysql import MySQLPool
 
 # 优质股票市值 >= 100亿
-STOCK_GOOD_MARKET_CAP = 10000000000
+GOOD_STOCK_MIN_MARKET_CAP = 10000000000
 
 
 # 数据库操作
@@ -241,7 +241,7 @@ class Database:
                 WHERE market_cap>=%s AND disable=0 ORDER BY stock_key'
 
         conn, cursor = self.mysql.open()
-        cursor.execute(sql, (STOCK_GOOD_MARKET_CAP))
+        cursor.execute(sql, GOOD_STOCK_MIN_MARKET_CAP)
         items = cursor.fetchall()
         self.mysql.close(conn, cursor)
 
