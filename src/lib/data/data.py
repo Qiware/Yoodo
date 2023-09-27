@@ -368,7 +368,10 @@ class Data():
                 feature.append(self.label.ratio(curr_tech_index["MA20VOL"], curr["volume"]))
 
                 # 技术指标
+                feature.append(curr_tech_index["KDJ"])
                 feature.append(self.label.kdj2label(curr_tech_index["KDJ"]))
+
+                feature.append(curr_tech_index["RSI"])
                 feature.append(self.label.rsi2label(curr_tech_index["RSI"]))
 
                 feature.append(self.label.cci2label(curr_tech_index["CCI"], prev_tech_index["CCI"]))

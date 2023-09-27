@@ -25,7 +25,7 @@ class Label():
         diff = (val - base_val)
         if diff == 0:
             return 0
-        if (base_val == 0):
+        if base_val == 0:
             return 100
         return diff / base_val * 100
 
@@ -89,7 +89,9 @@ class Label():
 
     def cci2label(self, curr_cci, prev_cci):
         """ CCI特征LABEL
-            CCI指标非常敏感, 适合追踪暴涨暴跌行情
+            @Desc CCI指标非常敏感, 适合追踪暴涨暴跌行情
+            @Param curr_cci: 当前周期CCI指标
+            @Param prev_cci: 前一周期CCI指标
         """
         # 情况1: 指标从下往上快速突破100, 是买入时间
         if curr_cci > 100:  # 超买区域
@@ -108,15 +110,20 @@ class Label():
         return SIGNAL_NONE
 
     def ad2label(self, curr, prev):
-        """ AD特征LABEL """
-        # 底背离: 价格下跌, 但资金在增加(看涨: 买入信号)
-        if ((curr["close_price"] - prev["close_price"]) < 0) and \
-                ((curr["AD"] - prev["AD"]) > 0):
-            return SIGNAL_ADD
-        # 顶背离: 价格上涨, 但资金在减少(看跌: 卖出信号)
-        if ((curr["close_price"] - prev["close_price"]) > 0) and ((curr["AD"] - prev["AD"]) < 0):
-            return SIGNAL_SUB
-        # 价格和资金量同步
+        """ AD特征LABEL
+            @应用规则: 当AD指标上升时，意味着资金在流入，股票价格有望上涨，此时是买入良机；
+            当AD指标下降时，意味着资金在流出，股票价格可能下跌，此时是卖出时机。
+        """
+        if (curr["AD"] - prev["AD"]) > 0:
+            if (curr["close_price"] - prev["close_price"]) < 0:
+                # 底背离: 价格下跌, 但资金在增加(看涨: 买入信号)
+                return SIGNAL_ADD_PLUS
+            return SIGNAL_POSITIVE
+        if (curr["AD"] - prev["AD"]) < 0:
+            # 顶背离: 价格上涨, 但资金在减少(看跌: 卖出信号)
+            if (curr["close_price"] - prev["close_price"]) > 0:
+                return SIGNAL_SUB_PLUS
+            return SIGNAL_NEGATIVE
         return SIGNAL_NONE
 
     def adosc2label(self, curr_ad, prev_ad):
