@@ -46,19 +46,36 @@ class Label():
         """ KDJ特征LABEL
         """
 
-        # 1.K与D值永远介于0到100之间。D大于80时，行情呈现超买现象。D小于20时，
-        #   行情呈现超卖现象。
-        if int(kdj["D"]) > 80:  # 超买: 减仓
+        k = int(kdj["K"])
+        d = int(kdj["D"])
+        j = int(kdj["J"])
+
+        # 1.J大于100时，行情呈现超买现象。J小于0时，行情呈现超卖现象。
+        if j > 100:  # 超买: 减仓
             return SIGNAL_SUB_PLUS
-        elif int(kdj["D"]) < 20:  # 超卖: 加仓
+        elif j < 0:  # 超卖: 加仓
             return SIGNAL_ADD_PLUS
 
-        # 2.上涨趋势中，K值大于D值，K线向上突破D线时，为买进信号。下跌趋势中，
+        # 2.K与D值永远介于0到100之间。K大于90时，行情呈现超买现象。K小于10时，
+        #   行情呈现超卖现象。
+        if k > 90:  # 超买: 减仓
+            return SIGNAL_SUB_PLUS
+        elif k < 10:  # 超卖: 加仓
+            return SIGNAL_ADD_PLUS
+
+        # 3.K与D值永远介于0到100之间。D大于80时，行情呈现超买现象。D小于20时，
+        #   行情呈现超卖现象。
+        if d > 80:  # 超买: 减仓
+            return SIGNAL_SUB_PLUS
+        elif d < 20:  # 超卖: 加仓
+            return SIGNAL_ADD_PLUS
+
+        # 4.上涨趋势中，K值大于D值，K线向上突破D线时，为买进信号。下跌趋势中，
         #   K值小于D值，K线向下跌破D线时，为卖出信号。
-        if int(kdj["K"]) > int(kdj["D"]):
-            return SIGNAL_ADD
-        elif int(kdj["K"]) < int(kdj["D"]):
-            return SIGNAL_SUB
+        if k > d:
+            return SIGNAL_POSITIVE
+        elif k < d:
+            return SIGNAL_NEGATIVE
 
         return SIGNAL_NONE
 
