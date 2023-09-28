@@ -248,7 +248,7 @@ class Database:
         return items
 
     def get_transaction_list(self, stock_key, date, num):
-        """ 获取指定日期往前的num条交易数据
+        """ 获取指定日期往前的num条交易数据(时间倒序)
             @Param stock_key: 股票KEY
             @Param date: 交易日期(格式: YYYYMMDD)
             @Param num: 交易条数

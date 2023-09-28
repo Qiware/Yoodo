@@ -126,8 +126,8 @@ class Data():
 
     def gen_reg_train_data(self, stock, transaction_list, days, fp):
         """ 生成'线性回归'训练数据
-            @Param stock_key: 股票信息
-            @Param transaction_list: 交易数据
+            @Param stock: 股票信息
+            @Param transaction_list: 交易数据(时间倒序)
             @Param days: 预测间隔天数
             @Param fp: 文件指针
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
@@ -148,26 +148,23 @@ class Data():
         #       预留最后一个作为起始基准.
         offset = len(transaction_list) - (TRAIN_DATA_TRANSACTION_NUM + 1*days)
 
-        while (offset > 0):
+        while offset > 0:
             train_data = ""
+            end = offset + TRAIN_DATA_TRANSACTION_NUM + 1*days
 
             # 生成训练数据
-            features = self.gen_feature(
-                stock,
-                transaction_list[offset:offset + TRAIN_DATA_TRANSACTION_NUM + 1*days], days)
+            features = self.gen_feature(stock, transaction_list[offset:end], days)
             if features is None:
                 offset -= 1
                 continue
 
             for feature in features:
-                train_data += "%f," % (feature)
+                train_data += "%f," % feature
 
             # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
-            price_ratio = self.label.ratio(
-                transaction_list[offset]["close_price"],
-                transaction_list[offset - 1]["close_price"])
+            price_ratio = self.get_price_ratio(transaction_list, offset, days)
 
-            train_data += "%f\n" % (price_ratio)
+            train_data += "%f\n" % price_ratio
 
             train_data_list.append(train_data)
             offset -= 1
@@ -180,7 +177,7 @@ class Data():
     def gen_cls_train_data(self, stock, transaction_list, days, fp):
         """ 生成'分类'训练数据
             @Param stock: 股票信息
-            @Param transaction_list: 交易数据
+            @Param transaction_list: 交易数据(时间倒序)
             @Param days: 预测间隔天数
             @Param fp: 文件指针
             @注意: 收盘价/最高价/最低价的涨跌比例不与当天开盘价比较, 而是与前一天的收盘价比较.
@@ -203,11 +200,10 @@ class Data():
 
         while offset > 0:
             train_data = ""
+            end = offset + TRAIN_DATA_TRANSACTION_NUM + 1*days
 
             # 生成训练数据
-            features = self.gen_feature(
-                stock,
-                transaction_list[offset:offset + TRAIN_DATA_TRANSACTION_NUM + 1*days], days)
+            features = self.gen_feature(stock, transaction_list[offset:end], days)
             if features is None:
                 logging.error("Generate feature by transactionn list failed! stock_key:%s offset:%s",
                               stock_key, offset)
@@ -216,10 +212,8 @@ class Data():
             for feature in features:
                 train_data += "%s," % feature
 
-            # 设置预测结果(往前一天的收盘价 与 往后一天的收盘价做对比)
-            price_ratio = self.label.ratio(
-                transaction_list[offset]["close_price"],
-                transaction_list[offset - 1]["close_price"])
+            # 设置预测结果(当前周期'最高收盘价'与前一周期收盘价比较)
+            price_ratio = self.get_price_ratio(transaction_list, offset, days)
             classify = self.label.gen_classify(price_ratio)
 
             train_data += "%d\n" % (classify)
@@ -231,6 +225,22 @@ class Data():
         fp.writelines(train_data_list)
 
         return None
+
+    def get_price_ratio(self, transaction_list, offset, days):
+        """ 获取当前周期'最大收盘价'与前一周期收盘价比较
+            @Param transaction_list: 交易列表(时间倒序)
+            @Param offset: 偏移量
+            @Param days: 周期天数
+        """
+        prev_close_price = transaction_list[offset]["close_price"]
+
+        curr_max_close_price = transaction_list[offset-days]["close_price"]
+        idx = offset-days+1
+        while idx < offset:
+            if transaction_list[idx]["close_price"] > curr_max_close_price:
+                curr_max_close_price = transaction_list[idx]["close_price"]
+            idx += 1
+        return self.label.ratio(prev_close_price, curr_max_close_price)
 
     def load_train_data(self, date, days):
         """ 加载训练数据, 并返回特征数据和目标数据 """
@@ -265,7 +275,7 @@ class Data():
     def gen_feature(self, stock, transaction_list, days):
         """ 通过交易列表生成特征数据. 返回格式: [x1, x2, x3, ...]
             @Param stock_key: 股票KEY
-            @Param transaction_list: 交易数据
+            @Param transaction_list: 交易数据(时间倒序)
             @Param days: 预测间隔天数
             @Return: 特征数据列表
         """
@@ -278,7 +288,6 @@ class Data():
             return None
 
         feature = list()
-        label = Label()
 
         # 股票KEY
         feature.append(self.label.str2label(stock_key))
@@ -289,7 +298,7 @@ class Data():
 
         # 生成特征数据(注意: 最后一个作为起始基准)
         index = TRAIN_DATA_TRANSACTION_NUM - 1
-        while (index >= (days-1)):
+        while index >= (days - 1):
             curr = transaction_list[index]
             prev = transaction_list[index + 1]
 
@@ -368,7 +377,6 @@ class Data():
                 feature.append(self.label.ratio(curr_tech_index["MA20VOL"], curr["volume"]))
 
                 # 技术指标
-                feature.append(curr_tech_index["KDJ"])
                 feature.append(self.label.kdj2label(curr_tech_index["KDJ"]))
 
                 feature.append(curr_tech_index["RSI"])

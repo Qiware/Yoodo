@@ -11,8 +11,14 @@ import logging
 from hkex import *
 from const import *
 
+sys.path.append("../../lib/stock")
+from stock import get_stock_code
+
+sys.path.append("../../lib/utils/thread_pool")
+from thread_pool import ThreadPool
+
 sys.path.append("../../repo/database")
-from database import *
+from database import Database
 
 # 港交所KEY
 HKEX_EXCHAGE_KEY = "hkex"
@@ -26,6 +32,13 @@ HKEX_TRANSACTION_CLOSE_PRICE = 4  # 收盘价
 HKEX_TRANSACTION_VOLUME = 5  # 交易量
 HKEX_TRANSACTION_TURNOVER = 6  # 交易额
 
+# 消息类型
+TYPE_STOCK_DATA = 1  # 股票数据
+TYPE_STOCK_CODE = 2  # 股票代码
+
+# 线程池配置
+CRAWL_WORKER_NUM = 10  # 爬取线程数
+CRAWL_QUEUE_CAPACITY = 1000  # 队列容量
 
 # 爬虫服务
 class Crawler:
@@ -33,6 +46,10 @@ class Crawler:
         """ 初始化处理 """
         self.hkex = HKEX()
         self.database = Database()
+
+        self.workers = ThreadPool(CRAWL_QUEUE_CAPACITY, CRAWL_WORKER_NUM)
+        self.workers.register(TYPE_STOCK_DATA, self._crawl_transaction)
+        self.workers.register(TYPE_STOCK_CODE, self.crawl_stock_by_stock_code)
 
     def gen_date(self, year, month, mday):
         """ 生成日期: YYYYMMDD """
@@ -80,12 +97,11 @@ class Crawler:
     def crawl_stock(self, start=HKEX_STOCK_CODE_MIN, end=HKEX_STOCK_CODE_MAX):
         """ 爬取全部股票信息 """
         stock_code = int(start)
-        while (stock_code <= int(end)):
-            print("Crawl stock data. stock_code:%s" % (stock_code))
-            # 爬取股票数据
-            self.crawl_stock_by_stock_code(stock_code)
-
+        while stock_code <= int(end):
+            print("Crawl stock data. stock_code:%s" % stock_code)
+            self.workers.bpush(TYPE_STOCK_CODE, stock_code)
             stock_code += 1
+        self.workers.wait()
 
     def gen_transaction(self, stock_code, stock_data, data):
         """ 生成交易数据
@@ -184,22 +200,26 @@ class Crawler:
 
         return transaction
 
-    def _crawl_transaction(self, stock_code, stock_data, lastest_day):
-        """ 爬取指定股票交易信息 """
+    def _crawl_transaction(self, stock_data):
+        """ 爬取指定股票交易信息
+            @Param stock_code: 股票代码(类型: int. 如: 00700)
+        """
+        latest_day = HKEX_LASTEST_1MONTH
+        exchange, stock_code = get_stock_code(stock_data["stock_key"])
 
-        print("Crawl transaction. stock_code:%s" % (stock_code))
+        print("Crawl transaction. stock_code:%s" % stock_code)
 
         # 爬取交易数据
-        data_list = self.hkex.get_kline_from_hkex(stock_code, lastest_day)
-        if data_list is None:
-            logging.error("Get hkex kline failed! stock_code:%s start_date:%s",
-                          stock_code, start_date)
+        data_list = self.hkex.get_kline_from_hkex(int(stock_code), latest_day)
+        if len(data_list) == 0:
+            logging.error("Get hkex kline failed! stock_code:%s latest_day:%s",
+                          stock_code, latest_day)
             return None
 
         # 遍历交易数据
         for data in data_list:
             # 提取交易信息
-            transaction = self.gen_transaction(stock_code, stock_data, data)
+            transaction = self.gen_transaction(int(stock_code), stock_data, data)
             if transaction is None:
                 logging.error("Gen transaction failed! stock_code:%s ", stock_code)
                 continue
@@ -207,12 +227,27 @@ class Crawler:
             # 更新交易信息
             self.database.set_transaction(transaction)
 
+        # 更新股票市值
+        self.update_stock_market_cap(stock_data, data_list[-1]["close_price"])
+
         return None
 
-    def crawl_transaction(self, begin_stock_code, lastest_day):
+    def update_stock_market_cap(self, stock, close_price):
+        """ 更新股票市值
+            @Param stock: 股票信息
+            @Param close_price: 最新收盘价
+        """
+        latest_stock_data = dict()
+
+        latest_stock_data["stock_key"] = stock["stock_key"]
+        latest_stock_data["market_cap"] = stock["total"] * close_price
+
+        self.database.set_stock(latest_stock_data)
+
+    def crawl_all_transaction(self):
         """ 爬取交易信息
             @Param stock_code: 股票代码
-            @Param lastest_day: 开始日期. 格式: 1month, 6month, 1year, 2year
+            @Param latest_day: 开始日期. 格式: 1month, 6month, 1year, 2year
         """
 
         # 获取股票列表
@@ -221,19 +256,12 @@ class Crawler:
             logging.error("Get stock list failed!")
             return
 
-        # 获取交易数据
+        # 放入爬取队列
         for stock in stock_list:
-            # 获取股票代码
-            stock_key = stock["stock_key"].split(":")
-            exchange = stock_key[0]
-            stock_code = int(stock_key[1])
-            if stock_code < int(begin_stock_code):
-                continue
+            self.workers.bpush(TYPE_STOCK_DATA, stock)
 
-            logging.info("Crawl transaction data. stock_key:%s", stock_key)
-
-            # 获取交易数据
-            self._crawl_transaction(stock_code, stock, lastest_day)
+        # 等待处理结束
+        self.workers.wait()
 
     def crawl_hsi_index(self):
         """ 获取'恒生指数'数据 """
@@ -259,6 +287,7 @@ class Crawler:
         """ 生成指数数据
             @Param index_code: 股票代码
             @Param data: 交易数据
+            @Note: 注意事项 - 指数交易数据中成交量和换手率均为0!!!
         """
         transaction = dict()
 
@@ -276,59 +305,49 @@ class Crawler:
 
         # 开盘价
         if data["open_price"] is None:
-            logging.error("Open price is none! date:%s stock_code:%s open_price:%f",
-                          transaction["date"], stock_code, transaction["open_price"])
+            logging.error("Open price is none! date:%s stock_key:%s open_price:%f",
+                          transaction["date"], transaction["stock_key"], transaction["open_price"])
             return None
 
         transaction["open_price"] = float(data["open_price"])
 
         # 收盘价
         if data["close_price"] is None:
-            logging.error("Close price is none! date:%s stock_code:%s close_price:%f",
-                          transaction["date"], stock_code, transaction["close_price"])
+            logging.error("Close price is none! date:%s stock_key:%s close_price:%f",
+                          transaction["date"], transaction["stock_key"], transaction["close_price"])
             return None
 
         transaction["close_price"] = float(data["close_price"])
 
         # 最高价
         if data["top_price"] is None:
-            logging.error("Top price is none! date:%s stock_code:%s top_price:%f",
-                          transaction["date"], stock_code, transaction["top_price"])
+            logging.error("Top price is none! date:%s stock_key:%s top_price:%f",
+                          transaction["date"], transaction["stock_key"], transaction["top_price"])
             return None
 
         transaction["top_price"] = float(data["top_price"])
 
         # 最低价
         if data["bottom_price"] is None:
-            logging.error("Bottom price is none! date:%s stock_code:%s bottom_price:%f",
-                          transaction["date"], stock_code, transaction["bottom_price"])
+            logging.error("Bottom price is none! date:%s stock_key:%s bottom_price:%f",
+                          transaction["date"], transaction["stock_key"], transaction["bottom_price"])
             return None
 
         transaction["bottom_price"] = float(data["bottom_price"])
 
         # 交易量
         transaction["volume"] = 0
-        # if data["volume"] is None:
-        #    logging.error("Volume is none! date:%s stock_code:%s volume:%d",
-        #                  transaction["date"], stock_code, transaction["volume"])
-        #    return None
-
-        # transaction["volume"] = int(data["volume"])
-        # if transaction["volume"] <= 0:
-        #    logging.error("Volume is none! date:%s stock_code:%s volume:%d",
-        #                  transaction["date"], stock_code, transaction["volume"])
-        #    return None
 
         # 交易额
         if data["turnover"] is None:
-            logging.error("Turnover is invalid! date:%s stock_code:%s turnover:%f",
-                          transaction["date"], stock_code, transaction["turnover"])
+            logging.error("Turnover is invalid! date:%s stock_key:%s turnover:%f",
+                          transaction["date"], transaction["stock_key"], transaction["turnover"])
             return None
 
         transaction["turnover"] = float(data["turnover"])
         if transaction["turnover"] <= 0:
-            logging.error("Turnover is invalid! date:%s stock_code:%s turnover:%d",
-                          transaction["date"], stock_code, transaction["turnover"])
+            logging.error("Turnover is invalid! date:%s stock_key:%s turnover:%d",
+                          transaction["date"], transaction["stock_key"], transaction["turnover"])
             return None
 
         # 创建时间

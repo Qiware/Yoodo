@@ -154,16 +154,16 @@ class HKEX():
         """
         return self.baidu.get_hsi_kline()
 
-    def get_lastest_interval(self, lastest_day):
-        if lastest_day == "1month":
+    def get_latest_interval(self, latest_day):
+        if latest_day == "1month":
             return HKEX_LASTEST_1MONTH
-        if lastest_day == "3month":
+        if latest_day == "3month":
             return HKEX_LASTEST_3MONTH
-        if lastest_day == "6month":
+        if latest_day == "6month":
             return HKEX_LASTEST_6MONTH
-        if lastest_day == "1year":
+        if latest_day == "1year":
             return HKEX_LASTEST_1YEAR
-        if lastest_day == "2year":
+        if latest_day == "2year":
             return HKEX_LASTEST_2YEAR
         return HKEX_LASTEST_1MONTH
 
@@ -174,13 +174,13 @@ class HKEX():
         """
         return self.baidu.get_hz2083_kline()
 
-    def get_kline_from_hkex(self, stock_code, lastest_day):
+    def get_kline_from_hkex(self, stock_code, latest_day):
         """ 获取交易K线数据: 开盘价、最高价、最低价、收盘价、交易量、交易额等
-            @Param code: 股票代码
-            @Param num: K线数量
+            @Param stock_code: 股票代码
+            @Param latest_day: 最新天数类型(取值范围: 1month/3month/6month/1year/2year)
         """
 
-        interval = self.get_lastest_interval(lastest_day)
+        interval = self.get_latest_interval(latest_day)
 
         # 准备请求参数
         headers = {'Content-Type': 'application/json'}
@@ -189,7 +189,7 @@ class HKEX():
 
         url = HKEX_GET_CHART_DATA2_URL % (
                 HKEX_SPAN_DAY, interval,
-                int(stock_code), self.token,
+                stock_code, self.token,
                 timestamp, timestamp, timestamp)
 
         # 发起拉取请求
@@ -285,7 +285,7 @@ if __name__ == "__main__":
 
     # 爬取企业信息
     stock_code = HKEX_STOCK_CODE_MIN
-    while (stock_code <= HKEX_STOCK_CODE_MAX):
+    while stock_code <= HKEX_STOCK_CODE_MAX:
         print("Stock code: ", stock_code)
         print(hkex.get_stock(stock_code))
         stock_code += 1
