@@ -20,15 +20,15 @@ def usage():
     print("     - help: 展示帮助信息")
 
 
-def crawl_stock(start_code):
+def crawl_all_stock():
     """ 爬取股票信息 """
 
     crawler = Crawler()
 
-    crawler.crawl_stock(start_code)
+    crawler.crawl_stock()
 
 
-def crawl_transaction(start_stock_code, lastest_day):
+def crawl_all_transaction():
     """ 爬取交易信息 """
 
     crawler = Crawler()
@@ -38,7 +38,7 @@ def crawl_transaction(start_stock_code, lastest_day):
     crawler.crawl_hz2083_index()  # 恒生科技指数
 
     # 爬取交易数据
-    crawler.crawl_transaction(start_stock_code, lastest_day)
+    crawler.crawl_all_transaction()
 
 
 if __name__ == "__main__":
@@ -52,10 +52,7 @@ if __name__ == "__main__":
 
     func = sys.argv[1]
     if func == "stock":
-        # 爬取股票信息
-        start_code = sys.argv[2]
-
-        crawl_stock(start_code)
+        crawl_all_stock()
     elif func == "transaction":
         # 爬取交易信息
         if len(sys.argv) != 4:
@@ -63,10 +60,7 @@ if __name__ == "__main__":
             print("python3 main.py transaction [start_stock_code] [start_date]")
             exit(-1)
 
-        stock_code = sys.argv[2]  # 股票代码
-        latest_day = sys.argv[3]  # 起始日期. 格式:1month, 3month, 6month, 1year, 2year
-
-        crawl_transaction(stock_code, latest_day)
+        crawl_all_transaction()
 
     else:
         usage()

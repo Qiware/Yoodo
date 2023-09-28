@@ -7,8 +7,6 @@ import logging
 import math
 import pandas
 import talib
-import time
-import threading
 
 sys.path.append("../../lib/data")
 from data import Data
@@ -16,122 +14,49 @@ from data import Data
 sys.path.append("../../lib/utils/dtime")
 from dtime import get_current_date
 
+sys.path.append("../../lib/utils/thread_pool")
+from thread_pool import ThreadPool
+
 # 默认工作线程数量
 WORKER_NUM = 5
 # 队列长度
 WAIT_QUEUE_LEN = 1000
 
+# 消息类型
+TYPE_INDEX_KEY = 1
+TYPE_STOCK_KEY = 2
+
+
 class Analyzer():
-    def __init__(self, start_code=1, worker_num=10):
-        """ 初始化
-            @Param worker_num: 工作线程数量
-        """
+    def __init__(self):
+        """ 初始化 """
         # 数据模块
         self.data = Data()
 
-        self.start_code = start_code
-
-        # 待处理队列
-        self.wait_queue = list()
-        self.push_count = 0
-        self.pop_count = 0
-        self.is_load_stock_finished = False
-        self.is_load_index_finished = False
-
-        # 启动一个线程加载指数列表
-        lt = threading.Thread(target=self.load_index, args=())
-        lt.setDaemon(True)
-        lt.start()
-
-        # 启动一个线程加载股票列表
-        lt = threading.Thread(target=self.load_stock, args=())
-        lt.setDaemon(True)
-        lt.start()
-
-        # 启动多个工程线程
-        if worker_num <= 0:
-            worker_num = WORKER_NUM
-
-        for i in range(worker_num):
-            wt = threading.Thread(target=self.handle, args=())
-            wt.setDaemon(True)
-            wt.start()
+        self.worker = ThreadPool(WAIT_QUEUE_LEN, WORKER_NUM)
+        self.worker.register(TYPE_INDEX_KEY, self.analyze)
+        self.worker.register(TYPE_STOCK_KEY, self.analyze)
 
     def load_stock(self):
         """ 加载股票列表 """
         # 获取股票列表
         stock_list = self.data.get_all_stock()
         for stock in stock_list:
-            fields = stock["stock_key"].split(":")
-            stock_code = int(fields[1])
-            if stock_code < self.start_code:
-                continue
-            # 加载待处理队列
-            self.wait_queue.append(stock["stock_key"])
-            self.push_count += 1
-            logging.debug("Push [%s]. push:%s pop:%s wait:%s",
-                          stock["stock_key"],
-                          self.push_count,
-                          self.pop_count,
-                          len(self.wait_queue))
-            while(len(self.wait_queue) >= WAIT_QUEUE_LEN):
-                time.sleep(1)
-        self.is_load_stock_finished = True
+            self.worker.bpush(TYPE_STOCK_KEY, stock["stock_key"])
+        self.worker.wait()
 
     def load_index(self):
         """ 加载指数列表 """
         # 获取指数列表
         index_list = self.data.get_all_index()
         for index in index_list:
-            # 放入待处理队列
-            self.wait_queue.append(index["index_key"])
-            self.push_count += 1
-            logging.debug("Push index_key:%s push:%s pop:%s wait:%s",
-                          index["index_key"],
-                          self.push_count,
-                          self.pop_count,
-                          len(self.wait_queue))
-            while(len(self.wait_queue) >= WAIT_QUEUE_LEN):
-                time.sleep(1)
-        self.is_load_index_finished = True
-
-    def handle(self):
-        """ 构建股票指数 """
-        while(True):
-            if self.is_finished():
-                break
-            try:
-                stock_key = self.wait_queue.pop()
-                self.pop_count += 1
-                print("Threading[%s] Pop stock_key:%s" %
-                              (threading.current_thread().ident, stock_key))
-                logging.debug("Threading[%s] Pop stock_key:%s",
-                              threading.current_thread().ident, stock_key)
-            except Exception as e:
-                time.sleep(1)
-                logging.error("Wait queue empty! err:%s", e)
-                continue
-            self.analyze(stock_key)
-
-    def is_finished(self):
-        """ 是否处理结束 """
-        return (self.is_load_stock_finished == True) and \
-                (self.is_load_index_finished == True) and \
-                (len(self.wait_queue) == 0)
-
-    def wait(self):
-        """ 等待处理结束 """
-        while(not self.is_finished()):
-            print("Analyze is doing! push:%s pop:%s wait:%s" % (
-                self.push_count, self.pop_count, len(self.wait_queue)))
-            time.sleep(10)
-        print("Analyze was done! push:%s pop:%s wait:%s" % (
-            self.push_count, self.pop_count, len(self.wait_queue)))
+            self.worker.bpush(TYPE_INDEX_KEY, index["index_key"])
+        self.worker.wait()
 
     def analyze(self, stock_key):
         # 获取交易数据(按时间逆序)
         transaction_list = self.data.get_transaction_list(
-                stock_key, get_current_date(), 100000)
+            stock_key, get_current_date(), 100000)
         if (transaction_list is None) or (len(transaction_list) == 0):
             logging.error("Get transaction list failed! stock_key:%s", stock_key)
             return
@@ -179,7 +104,7 @@ class Analyzer():
         self.boll(stock_index, transaction_list, close_price_list)
 
         # AD指标
-        self.ad(stock_index, transaction_list, top_price_list, 
+        self.ad(stock_index, transaction_list, top_price_list,
                 bottom_price_list, close_price_list, volume_list)
 
         # ADOSC指标
@@ -234,7 +159,7 @@ class Analyzer():
                 stock_index[date] = dict()
             stock_index[date][index_name] = float(item)
             idx += 1
-        return 
+        return
 
     def ma_volume(self, stock_index, transaction_list, volume_list, days):
         """ 计算交易量移动平均线
@@ -265,7 +190,7 @@ class Analyzer():
                 stock_index[date] = dict()
             stock_index[date][index_name] = float(item)
             idx += 1
-        return 
+        return
 
     def dema(self, stock_index, transaction_list):
         """ 计算DEMA指标 """
@@ -294,12 +219,12 @@ class Analyzer():
         """ 计算MACD指标 """
 
         diff, dea, macd = talib.MACD(
-                pandas.Series(close_price_list),
-                fastperiod=12, slowperiod=26, signalperiod=9)
+            pandas.Series(close_price_list),
+            fastperiod=12, slowperiod=26, signalperiod=9)
 
         # 存储MACD值
         idx = 0
-        while(idx < len(macd)):
+        while idx < len(macd):
             date = transaction_list[idx]["date"]
 
             if (math.isnan(diff[idx])) or math.isnan(dea[idx]) or math.isnan(macd[idx]):
@@ -322,17 +247,17 @@ class Analyzer():
         """ 计算KDJ指标 """
 
         k, d = talib.STOCH(
-                pandas.Series(top_price_list),
-                pandas.Series(bottom_price_list),
-                pandas.Series(close_price_list),
-                fastk_period=5,
-                slowk_period=3, slowk_matype=0,
-                slowd_period=3, slowd_matype=0)
-        j = 3*k - 2*d
+            pandas.Series(top_price_list),
+            pandas.Series(bottom_price_list),
+            pandas.Series(close_price_list),
+            fastk_period=5,
+            slowk_period=3, slowk_matype=0,
+            slowd_period=3, slowd_matype=0)
+        j = 3 * k - 2 * d
 
         # 存储KDJ值
         idx = 0
-        while(idx < len(k)):
+        while idx < len(k):
             date = transaction_list[idx]["date"]
 
             value = dict()
@@ -358,10 +283,10 @@ class Analyzer():
 
         # 存储RSI值
         idx = 0
-        while(idx < len(rsi)):
+        while idx < len(rsi):
             date = transaction_list[idx]["date"]
 
-            if (math.isnan(rsi[idx])):
+            if math.isnan(rsi[idx]):
                 idx += 1
                 continue
 
@@ -374,14 +299,14 @@ class Analyzer():
     def obv(self, stock_index, transaction_list, close_price_list, volume_list):
         """ 计算OBV指标 """
 
-        obv = talib.OBV(pandas.Series(close_price_list), pandas.Series(volume_list),)
+        obv = talib.OBV(pandas.Series(close_price_list), pandas.Series(volume_list), )
 
         # 存储OBV值
         idx = 0
-        while(idx < len(obv)):
+        while idx < len(obv):
             date = transaction_list[idx]["date"]
 
-            if (math.isnan(obv[idx])):
+            if math.isnan(obv[idx]):
                 idx += 1
                 continue
 
@@ -395,16 +320,16 @@ class Analyzer():
         """ 计算BOLL指标 """
 
         upper, middle, lower = talib.BBANDS(
-                pandas.Series(close_price_list),
-                timeperiod=20,
-                # number of non-biased standard deviations from the mean
-                nbdevup=2, nbdevdn=2,
-                # Moving average type: simple moving average here
-                matype=0)
+            pandas.Series(close_price_list),
+            timeperiod=20,
+            # number of non-biased standard deviations from the mean
+            nbdevup=2, nbdevdn=2,
+            # Moving average type: simple moving average here
+            matype=0)
 
         # 存储BOLL值
         idx = 0
-        while(idx < len(upper)):
+        while idx < len(upper):
             date = transaction_list[idx]["date"]
 
             if (math.isnan(upper[idx])) or (math.isnan(middle[idx])) or (math.isnan(lower[idx])):
@@ -426,17 +351,17 @@ class Analyzer():
         """ 计算AD指标 """
 
         ad = talib.AD(
-                pandas.Series(top_price_list),
-                pandas.Series(bottom_price_list),
-                pandas.Series(close_price_list),
-                pandas.Series(volume_list))
+            pandas.Series(top_price_list),
+            pandas.Series(bottom_price_list),
+            pandas.Series(close_price_list),
+            pandas.Series(volume_list))
 
         # 存储AD值
         idx = 0
-        while(idx < len(ad)):
+        while idx < len(ad):
             date = transaction_list[idx]["date"]
 
-            if (math.isnan(ad[idx])):
+            if math.isnan(ad[idx]):
                 idx += 1
                 continue
 
@@ -451,18 +376,18 @@ class Analyzer():
         """ 计算ADOSC指标 """
 
         adosc = talib.ADOSC(
-                pandas.Series(top_price_list),
-                pandas.Series(bottom_price_list),
-                pandas.Series(close_price_list),
-                pandas.Series(volume_list),
-                fastperiod=3, slowperiod=10)
+            pandas.Series(top_price_list),
+            pandas.Series(bottom_price_list),
+            pandas.Series(close_price_list),
+            pandas.Series(volume_list),
+            fastperiod=3, slowperiod=10)
 
         # 存储ADOSC值
         idx = 0
-        while(idx < len(adosc)):
+        while idx < len(adosc):
             date = transaction_list[idx]["date"]
 
-            if (math.isnan(adosc[idx])):
+            if math.isnan(adosc[idx]):
                 idx += 1
                 continue
 
@@ -476,16 +401,16 @@ class Analyzer():
         """ 计算SAR指标 """
 
         sar = talib.SAR(
-                pandas.Series(top_price_list),
-                pandas.Series(bottom_price_list),
-                acceleration=0, maximum=0)
+            pandas.Series(top_price_list),
+            pandas.Series(bottom_price_list),
+            acceleration=0, maximum=0)
 
         # 存储SAR值
         idx = 0
-        while(idx < len(sar)):
+        while idx < len(sar):
             date = transaction_list[idx]["date"]
 
-            if (math.isnan(sar[idx])):
+            if math.isnan(sar[idx]):
                 idx += 1
                 continue
 
@@ -499,17 +424,17 @@ class Analyzer():
         """ 计算WILLR指标 """
 
         willr = talib.WILLR(
-                pandas.Series(top_price_list),
-                pandas.Series(bottom_price_list),
-                pandas.Series(close_price_list),
-                timeperiod=14)
+            pandas.Series(top_price_list),
+            pandas.Series(bottom_price_list),
+            pandas.Series(close_price_list),
+            timeperiod=14)
 
         # 存储WILLR值
         idx = 0
-        while(idx < len(willr)):
+        while idx < len(willr):
             date = transaction_list[idx]["date"]
 
-            if (math.isnan(willr[idx])):
+            if math.isnan(willr[idx]):
                 idx += 1
                 continue
 
@@ -524,17 +449,17 @@ class Analyzer():
         """ 计算CCI指标 """
 
         cci = talib.CCI(
-                pandas.Series(top_price_list),
-                pandas.Series(bottom_price_list),
-                pandas.Series(close_price_list),
-                timeperiod=14)
+            pandas.Series(top_price_list),
+            pandas.Series(bottom_price_list),
+            pandas.Series(close_price_list),
+            timeperiod=14)
 
         # 存储CCI值
         idx = 0
-        while(idx < len(cci)):
+        while idx < len(cci):
             date = transaction_list[idx]["date"]
 
-            if (math.isnan(cci[idx])):
+            if math.isnan(cci[idx]):
                 idx += 1
                 continue
 
@@ -548,15 +473,15 @@ class Analyzer():
         """ 计算EMA指标 """
 
         ema = talib.EMA(
-                pandas.Series(close_price_list),
-                timeperiod=6)
+            pandas.Series(close_price_list),
+            timeperiod=6)
 
         # 存储EMA值
         idx = 0
-        while(idx < len(ema)):
+        while idx < len(ema):
             date = transaction_list[idx]["date"]
 
-            if (math.isnan(ema[idx])):
+            if math.isnan(ema[idx]):
                 idx += 1
                 continue
 
@@ -566,7 +491,6 @@ class Analyzer():
             idx += 1
         return
 
-
     def sort_by_date(self, transaction_list):
         """ 交易列表重排序: 按时间有序 """
 
@@ -575,8 +499,8 @@ class Analyzer():
         count = len(transaction_list)
 
         idx = 0
-        while(idx < count):
-            sort_list.append(transaction_list[count-idx-1])
+        while idx < count:
+            sort_list.append(transaction_list[count - idx - 1])
             idx += 1
 
         return sort_list
