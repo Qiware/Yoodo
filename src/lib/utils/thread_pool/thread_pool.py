@@ -10,8 +10,8 @@ WORKER_NUM = 10  # 默认线程数量
 
 # 处理消息
 class Message:
-    def __init__(self, type, data):
-        self.type = type
+    def __init__(self, typ, data):
+        self.type = typ
         self.data = data
 
 
@@ -62,13 +62,13 @@ class ThreadPool:
                 time.sleep(1)
                 continue
 
-    def register(self, type, callback):
+    def register(self, typ, callback):
         """ 注册回调函数 """
-        self.callback[type] = callback
+        self.callback[typ] = callback
 
-    def bpush(self, type, data):
+    def bpush(self, typ, data):
         """ 往队列中加入数据(阻塞) """
-        message = Message(type, data)
+        message = Message(typ, data)
         while True:
             if len(self.wait_queue) >= self.capacity:
                 time.sleep(1)

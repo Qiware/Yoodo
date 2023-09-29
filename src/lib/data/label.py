@@ -44,6 +44,12 @@ class Label():
 
     def kdj2label(self, kdj):
         """ KDJ特征LABEL
+            @基本概念:
+              1.K线: 反映了最近一段时间内股票价格在波动中收盘价与最低价之间的相对位置;
+              2.D线: 则是K线的平滑线;
+              3.J线: 则是K线和D线的差值;
+              K线和D线的活动范围在0-100, J线的活动范围没有具体的限制.
+            @应用规则: https://zhuanlan.zhihu.com/p/419208966
         """
 
         k = int(kdj["K"])
