@@ -54,6 +54,8 @@ class Analyzer():
         self.worker.wait()
 
     def analyze(self, stock_key):
+        logging.debug("Analyze stock technical index. stock_key:%s", stock_key)
+
         # 获取交易数据(按时间逆序)
         transaction_list = self.data.get_transaction_list(
             stock_key, int(get_current_date()), 100000)

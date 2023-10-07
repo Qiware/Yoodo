@@ -427,7 +427,7 @@ class Data():
                           stock_key, date, days)
             return date, None
 
-        lastest = transaction_list[0]
+        latest = transaction_list[0]
 
         # 填充交易数据
         transaction_list = self.fill_transaction_data(stock, date, transaction_list)
@@ -445,7 +445,7 @@ class Data():
 
         feature.append(item)
 
-        return lastest["date"], feature
+        return latest["date"], feature
 
     def get_all_index(self):
         """ 获取所有指数  """

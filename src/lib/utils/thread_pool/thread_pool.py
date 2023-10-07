@@ -48,7 +48,7 @@ class ThreadPool:
 
             try:
                 # 获取数据
-                message = self.wait_queue.pop()
+                message = self.wait_queue.pop(0)
                 self.pop_count += 1
 
                 # 处理数据
