@@ -50,17 +50,16 @@ class ThreadPool:
                 # 获取数据
                 message = self.wait_queue.pop(0)
                 self.pop_count += 1
-
-                # 处理数据
-                if message.type in self.callback.keys():
-                    self.callback[message.type](message.data)
-                else:
-                    logging.error("Unsupported message type! type:%d", message.type)
-
             except Exception as e:
                 logging.error("Wait queue empty! err:%s", e)
                 time.sleep(1)
                 continue
+
+            # 处理数据
+            if message.type in self.callback.keys():
+                self.callback[message.type](message.data)
+            else:
+                logging.error("Unsupported message type! type:%d", message.type)
 
     def register(self, typ, callback):
         """ 注册回调函数 """
