@@ -129,17 +129,7 @@ class Label():
             @应用规则: 当AD指标上升时，意味着资金在流入，股票价格有望上涨，此时是买入良机；
             当AD指标下降时，意味着资金在流出，股票价格可能下跌，此时是卖出时机。
         """
-        if (curr["AD"] - prev["AD"]) > 0:
-            if (curr["close_price"] - prev["close_price"]) < 0:
-                # 底背离: 价格下跌, 但资金在增加(看涨: 买入信号)
-                return SIGNAL_ADD_PLUS
-            return SIGNAL_POSITIVE
-        if (curr["AD"] - prev["AD"]) < 0:
-            # 顶背离: 价格上涨, 但资金在减少(看跌: 卖出信号)
-            if (curr["close_price"] - prev["close_price"]) > 0:
-                return SIGNAL_SUB_PLUS
-            return SIGNAL_NEGATIVE
-        return SIGNAL_NONE
+        return self.ratio(prev["AD"], curr["AD"])
 
     def adosc2label(self, curr_ad, prev_ad):
         """ ADOSC特征LABEL
