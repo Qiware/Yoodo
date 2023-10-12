@@ -10,8 +10,8 @@ WORKER_NUM = 10  # 默认线程数量
 
 # 处理消息
 class Message:
-    def __init__(self, type, data):
-        self.type = type
+    def __init__(self, typ, data):
+        self.type = typ
         self.data = data
 
 
@@ -48,27 +48,26 @@ class ThreadPool:
 
             try:
                 # 获取数据
-                message = self.wait_queue.pop()
+                message = self.wait_queue.pop(0)
                 self.pop_count += 1
-
-                # 处理数据
-                if message.type in self.callback.keys():
-                    self.callback[message.type](message.data)
-                else:
-                    logging.error("Unsupported message type! type:%d", message.type)
-
             except Exception as e:
                 logging.error("Wait queue empty! err:%s", e)
                 time.sleep(1)
                 continue
 
-    def register(self, type, callback):
-        """ 注册回调函数 """
-        self.callback[type] = callback
+            # 处理数据
+            if message.type in self.callback.keys():
+                self.callback[message.type](message.data)
+            else:
+                logging.error("Unsupported message type! type:%d", message.type)
 
-    def bpush(self, type, data):
+    def register(self, typ, callback):
+        """ 注册回调函数 """
+        self.callback[typ] = callback
+
+    def bpush(self, typ, data):
         """ 往队列中加入数据(阻塞) """
-        message = Message(type, data)
+        message = Message(typ, data)
         while True:
             if len(self.wait_queue) >= self.capacity:
                 time.sleep(1)

@@ -18,7 +18,7 @@ sys.path.append("../../lib/utils/thread_pool")
 from thread_pool import ThreadPool
 
 # 默认工作线程数量
-WORKER_NUM = 5
+WORKER_NUM = 20
 # 队列长度
 WAIT_QUEUE_LEN = 1000
 
@@ -54,9 +54,11 @@ class Analyzer():
         self.worker.wait()
 
     def analyze(self, stock_key):
+        logging.debug("Analyze stock technical index. stock_key:%s", stock_key)
+
         # 获取交易数据(按时间逆序)
         transaction_list = self.data.get_transaction_list(
-            stock_key, get_current_date(), 100000)
+            stock_key, int(get_current_date()), 100000)
         if (transaction_list is None) or (len(transaction_list) == 0):
             logging.error("Get transaction list failed! stock_key:%s", stock_key)
             return

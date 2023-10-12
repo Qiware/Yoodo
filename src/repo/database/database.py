@@ -447,10 +447,10 @@ class Database:
 
         return item
 
-    def get_technical_index_dict(self, stock_key, lastest_date):
+    def get_technical_index_dict(self, stock_key, latest_date):
         """ 获取指定股票技术指标数据(字典)
             @Param stock_key: 股票KEY
-            @Param lastest_date: 最新交易日期(格式: YYYYMMDD)
+            @Param latest_date: 最新交易日期(格式: YYYYMMDD)
         """
 
         # 查询交易数据
@@ -459,7 +459,7 @@ class Database:
                 WHERE stock_key=%s AND date<=%s'
 
         conn, cursor = self.mysql.open()
-        cursor.execute(sql, (stock_key, lastest_date))
+        cursor.execute(sql, (stock_key, latest_date))
         items = cursor.fetchall()
         self.mysql.close(conn, cursor)
 
@@ -474,10 +474,10 @@ class Database:
 
         return data
 
-    def get_technical_index_list(self, stock_key, lastest_date):
+    def get_technical_index_list(self, stock_key, latest_date):
         """ 获取指定股票技术指标数据(列表)
             @Param stock_key: 股票KEY
-            @Param lastest_date: 最新交易日期(格式: YYYYMMDD)
+            @Param latest_date: 最新交易日期(格式: YYYYMMDD)
         """
 
         # 查询交易数据
@@ -486,7 +486,7 @@ class Database:
                 WHERE stock_key=%s AND date<=%s ORDER BY date'
 
         conn, cursor = self.mysql.open()
-        cursor.execute(sql, (stock_key, lastest_date))
+        cursor.execute(sql, (stock_key, latest_date))
         items = cursor.fetchall()
         self.mysql.close(conn, cursor)
 

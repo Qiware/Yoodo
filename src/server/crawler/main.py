@@ -55,11 +55,6 @@ if __name__ == "__main__":
         crawl_all_stock()
     elif func == "transaction":
         # 爬取交易信息
-        if len(sys.argv) != 4:
-            print("Parameter is invalid!")
-            print("python3 main.py transaction [start_stock_code] [start_date]")
-            exit(-1)
-
         crawl_all_transaction()
 
     else:
