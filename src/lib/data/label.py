@@ -168,20 +168,29 @@ class Label():
             2.类似的，当DIF线由上往下穿越DEA线，形成MACD死叉。如果死叉在零轴之上
             出现，意味着股价短期内下跌调整开始，投资者应减仓；若死叉出现在零轴下，
             则表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓。
+            3.暂不考虑顶背离和底背离的形态
         """
         # 判断是否MACD金叉
         if curr["DIFF"] > curr["DEA"]:
             if prev["DIFF"] < prev["DEA"]:
-                return SIGNAL_ADD_PLUS  # 将有大幅度的反弹, 适合长线投资
-            if curr["MACD"] < prev["MACD"]:
-                return SIGNAL_SUB  # 顶背离
+                # 出现MACD金叉形态
+                if curr["DEA"] > 0:
+                    # 金叉在零轴上出现时，则表明股价即将开始有较大幅度的反弹，适合长线投资。
+                    return SIGNAL_ADD_PLUS
+                # 在零轴下出现，表示股价止跌回涨，可短线买入
+                return SIGNAL_ADD
+            # 维持MACD金叉形态后的走势
             return SIGNAL_POSITIVE  # 继续看涨
         # 判断是否死叉
         if curr["DIFF"] < curr["DEA"]:
             if prev["DIFF"] > prev["DEA"]:
-                return SIGNAL_SUB_PLUS  # 意味着股价短期内下跌调整开始，投资者应减仓
-            if curr["MACD"] > prev["MACD"]:
-                return SIGNAL_ADD  # 底背离
+                # 出现MACD死叉形态
+                if curr["DEA"] < 0:
+                    # 死叉出现在零轴下，则表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓。
+                    return SIGNAL_SUB_PLUS  # 意味着股价短期内下跌调整开始，投资者应减仓
+                # 死叉在零轴之上出现，意味着股价短期内下跌调整开始，投资者应减仓
+                return SIGNAL_SUB  # 意味着股价短期内下跌调整开始，投资者应减仓
+            # 维持MACD死叉形态后的走势
             return SIGNAL_NEGATIVE  # 继续看跌
         return SIGNAL_NONE
 
