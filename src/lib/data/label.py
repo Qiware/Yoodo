@@ -189,29 +189,32 @@ class Label():
             @Param sar: SAR指标
             @Param close_price: 收盘价
         """
-        if curr["SAR"] < curr["close_price"]:
-            # 1、当股票股价从SAR曲线下方开始向上突破SAR曲线时，为买入信号，预示着股
-            #    价一轮上升行情可能展开，投资者应迅速及时地买进股票。
-            if prev["SAR"] >= prev["close_price"]:
-                return SIGNAL_ADD_PLUS
-            # 2、当股票股价向上突破SAR曲线后继续向上运动而SAR曲线也同时向上运动时，
-            #    表明股价的上涨趋势已经形成，SAR曲线对股价构成强劲的支撑，投资者应坚
-            #    决持股待涨或逢低加码买进股票。
-            if prev["SAR"] < prev["close_price"]:
-                return SIGNAL_POSITIVE
-            return SIGNAL_NONE
+        # 股价上涨时
+        if curr["close_price"] > prev["close_price"]:
+            if curr["close_price"] > curr["SAR"]:
+                # 1、当股票股价从SAR曲线下方开始向上突破SAR曲线时，为买入信号，预示着股
+                #    价一轮上升行情可能展开，投资者应迅速及时地买进股票。
+                if prev["SAR"] >= prev["close_price"]:
+                    return SIGNAL_ADD_PLUS
+                # 2、当股票股价向上突破SAR曲线后继续向上运动而SAR曲线也同时向上运动时，
+                #    表明股价的上涨趋势已经形成，SAR曲线对股价构成强劲的支撑，投资者应坚
+                #    决持股待涨或逢低加码买进股票。
+                if curr["SAR"] > prev["SAR"]:
+                    return SIGNAL_POSITIVE
+                return SIGNAL_NONE
 
-        if curr["SAR"] > curr["close_price"]:
-            # 3、当股票股价从SAR曲线上方开始向下突破SAR曲线时，为卖出信号，预示
-            #    着股价一轮下跌行情可能展开，投资者应迅速及时地卖出股票。
-            if prev["SAR"] <= prev["close_price"]:
-                return SIGNAL_SUB_PLUS
-            # 4、当股票股价向下突破SAR曲线后继续向下运动而SAR曲线也同时向下运动，
-            #    表明股价的下跌趋势已经形成，SAR曲线对股价构成巨大的压力，投资者
-            #    应坚决持币观望或逢高减磅。
-            if prev["SAR"] > prev["close_price"]:
-                return SIGNAL_NEGATIVE
-            return SIGNAL_NONE
+        if curr["close_price"] < prev["close_price"]:
+            if curr["SAR"] > curr["close_price"]:
+                # 3、当股票股价从SAR曲线上方开始向下突破SAR曲线时，为卖出信号，预示
+                #    着股价一轮下跌行情可能展开，投资者应迅速及时地卖出股票。
+                if prev["SAR"] <= prev["close_price"]:
+                    return SIGNAL_SUB_PLUS
+                # 4、当股票股价向下突破SAR曲线后继续向下运动而SAR曲线也同时向下运动，
+                #    表明股价的下跌趋势已经形成，SAR曲线对股价构成巨大的压力，投资者
+                #    应坚决持币观望或逢高减磅。
+                if prev["SAR"] > curr["SAR"]:
+                    return SIGNAL_NEGATIVE
+                return SIGNAL_NONE
         return SIGNAL_NONE
 
     def obv2label(self, curr, prev):
