@@ -48,7 +48,7 @@ class ThreadPool:
 
             try:
                 # 获取数据
-                message = self.wait_queue.pop(0)
+                message = self.wait_queue.pop()
                 self.pop_count += 1
             except Exception as e:
                 logging.error("Wait queue empty! err:%s", e)

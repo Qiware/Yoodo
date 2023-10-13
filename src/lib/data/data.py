@@ -103,6 +103,8 @@ class Data():
 
         stock_key = stock["stock_key"]
 
+        logging.info("Generate train data. stock_key:%s" % stock_key)
+
         # 拉取交易数据
         transaction_list = self.database.get_transaction_list(stock["stock_key"], date, num)
         if transaction_list is None:
