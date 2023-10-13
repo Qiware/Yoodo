@@ -403,6 +403,7 @@ class Data():
                 curr_obv = {"OBV": curr_tech_index["OBV"], "close_price": curr["close_price"]}
                 prev_obv = {"OBV": prev_tech_index["OBV"], "close_price": prev["close_price"]}
                 feature.append(self.label.obv2label(curr_obv, prev_obv))
+                feature.append(self.label.ratio(prev_tech_index["OBV"], curr_tech_index["OBV"]))
 
                 index -= 1
             except Exception as e:

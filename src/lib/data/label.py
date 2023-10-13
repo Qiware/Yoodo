@@ -232,9 +232,6 @@ class Label():
             参考资料: https://baijiahao.baidu.com/s?id=1729552677456218979&wfr=spider&for=pc
         """
         diff = curr["OBV"] - prev["OBV"]
-        if diff > 0:
-            ratio = diff / abs(prev["OBV"])
-            print("OBV add ratio: %s" % ratio)
 
         # 1、当股价上升而OBV线下降，表示买盘无力，股价可能会回跌。
         if curr["close_price"] - prev["close_price"] > 0:
@@ -249,7 +246,6 @@ class Label():
         diff = curr["OBV"] - prev["OBV"]
         if diff > 0:
             ratio = diff / abs(prev["OBV"])
-            print("OBV add ratio: %s" % ratio)
             if ratio >= 0.3:
                 # 4、OBV线急速上升时，表示力量将用尽为卖出信号。
                 return SIGNAL_SUB
