@@ -400,6 +400,10 @@ class Data():
                 prev_sar = {"SAR": prev_tech_index["SAR"], "close_price": prev["close_price"]}
                 feature.append(self.label.sar2label(curr_sar, prev_sar))
 
+                curr_obv = {"OBV": curr_tech_index["OBV"], "close_price": curr["close_price"]}
+                prev_obv = {"OBV": prev_tech_index["OBV"], "close_price": prev["close_price"]}
+                feature.append(self.label.obv2label(curr_obv, prev_obv))
+
                 index -= 1
             except Exception as e:
                 logging.error("Generate feature by transaction list failed! stock_key:%s error:%s",

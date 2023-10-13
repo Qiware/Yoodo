@@ -214,6 +214,60 @@ class Label():
             return SIGNAL_NONE
         return SIGNAL_NONE
 
+    def obv2label(self, curr, prev):
+        """ 将OBV指标转为LABEL
+            1、当股价上升而OBV线下降，表示买盘无力，股价可能会回跌。
+            2、股价下降时而OBV线上升，表示买盘旺盛，逢低接手强股，股价可能会止跌回升。
+            3、OBV线缓慢上升，表示买气逐渐加强，为买进信号。
+            4、OBV线急速上升时，表示力量将用尽为卖出信号。
+            5、OBV线对双重顶第二个高峰的确定有较为标准的显示，当股价自双重顶第一个高峰下跌又再次回升时，如果OBV线能够随股价趋势同步上升且
+               价量配合，则可持续多头市场并出现更高峰。相反，当股价再次回升时OBV线未能同步配合，却见下降，则可能形成第二个顶峰，完成双重顶
+               的形态，导致股价反转下跌。
+            6、OBV线从正的累积数转为负数时，为下跌趋势，应该卖出持有股票。反之，OBV线从负的累积数转为正数时，应该买进股票。
+            7、OBV线最大的用处，在于观察股市盘局整理后，何时会脱离盘局以及突破后的未来走势，OBV线变动方向是重要参考指数，其具体的数值并无
+               实际意义。
+            参考资料: https://baijiahao.baidu.com/s?id=1729552677456218979&wfr=spider&for=pc
+        """
+        diff = curr["OBV"] - prev["OBV"]
+        if diff > 0:
+            ratio = diff / abs(prev["OBV"])
+            print("OBV add ratio: %s" % ratio)
+
+        # 1、当股价上升而OBV线下降，表示买盘无力，股价可能会回跌。
+        if curr["close_price"] - prev["close_price"] > 0:
+            if diff < 0:
+                return SIGNAL_NEGATIVE
+
+        # 2、股价下降时而OBV线上升，表示买盘旺盛，逢低接手强股，股价可能会止跌回升。
+        if curr["close_price"] - prev["close_price"] < 0:
+            if diff > 0:
+                return SIGNAL_POSITIVE
+
+        diff = curr["OBV"] - prev["OBV"]
+        if diff > 0:
+            ratio = diff / abs(prev["OBV"])
+            print("OBV add ratio: %s" % ratio)
+            if ratio >= 0.3:
+                # 4、OBV线急速上升时，表示力量将用尽为卖出信号。
+                return SIGNAL_SUB
+            # 3、OBV线缓慢上升，表示买气逐渐加强，为买进信号。
+            return SIGNAL_ADD
+
+        # 5、OBV线对双重顶第二个高峰的确定有较为标准的显示，当股价自双重顶第一个高峰下跌又再次回升时，如果OBV线能够随股价趋势同步上升且
+        #    价量配合，则可持续多头市场并出现更高峰。 (底背离)
+        #    相反，当股价再次回升时OBV线未能同步配合，却见下降，则可能形成第二个顶峰，完成双重顶
+        #    的形态，导致股价反转下跌。(顶背离)
+
+        # 6、OBV线从正的累积数转为负数时，为下跌趋势，应该卖出持有股票。反之，OBV线从负的累积数转为正数时，应该买进股票。
+        if (prev["OBV"] > 0) and (curr["OBV"] < 0):
+            return SIGNAL_SUB
+        elif (prev["OBV"] < 0) and (curr["OBV"] > 0):
+            return SIGNAL_ADD
+
+        # 7、OBV线最大的用处，在于观察股市盘局整理后，何时会脱离盘局以及突破后的未来走势，OBV线变动方向是重要参考指数，其具体的数值并无
+        #    实际意义。
+        return SIGNAL_NONE
+
 
 if __name__ == "__main__":
     label = Label()
