@@ -129,17 +129,7 @@ class Label():
             @应用规则: 当AD指标上升时，意味着资金在流入，股票价格有望上涨，此时是买入良机；
             当AD指标下降时，意味着资金在流出，股票价格可能下跌，此时是卖出时机。
         """
-        if (curr["AD"] - prev["AD"]) > 0:
-            if (curr["close_price"] - prev["close_price"]) < 0:
-                # 底背离: 价格下跌, 但资金在增加(看涨: 买入信号)
-                return SIGNAL_ADD_PLUS
-            return SIGNAL_POSITIVE
-        if (curr["AD"] - prev["AD"]) < 0:
-            # 顶背离: 价格上涨, 但资金在减少(看跌: 卖出信号)
-            if (curr["close_price"] - prev["close_price"]) > 0:
-                return SIGNAL_SUB_PLUS
-            return SIGNAL_NEGATIVE
-        return SIGNAL_NONE
+        return self.ratio(prev["AD"], curr["AD"])
 
     def adosc2label(self, curr_ad, prev_ad):
         """ ADOSC特征LABEL
@@ -168,20 +158,29 @@ class Label():
             2.类似的，当DIF线由上往下穿越DEA线，形成MACD死叉。如果死叉在零轴之上
             出现，意味着股价短期内下跌调整开始，投资者应减仓；若死叉出现在零轴下，
             则表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓。
+            3.暂不考虑顶背离和底背离的形态
         """
         # 判断是否MACD金叉
         if curr["DIFF"] > curr["DEA"]:
             if prev["DIFF"] < prev["DEA"]:
-                return SIGNAL_ADD_PLUS  # 将有大幅度的反弹, 适合长线投资
-            if curr["MACD"] < prev["MACD"]:
-                return SIGNAL_SUB  # 顶背离
+                # 出现MACD金叉形态
+                if curr["DEA"] > 0:
+                    # 金叉在零轴上出现时，则表明股价即将开始有较大幅度的反弹，适合长线投资。
+                    return SIGNAL_ADD_PLUS
+                # 在零轴下出现，表示股价止跌回涨，可短线买入
+                return SIGNAL_ADD
+            # 维持MACD金叉形态后的走势
             return SIGNAL_POSITIVE  # 继续看涨
         # 判断是否死叉
         if curr["DIFF"] < curr["DEA"]:
             if prev["DIFF"] > prev["DEA"]:
-                return SIGNAL_SUB_PLUS  # 意味着股价短期内下跌调整开始，投资者应减仓
-            if curr["MACD"] > prev["MACD"]:
-                return SIGNAL_ADD  # 底背离
+                # 出现MACD死叉形态
+                if curr["DEA"] < 0:
+                    # 死叉出现在零轴下，则表示股价已经见顶，后市很可能开始大幅下行，投资者应立即清仓。
+                    return SIGNAL_SUB_PLUS  # 意味着股价短期内下跌调整开始，投资者应减仓
+                # 死叉在零轴之上出现，意味着股价短期内下跌调整开始，投资者应减仓
+                return SIGNAL_SUB  # 意味着股价短期内下跌调整开始，投资者应减仓
+            # 维持MACD死叉形态后的走势
             return SIGNAL_NEGATIVE  # 继续看跌
         return SIGNAL_NONE
 
@@ -190,29 +189,82 @@ class Label():
             @Param sar: SAR指标
             @Param close_price: 收盘价
         """
-        if curr["SAR"] < curr["close_price"]:
-            # 1、当股票股价从SAR曲线下方开始向上突破SAR曲线时，为买入信号，预示着股
-            #    价一轮上升行情可能展开，投资者应迅速及时地买进股票。
-            if prev["SAR"] >= prev["close_price"]:
-                return SIGNAL_ADD_PLUS
-            # 2、当股票股价向上突破SAR曲线后继续向上运动而SAR曲线也同时向上运动时，
-            #    表明股价的上涨趋势已经形成，SAR曲线对股价构成强劲的支撑，投资者应坚
-            #    决持股待涨或逢低加码买进股票。
-            if prev["SAR"] < prev["close_price"]:
-                return SIGNAL_POSITIVE
-            return SIGNAL_NONE
+        # 股价上涨时
+        if curr["close_price"] > prev["close_price"]:
+            if curr["close_price"] > curr["SAR"]:
+                # 1、当股票股价从SAR曲线下方开始向上突破SAR曲线时，为买入信号，预示着股
+                #    价一轮上升行情可能展开，投资者应迅速及时地买进股票。
+                if prev["SAR"] >= prev["close_price"]:
+                    return SIGNAL_ADD_PLUS
+                # 2、当股票股价向上突破SAR曲线后继续向上运动而SAR曲线也同时向上运动时，
+                #    表明股价的上涨趋势已经形成，SAR曲线对股价构成强劲的支撑，投资者应坚
+                #    决持股待涨或逢低加码买进股票。
+                if curr["SAR"] > prev["SAR"]:
+                    return SIGNAL_POSITIVE
+                return SIGNAL_NONE
 
-        if curr["SAR"] > curr["close_price"]:
-            # 3、当股票股价从SAR曲线上方开始向下突破SAR曲线时，为卖出信号，预示
-            #    着股价一轮下跌行情可能展开，投资者应迅速及时地卖出股票。
-            if prev["SAR"] <= prev["close_price"]:
-                return SIGNAL_SUB_PLUS
-            # 4、当股票股价向下突破SAR曲线后继续向下运动而SAR曲线也同时向下运动，
-            #    表明股价的下跌趋势已经形成，SAR曲线对股价构成巨大的压力，投资者
-            #    应坚决持币观望或逢高减磅。
-            if prev["SAR"] > prev["close_price"]:
+        if curr["close_price"] < prev["close_price"]:
+            if curr["SAR"] > curr["close_price"]:
+                # 3、当股票股价从SAR曲线上方开始向下突破SAR曲线时，为卖出信号，预示
+                #    着股价一轮下跌行情可能展开，投资者应迅速及时地卖出股票。
+                if prev["SAR"] <= prev["close_price"]:
+                    return SIGNAL_SUB_PLUS
+                # 4、当股票股价向下突破SAR曲线后继续向下运动而SAR曲线也同时向下运动，
+                #    表明股价的下跌趋势已经形成，SAR曲线对股价构成巨大的压力，投资者
+                #    应坚决持币观望或逢高减磅。
+                if prev["SAR"] > curr["SAR"]:
+                    return SIGNAL_NEGATIVE
+                return SIGNAL_NONE
+        return SIGNAL_NONE
+
+    def obv2label(self, curr, prev):
+        """ 将OBV指标转为LABEL
+            1、当股价上升而OBV线下降，表示买盘无力，股价可能会回跌。
+            2、股价下降时而OBV线上升，表示买盘旺盛，逢低接手强股，股价可能会止跌回升。
+            3、OBV线缓慢上升，表示买气逐渐加强，为买进信号。
+            4、OBV线急速上升时，表示力量将用尽为卖出信号。
+            5、OBV线对双重顶第二个高峰的确定有较为标准的显示，当股价自双重顶第一个高峰下跌又再次回升时，如果OBV线能够随股价趋势同步上升且
+               价量配合，则可持续多头市场并出现更高峰。相反，当股价再次回升时OBV线未能同步配合，却见下降，则可能形成第二个顶峰，完成双重顶
+               的形态，导致股价反转下跌。
+            6、OBV线从正的累积数转为负数时，为下跌趋势，应该卖出持有股票。反之，OBV线从负的累积数转为正数时，应该买进股票。
+            7、OBV线最大的用处，在于观察股市盘局整理后，何时会脱离盘局以及突破后的未来走势，OBV线变动方向是重要参考指数，其具体的数值并无
+               实际意义。
+            参考资料: https://baijiahao.baidu.com/s?id=1729552677456218979&wfr=spider&for=pc
+        """
+        diff = curr["OBV"] - prev["OBV"]
+
+        # 1、当股价上升而OBV线下降，表示买盘无力，股价可能会回跌。
+        if curr["close_price"] - prev["close_price"] > 0:
+            if diff < 0:
                 return SIGNAL_NEGATIVE
-            return SIGNAL_NONE
+
+        # 2、股价下降时而OBV线上升，表示买盘旺盛，逢低接手强股，股价可能会止跌回升。
+        if curr["close_price"] - prev["close_price"] < 0:
+            if diff > 0:
+                return SIGNAL_POSITIVE
+
+        diff = curr["OBV"] - prev["OBV"]
+        if diff > 0:
+            ratio = diff / abs(prev["OBV"])
+            if ratio >= 0.3:
+                # 4、OBV线急速上升时，表示力量将用尽为卖出信号。
+                return SIGNAL_SUB
+            # 3、OBV线缓慢上升，表示买气逐渐加强，为买进信号。
+            return SIGNAL_ADD
+
+        # 5、OBV线对双重顶第二个高峰的确定有较为标准的显示，当股价自双重顶第一个高峰下跌又再次回升时，如果OBV线能够随股价趋势同步上升且
+        #    价量配合，则可持续多头市场并出现更高峰。 (底背离)
+        #    相反，当股价再次回升时OBV线未能同步配合，却见下降，则可能形成第二个顶峰，完成双重顶
+        #    的形态，导致股价反转下跌。(顶背离)
+
+        # 6、OBV线从正的累积数转为负数时，为下跌趋势，应该卖出持有股票。反之，OBV线从负的累积数转为正数时，应该买进股票。
+        if (prev["OBV"] > 0) and (curr["OBV"] < 0):
+            return SIGNAL_SUB
+        elif (prev["OBV"] < 0) and (curr["OBV"] > 0):
+            return SIGNAL_ADD
+
+        # 7、OBV线最大的用处，在于观察股市盘局整理后，何时会脱离盘局以及突破后的未来走势，OBV线变动方向是重要参考指数，其具体的数值并无
+        #    实际意义。
         return SIGNAL_NONE
 
 

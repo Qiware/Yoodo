@@ -103,6 +103,8 @@ class Data():
 
         stock_key = stock["stock_key"]
 
+        logging.info("Generate train data. stock_key:%s" % stock_key)
+
         # 拉取交易数据
         transaction_list = self.database.get_transaction_list(stock["stock_key"], date, num)
         if transaction_list is None:
@@ -397,6 +399,11 @@ class Data():
                 curr_sar = {"SAR": curr_tech_index["SAR"], "close_price": curr["close_price"]}
                 prev_sar = {"SAR": prev_tech_index["SAR"], "close_price": prev["close_price"]}
                 feature.append(self.label.sar2label(curr_sar, prev_sar))
+
+                curr_obv = {"OBV": curr_tech_index["OBV"], "close_price": curr["close_price"]}
+                prev_obv = {"OBV": prev_tech_index["OBV"], "close_price": prev["close_price"]}
+                feature.append(self.label.obv2label(curr_obv, prev_obv))
+                feature.append(self.label.ratio(prev_tech_index["OBV"], curr_tech_index["OBV"]))
 
                 index -= 1
             except Exception as e:

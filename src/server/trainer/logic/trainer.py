@@ -73,11 +73,13 @@ class Trainer:
 
         # 预测结果
         # 获取股票列表
-        latest_date = int(get_current_date())
-        for date in range(20230901, latest_date+1):
+        curr_date = get_current_date()
+        first_date = curr_date[0:6] + "01"
+        for date in range(int(first_date), int(curr_date)+1):
             stock_list = self.data.get_good_stock()
             for stock in stock_list:
                 stock_key = stock["stock_key"]
+                print("Predict stock: %s" % stock_key)
 
                 # 加载特征数据
                 base_date, feature = self.data.load_feature(stock, date, days)
