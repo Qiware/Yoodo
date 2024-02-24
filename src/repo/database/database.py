@@ -71,7 +71,7 @@ class Database:
         # logging.debug("sql:%s conditions:%s", sql, conditions)
 
         # 执行SQL语句
-        conn, cursor = self.msyql.open()
+        conn, cursor = self.mysql.open()
         execute = cursor.execute(sql, conditions)
         conn.commit()
         self.mysql.close(conn, cursor)
