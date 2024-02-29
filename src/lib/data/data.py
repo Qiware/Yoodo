@@ -84,6 +84,7 @@ class Data():
         # 获取股票列表
         stock_list = self.database.get_good_stock()
         for stock in stock_list:
+            print("Stock key: %s" % stock["stock_key"])
             # 生成训练数据
             self._gen_train_data(model_type, stock, date, days, num, fp)
 

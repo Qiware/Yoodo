@@ -37,7 +37,7 @@ TYPE_STOCK_DATA = 1  # 股票数据
 TYPE_STOCK_CODE = 2  # 股票代码
 
 # 线程池配置
-CRAWL_WORKER_NUM = 10  # 爬取线程数
+CRAWL_WORKER_NUM = 1  # 爬取线程数
 CRAWL_QUEUE_CAPACITY = 1000  # 队列容量
 
 # 爬虫服务
@@ -204,7 +204,7 @@ class Crawler:
         """ 爬取指定股票交易信息
             @Param stock_code: 股票代码(类型: int. 如: 00700)
         """
-        latest_day = HKEX_LASTEST_1MONTH
+        latest_day = HKEX_LASTEST_3MONTH
         exchange, stock_code = get_stock_code(stock_data["stock_key"])
 
         print("Crawl transaction. stock_code:%s" % stock_code)

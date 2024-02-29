@@ -141,6 +141,28 @@ class Potential:
                     elif ad < 0:
                         labels["negative"] += 1
 
+                if ("ADOSC" in curr_tech_data.keys()) and ("ADOSC" in prev_tech_data.keys()):
+                    adosc = self.label.adosc2label(curr_tech_data["ADOSC"], prev_tech_data["ADOSC"])
+                    labels["adosc"] = adosc
+                    if adosc == 0:
+                        labels["none"] += 1
+                    elif adosc > 0:
+                        labels["positive"] += 1
+                    elif adosc < 0:
+                        labels["negative"] += 1
+
+                if ("SAR" in curr_tech_data.keys()) and ("SAR" in prev_tech_data.keys()):
+                    curr_sar = {"SAR": curr_tech_data["SAR"], "close_price": curr_transaction_data["close_price"]}
+                    prev_sar = {"SAR": prev_tech_data["SAR"], "close_price": prev_transaction_data["close_price"]}
+                    sar = self.label.sar2label(curr_sar, prev_sar)
+                    labels["sar"] = sar
+                    if sar == 0:
+                        labels["none"] += 1
+                    elif sar > 0:
+                        labels["positive"] += 1
+                    elif sar < 0:
+                        labels["negative"] += 1
+
                 print(labels)
                 idx += 1
 
