@@ -7,7 +7,7 @@ import urllib
 import requests	# pip3 install requests
 
 # 获取最近一个月的交易数据
-HKEX_TOKEN = "evLtsLsBNAUVTPxtGqVeG4mg4e9flB8nPN4rfbOMOztYT9gX2hK07sVCY52VVQxX"
+HKEX_TOKEN = "evLtsLsBNAUVTPxtGqVeG1crQXMREqQ%2B0z2ejZuywjQGTLuNt9HwCQb0WW7lSmgy"
 
 # 时间间隔
 HKEX_TODAY = 1 # 获取最近今天的数据(时)
