@@ -103,31 +103,35 @@ class HKEX():
 
     def get_stock(self, stock_code):
         """ 获取股票基础信息: 股票代码、企业名称、企业市值等 """
-        headers = {'Content-Type': 'application/json'}
+        while(True):
+            try:
+                headers = {'Content-Type': 'application/json'}
 
-        timestamp = int(time.time() * 1000)
+                timestamp = int(time.time() * 1000)
 
-        url = HKEX_GET_EQUITY_QUOTE_URL % (int(stock_code), self.token, timestamp, timestamp, timestamp)
+                url = HKEX_GET_EQUITY_QUOTE_URL % (int(stock_code), self.token, timestamp, timestamp, timestamp)
 
-        # 发起拉取请求
-        rsp = requests.get(url=url, headers=headers)
-        if rsp is None:
-            return dict()
+                # 发起拉取请求
+                rsp = requests.get(url=url, headers=headers)
+                if rsp is None:
+                    return dict()
 
-        # 结果校验
-        data = self.parse(rsp.text)
-        if "data" not in data.keys():
-            return dict()
-        data = data["data"]
-        if "responsecode" not in data.keys():
-            return dict()
-        if data["responsecode"] != HKEX_RESPONE_CODE_OK:
-            return dict()
-        if "quote" not in data.keys():
-            return dict()
+                # 结果校验
+                data = self.parse(rsp.text)
+                if "data" not in data.keys():
+                    return dict()
+                data = data["data"]
+                if "responsecode" not in data.keys():
+                    return dict()
+                if data["responsecode"] != HKEX_RESPONE_CODE_OK:
+                    return dict()
+                if "quote" not in data.keys():
+                    return dict()
 
-        # 结果解析
-        return self.parse_stock_resp(data["quote"])
+                # 结果解析
+                return self.parse_stock_resp(data["quote"])
+            except Exception as e:
+               print(e) 
 
     def parse_stock_resp(self, resp):
         """ 解析股票信息 """

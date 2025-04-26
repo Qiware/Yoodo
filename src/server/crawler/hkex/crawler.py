@@ -204,7 +204,7 @@ class Crawler:
         """ 爬取指定股票交易信息
             @Param stock_code: 股票代码(类型: int. 如: 00700)
         """
-        latest_day = HKEX_LASTEST_3MONTH
+        latest_day = HKEX_LASTEST_6MONTH
         exchange, stock_code = get_stock_code(stock_data["stock_key"])
 
         print("Crawl transaction. stock_code:%s" % stock_code)
